@@ -1,0 +1,712 @@
+syntax = "proto3";
+package dcs.mission.v0;
+import "dcs/common/v0/common.proto";
+import "google/protobuf/struct.proto";
+option csharp_namespace = "RurouniJones.Dcs.Grpc.V0.Mission";
+option go_package = "github.com/DCS-gRPC/go-bindings/dcs/v0/mission";
+
+// the "path" field in mission command requests and responses is a repeated
+// string however "paths" doesn't make sense. therefore we will disable
+// the linter pluralization checks for this file.
+// protolint:disable REPEATED_FIELD_NAMES_PLURALIZED
+
+// Contains the streaming APIs that streaming information out of the DCS server.
+service MissionService {
+  // Streams DCS game generated Events.
+  // See https://wiki.hoggitworld.com/view/Category:Events
+  rpc StreamEvents(StreamEventsRequest) returns (stream StreamEventsResponse) {}
+
+  // Streams unit updates
+  // Provides similar functionality as Tacview but at a much lower update rate
+  // so puts less load on the server. Suitable for things like online maps but
+  // not as a Tacview replacement.
+  rpc StreamUnits(StreamUnitsRequest) returns (stream StreamUnitsResponse) {}
+
+  // Returns the mission's in-game starttime as an ISO 8601 formatted datetime
+  // string.
+  rpc GetScenarioStartTime(GetScenarioStartTimeRequest)
+      returns (GetScenarioStartTimeResponse) {}
+
+  // Returns the mission's in-game current time as an ISO 8601 formatted
+  // datetime string.
+  rpc GetScenarioCurrentTime(GetScenarioCurrentTimeRequest)
+      returns (GetScenarioCurrentTimeResponse) {}
+
+  // Adds a new mission command
+  // See https://wiki.hoggitworld.com/view/DCS_func_addCommand
+  rpc AddMissionCommand(AddMissionCommandRequest)
+      returns (AddMissionCommandResponse) {}
+
+  // Adds a new command sub menu
+  // See https://wiki.hoggitworld.com/view/DCS_func_addSubMenu
+  rpc AddMissionCommandSubMenu(AddMissionCommandSubMenuRequest)
+      returns (AddMissionCommandSubMenuResponse) {}
+
+  // Removes a registered mission command.
+  // See https://wiki.hoggitworld.com/view/DCS_func_removeItem
+  rpc RemoveMissionCommandItem(RemoveMissionCommandItemRequest)
+      returns (RemoveMissionCommandItemResponse) {}
+
+  // Adds a new coalition command
+  // See https://wiki.hoggitworld.com/view/DCS_func_addCommandForCoalition
+  rpc AddCoalitionCommand(AddCoalitionCommandRequest)
+      returns (AddCoalitionCommandResponse) {}
+
+  // Adds a new coalition command sub menu
+  // See https://wiki.hoggitworld.com/view/DCS_func_addSubMenuForCoalition
+  rpc AddCoalitionCommandSubMenu(AddCoalitionCommandSubMenuRequest)
+      returns (AddCoalitionCommandSubMenuResponse) {}
+
+  // Removes a registered coalition command.
+  // See https://wiki.hoggitworld.com/view/DCS_func_removeItemForCoalition
+  rpc RemoveCoalitionCommandItem(RemoveCoalitionCommandItemRequest)
+      returns (RemoveCoalitionCommandItemResponse) {}
+
+  // Adds a new group command
+  // See https://wiki.hoggitworld.com/view/DCS_func_addCommandForGroup
+  rpc AddGroupCommand(AddGroupCommandRequest)
+      returns (AddGroupCommandResponse) {}
+
+  // Adds a new group command sub menu
+  // See https://wiki.hoggitworld.com/view/DCS_func_addSubMenuForGroup
+  rpc AddGroupCommandSubMenu(AddGroupCommandSubMenuRequest)
+      returns (AddGroupCommandSubMenuResponse) {}
+
+  // Removes a group coalition command.
+  // See https://wiki.hoggitworld.com/view/DCS_func_removeItemForGroup
+  rpc RemoveGroupCommandItem(RemoveGroupCommandItemRequest)
+      returns (RemoveGroupCommandItemResponse) {}
+}
+
+message StreamEventsRequest {
+}
+
+// The DCS Event information. Contains event information and a timestamp.
+message StreamEventsResponse {
+  // Occurs when a unit fires a weapon (but no machine gun- or autocannon-based
+  // weapons - those are handled by [ShootingStartEvent]).
+  message ShotEvent {
+    // The object that fired the weapon.
+    dcs.common.v0.Initiator initiator = 1;
+    // The weapon that has been fired.
+    dcs.common.v0.Weapon weapon = 2;
+  }
+
+  // Occurs when an object is hit by a weapon.
+  message HitEvent {
+    // The object that fired the weapon. Not set when for example fyling an
+    // aircraft into a building (building will be the target and weapon_name the
+    // name of the aircraft).
+    optional dcs.common.v0.Initiator initiator = 1;
+    // The weapon that the target has been hit with.
+    dcs.common.v0.Weapon weapon = 2;
+    // The object that has been hit.
+    dcs.common.v0.Target target = 3;
+    // The weapon the target got hit by.
+    optional string weapon_name = 4;
+  }
+
+  // Occurs when an aircraft takes off from an airbase, farp, or ship.
+  message TakeoffEvent {
+    // The object that took off.
+    dcs.common.v0.Initiator initiator = 1;
+    // The airbase, farp or ship the unit took off from.
+    dcs.common.v0.Airbase place = 2;
+  }
+
+  // Occurs when an aircraft lands at an airbase, farp or ship.
+  message LandEvent {
+    // The object that landed.
+    dcs.common.v0.Initiator initiator = 1;
+    // The airbase, farp or ship the unit landed at.
+    dcs.common.v0.Airbase place = 2;
+  }
+
+  // Occurs when an aircraft crashes into the ground and is completely
+  // destroyed.
+  message CrashEvent {
+    // The object that crashed.
+    dcs.common.v0.Initiator initiator = 1;
+  }
+
+  // Occurs when a pilot ejects from its aircraft.
+  message EjectionEvent {
+    // The unit a pilot ejected from.
+    dcs.common.v0.Initiator initiator = 1;
+    // The ejection seat.
+    dcs.common.v0.Target target = 3;
+  }
+
+  // Occurs when an aircraft connects with a tanker and begins taking on fuel.
+  message RefuelingEvent {
+    // The object that is receiving fuel.
+    dcs.common.v0.Initiator initiator = 1;
+  }
+
+  // Occurs when an object is completely destroyed.
+  message DeadEvent {
+    // The object that has been destroyed.
+    dcs.common.v0.Initiator initiator = 1;
+  }
+
+  // Occurs when a pilot of an aircraft is killed. Can occur either if the
+  // player is alive and crashes (in this case both this and the [CrashEvent]
+  // event will be fired) or if a weapon kills the pilot without completely
+  // destroying the plane.
+  message PilotDeadEvent {
+    // The unit the pilot has died in.
+    dcs.common.v0.Initiator initiator = 1;
+  }
+
+  // Occurs when a ground unit captures either an airbase or a farp.
+  message BaseCaptureEvent {
+    // The object that captured the base.
+    dcs.common.v0.Initiator initiator = 1;
+    // The airbase that was captured, can be a FARP or Airbase
+    dcs.common.v0.Airbase place = 2;
+  }
+
+  // Occurs when the mission starts.
+  message MissionStartEvent {
+  }
+
+  // Occurs when the mission stops.
+  message MissionEndEvent {
+  }
+
+  // Occurs when an aircraft is finished taking fuel.
+  message RefuelingStopEvent {
+    // he unit that was receiving fuel.
+    dcs.common.v0.Initiator initiator = 1;
+  }
+
+  // Occurs when any object is spawned into the mission.
+  message BirthEvent {
+    // The object that was spawned.
+    dcs.common.v0.Initiator initiator = 1;
+    // The airbase, farp or ship the unit took off from.
+    optional dcs.common.v0.Airbase place = 2;
+  }
+
+  // Occurs e.g. when a player controlled aircraft blacks out.
+  message HumanFailureEvent {
+    // The unit the system failure occurred in.
+    dcs.common.v0.Initiator initiator = 1;
+  }
+
+  // Occurs when a system on an aircraft fails. This can be due to damage or due
+  // to random failures set up in the mission editor.
+  message DetailedFailureEvent {
+    // The target the failure occurred for.
+    dcs.common.v0.Target target = 1;
+  }
+
+  // Occurs when any aircraft starts its engines.
+  message EngineStartupEvent {
+    // The object that starts its engines.
+    dcs.common.v0.Initiator initiator = 1;
+    // The airbase, farp or ship the unit started their engine at.
+    dcs.common.v0.Airbase place = 2;
+  }
+
+  message EngineShutdownEvent {
+    // Occurs when any aircraft shuts down its engines.
+    dcs.common.v0.Initiator initiator = 1;
+    // The airbase, farp or ship the unit shut down their engine at.
+    dcs.common.v0.Airbase place = 2;
+  }
+
+  // Occurs when a player takes direct control of a unit.
+  message PlayerEnterUnitEvent {
+    // The unit the player took control of.
+    dcs.common.v0.Initiator initiator = 1;
+  }
+
+  // Occurs when a player relieves direct control of a unit.
+  message PlayerLeaveUnitEvent {
+    // The unit the player relieves control of.
+    dcs.common.v0.Initiator initiator = 1;
+  }
+
+  // Occurs when a unit begins firing a machine gun- or autocannon-based weapon
+  // (weapons with a high rate of fire). Other weapons are handled by
+  // [ShotEvent].
+  message ShootingStartEvent {
+    // The object that started firing.
+    dcs.common.v0.Initiator initiator = 1;
+    // The name of the shoot weapon.
+    string weapon_name = 2;
+  }
+
+  // Occurs when a unit stops firing a machine gun- or autocannon-based weapon.
+  // Event will always correspond with a [ShootingStartEvent] event.
+  message ShootingEndEvent {
+    // The object that was shooting and has no stopped firing.
+    dcs.common.v0.Initiator initiator = 1;
+    // The name of the shoot weapon.
+    string weapon_name = 2;
+  }
+
+  // Occurs when marks get added to the mission by players or scripting
+  // functions.
+  message MarkAddEvent {
+    // The object that added the mark.
+    dcs.common.v0.Initiator initiator = 1;
+    oneof visibility {
+      // The group the mark's visibility is restricted for.
+      uint64 group_id = 2;
+      // The coalition the mark's visibility is restricted for.
+      dcs.common.v0.Coalition coalition = 3;
+    }
+    // The mark's id.
+    uint32 id = 4;
+    // The position the mark has been added at.
+    dcs.common.v0.Position position = 5;
+    // The mark's label.
+    string text = 6;
+  }
+
+  // Occurs when marks got changed.
+  message MarkChangeEvent {
+    // The object that changed the mark.
+    dcs.common.v0.Initiator initiator = 1;
+    oneof visibility {
+      // The group the mark's visibility is restricted for.
+      uint64 group_id = 2;
+      // The coalition the mark's visibility is restricted for.
+      dcs.common.v0.Coalition coalition = 3;
+    }
+    // The mark's id.
+    uint32 id = 4;
+    // The position of the changed mark.
+    dcs.common.v0.Position position = 5;
+    // The mark's label.
+    string text = 6;
+  }
+
+  // Occurs when marks get removed.
+  message MarkRemoveEvent {
+    // The object that removed the mark.
+    dcs.common.v0.Initiator initiator = 1;
+    oneof visibility {
+      // The group the mark's visibility is restricted for.
+      uint64 group_id = 2;
+      // The coalition the mark's visibility is restricted for.
+      dcs.common.v0.Coalition coalition = 3;
+    }
+    // The mark's id.
+    uint32 id = 4;
+    // The position the mark has been removed from.
+    dcs.common.v0.Position position = 5;
+    // The mark's label.
+    string text = 6;
+  }
+
+  // Occurs when an object is killed by a weapon.
+  message KillEvent {
+    // The object that fired the weapon.
+    dcs.common.v0.Initiator initiator = 1;
+    // The weapon that the target has been killed with.
+    dcs.common.v0.Weapon weapon = 2;
+    // The object that has been killed.
+    dcs.common.v0.Target target = 3;
+    // The name of the weapon that killed the target (exists instead of weapon
+    // for weapons that trigger the shooting start and end events).
+    optional string weapon_name = 4;
+  }
+
+  // A score change (doesn't contain any useful information)
+  message ScoreEvent {
+  }
+
+  // A unit got destroyed.
+  message UnitLostEvent {
+    // The object that got destroyed weapon.
+    dcs.common.v0.Initiator initiator = 1;
+  }
+
+  // A pilot detached from their ejection seat.
+  message LandingAfterEjectionEvent {
+    // The ejected pilot.
+    dcs.common.v0.Initiator initiator = 1;
+    // The position the pilot landed at.
+    dcs.common.v0.Position place = 2;
+  }
+
+  // A pilot detached from their ejection seat.
+  message DiscardChairAfterEjectionEvent {
+    // The ejection seat.
+    dcs.common.v0.Initiator initiator = 1;
+    // The pilot.
+    dcs.common.v0.Target target = 2;
+  }
+
+  // Fired for each payload of an aircraft spawened midair.
+  message WeaponAddEvent {
+    // The object that got spawned.
+    dcs.common.v0.Initiator initiator = 1;
+    // The name of the payload.
+    string weapon_name = 2;
+  }
+
+  // Occurs when an aircraft receives an LSO rating after recovering on an
+  // aircraft carrier.
+  message LandingQualityMarkEvent {
+    // The aircraft that received the rating.
+    dcs.common.v0.Initiator initiator = 1;
+    // The rating.
+    string comment = 2;
+    // The ship the unit landed at.
+    dcs.common.v0.Airbase place = 3;
+  }
+
+  // Occurs when a chat message is sent on the server
+  message PlayerSendChatEvent {
+    // The player's id in the current server session.
+    uint32 player_id = 1;
+    // what was typed
+    string message = 2;
+  }
+
+  // fired when the player changes across to a slot
+  message PlayerChangeSlotEvent {
+    // The player's id in the current server session.
+    uint32 player_id = 1;
+    // The slot's coalition
+    dcs.common.v0.Coalition coalition = 2;
+    // The slot's identifier
+    string slot_id = 3;
+  }
+  
+  /**
+   * Fired when a player connected to the server.
+   */
+  message ConnectEvent {
+    // The player's IP and port.
+    string addr = 1;
+    // The name of the player.
+    string name = 2;
+    // The player's unique client identifier (used to ban a player).
+    string ucid = 3;
+    // The player's id in the current server session
+    // (used to for name/slot/... changes).
+    uint32 id = 4;
+  }
+
+  /**
+   * The reason a player disconnected for.
+   */
+  enum DisconnectReason {
+    DISCONNECT_REASON_UNSPECIFIED = 0;
+    DISCONNECT_REASON_THATS_OKAY = 1;
+    DISCONNECT_REASON_INVALID_ADDRESS = 2;
+    DISCONNECT_REASON_CONNECT_FAILED = 3;
+    DISCONNECT_REASON_WRONG_VERSION = 4;
+    DISCONNECT_REASON_PROTOCOL_ERROR = 5;
+    DISCONNECT_REASON_TIMEOUT = 6;
+    DISCONNECT_REASON_INVALID_PASSWORD = 101;
+    DISCONNECT_REASON_BANNED = 102;
+    DISCONNECT_REASON_BAD_CALLSIGN = 103;
+    DISCONNECT_REASON_TAINTED_CLIENT = 104;
+    DISCONNECT_REASON_KICKED = 105;
+    DISCONNECT_REASON_REFUSED = 106;
+    DISCONNECT_REASON_DENIED_TRIAL_ONLY = 107;
+  }
+
+  /**
+   * Fired when a player disconnected from the server
+   * (not fired for the server's player).
+   */
+  message DisconnectEvent {
+    // The player's id in the current server session.
+    uint32 id = 1;
+    // The reason a player disconnected for.
+    DisconnectReason reason = 2;
+  }
+
+  message MissionCommandEvent {
+    // A struct containing details of the command that was run by a player
+    google.protobuf.Struct details = 1;
+  }
+
+  message CoalitionCommandEvent {
+    // The coalition of the player who ran the command
+    dcs.common.v0.Coalition coalition = 1;
+    // A struct containing details of the command that was run by a player
+    google.protobuf.Struct details = 2;
+  }
+
+  message GroupCommandEvent {
+    // Details of the group to which the player who ran the command is a unit of
+    dcs.common.v0.Group group = 1;
+    // A struct containing details of the command that was run by a player
+    google.protobuf.Struct details = 2;
+  }
+
+  // The event's mission time.
+  double time = 1;
+  oneof event {
+    ShotEvent shot = 4;
+    HitEvent hit = 5;
+    TakeoffEvent takeoff = 6;
+    LandEvent land = 7;
+    CrashEvent crash = 8;
+    EjectionEvent ejection = 9;
+    RefuelingEvent refueling = 10;
+    DeadEvent dead = 11;
+    PilotDeadEvent pilot_dead = 12;
+    BaseCaptureEvent base_capture = 13;
+    MissionStartEvent mission_start = 14;
+    MissionEndEvent mission_end = 15;
+    // @exclude 16 reserved for S_EVENT_TOOK_CONTROL
+    RefuelingStopEvent refueling_stop = 17;
+    BirthEvent birth = 18;
+    HumanFailureEvent human_failure = 19;
+    DetailedFailureEvent detailed_failure = 20;
+    EngineStartupEvent engine_startup = 21;
+    EngineShutdownEvent engine_shutdown = 22;
+    PlayerEnterUnitEvent player_enter_unit = 23;
+    PlayerLeaveUnitEvent player_leave_unit = 24;
+    // @exclude 25 reserved for S_EVENT_PLAYER_COMMENT
+    ShootingStartEvent shooting_start = 26;
+    ShootingEndEvent shooting_end = 27;
+    MarkAddEvent mark_add = 28;
+    MarkChangeEvent mark_change = 29;
+    MarkRemoveEvent mark_remove = 30;
+    KillEvent kill = 31;
+    ScoreEvent score = 32;
+    UnitLostEvent unit_lost = 33;
+    LandingAfterEjectionEvent landing_after_ejection = 34;
+    // @exclude 35 reserved for S_EVENT_PARATROOPER_LENDING
+    DiscardChairAfterEjectionEvent discard_chair_after_ejection = 36;
+    WeaponAddEvent weapon_add = 37;
+    // @exclude 38 reserved for S_EVENT_TRIGGER_ZONE
+    LandingQualityMarkEvent landing_quality_mark = 39;
+    // @exclude 40 reserved for S_EVENT_BDA
+
+    // The following events are additions on top of DCS's own event enum,
+    // which is why they start at 8192 to give DCS plenty of space for
+    // new built-in events.
+    ConnectEvent connect = 8192;
+    DisconnectEvent disconnect = 8193;
+    PlayerSendChatEvent player_send_chat = 8194;
+    PlayerChangeSlotEvent player_change_slot = 8195;
+    MissionCommandEvent mission_command = 8196;
+    CoalitionCommandEvent coalition_command = 8197;
+    GroupCommandEvent group_command = 8198;
+  }
+}
+
+message StreamUnitsRequest {
+  // The poll rate in seconds at which the gRPC server communicates with the DCS
+  // mission to retrieve the latest unit positions. The lower the `poll_rate`
+  // the higher the amount of requests send to to the DCS mission. Default: 5
+  optional uint32 poll_rate = 1;
+
+  // The maximum backoff in seconds which the gRPC postpones polling units that
+  // haven't moved recently. This is an optimization to dynamically reduce the
+  // poll rate for stationary units. Set it to the same value as `poll_rate` to
+  // disable the backoff. Default: 30
+  optional uint32 max_backoff = 2;
+
+  // The type of the unit to stream movements. Different categories of units
+  // would move at different speeds, which allows the stream to be configured
+  // with the appropriate polling rates. `GROUP_CATEGORY_UNSPECIFIED` would
+  // return all the units.
+  dcs.common.v0.GroupCategory category = 3;
+}
+
+message StreamUnitsResponse {
+  message UnitGone {
+    uint32 id = 1;
+    string name = 2;
+  }
+
+  oneof update {
+    // The unit is either new or its position changed.
+    dcs.common.v0.Unit unit = 1;
+
+    // The unit does not exist anymore.
+    UnitGone gone = 2;
+  }
+}
+
+message GetScenarioStartTimeRequest {
+}
+
+message GetScenarioStartTimeResponse {
+  string datetime = 1;
+}
+
+message GetScenarioCurrentTimeRequest {
+}
+
+message GetScenarioCurrentTimeResponse {
+  string datetime = 1;
+}
+
+// MISSION COMMANDS
+// GLOBAL
+
+// Adds an F10 radio command visible to all players in all coalitions.
+// When the player activates the command then a `missionCommand` event will be
+// emitted to all connected DCS-gRPC clients for processing as they see fit.
+message AddMissionCommandRequest {
+  // The name of the command that is displayed to the player.
+  // It will form the last entry in the returned path.
+  string name = 1;
+  // The menu path the command will appear under. This can be empty if you want
+  // the command to be on the first level under the F10 menu. This path must
+  // already have been created.
+  repeated string path = 2;
+  // A struct containing data that will be included in the emitted event to the
+  // DCS-gRPC clients
+  google.protobuf.Struct details = 3;
+}
+
+message AddMissionCommandResponse {
+  // The full path to the command, including the command name. Use this path to
+  // delete the command.
+  repeated string path = 1;
+}
+
+message AddMissionCommandSubMenuRequest {
+  // The name of the submenu that is displayed to the player.
+  // It will form the last entry in the returned path.
+  string name = 1;
+  // The menu path the submenu will appear under. This can be empty if you want
+  // the submenu to be on the first level under the F10 menu. This path must
+  // already have been created using this command. you cannot create a nested
+  // submenu tree in one command.
+  repeated string path = 2;
+}
+
+message AddMissionCommandSubMenuResponse {
+  // The full path to the submenu, including the submenu name. Use this path to
+  // add another submenu or command underneath it or delete the submenu.
+  repeated string path = 1;
+}
+
+message RemoveMissionCommandItemRequest {
+  // The full path to the menu item, which can be a submenu or a command, to be
+  // removed. Deleting a menu item will delete all children it may have.
+  repeated string path = 1;
+}
+
+message RemoveMissionCommandItemResponse {
+}
+
+// COALITION
+
+// Adds an F10 radio command visible to all players in the specified coalition.
+// When the player activates the command then a `coalitionCommand` event will
+// be emitted to all connected DCS-gRPC clients for processing as they see fit.
+// The emitted event will include the coalition.
+message AddCoalitionCommandRequest {
+  // The coalition whose players will be able to see and run the command
+  dcs.common.v0.Coalition coalition = 1; 
+  // The name of the command that is displayed to the player.
+  // It will form the last entry in the returned path.
+  string name = 2;
+  // The menu path the command will appear under. This can be empty if you want
+  // the command to be on the first level under the F10 menu. This path must
+  // already have been created.
+  repeated string path = 3;
+  // A struct containing data that will be included in the emitted event to the
+  // DCS-gRPC clients
+  google.protobuf.Struct details = 4;
+}
+
+message AddCoalitionCommandResponse {
+  // The full path to the command, including the command name. Use this path to
+  // delete the command.
+  repeated string path = 1;
+}
+
+message AddCoalitionCommandSubMenuRequest {
+  // The coalition whose players will be able to see the submenu
+  dcs.common.v0.Coalition coalition = 1;
+  // The name of the submenu that is displayed to the player.
+  // It will form the last entry in the returned path.
+  string name = 2;
+  // The menu path the submenu will appear under. This can be empty if you want
+  // the submenu to be on the first level under the F10 menu. This path must
+  // already have been created using this command. you cannot create a nested
+  // submenu tree in one command.
+  repeated string path = 3;
+}
+
+message AddCoalitionCommandSubMenuResponse {
+  // The full path to the submenu, including the submenu name. Use this path to
+  // add another submenu or command underneath it or delete the submenu.
+  repeated string path = 1;
+}
+
+message RemoveCoalitionCommandItemRequest {
+  // The coalition whose players will have the menu item removed
+  dcs.common.v0.Coalition coalition = 1; 
+  // The full path to the menu item, which can be a submenu or a command, to be
+  // removed. Deleting a menu item will delete all children it may have.
+  repeated string path = 2;
+}
+
+message RemoveCoalitionCommandItemResponse {
+}
+
+// GROUP
+
+// Adds an F10 radio command visible to all players in the specified group.
+// When the player activates the command then a `groupCommand` event will
+// be emitted to all connected DCS-gRPC clients for processing as they see fit.
+// The emitted event will include the group name.
+message AddGroupCommandRequest {
+  // The name of the group whose players will be able to see and execute the
+  // command. TODO (Figure out if this persists across spawns)
+  string group_name = 1;
+  // The name of the command that is displayed to the player.
+  // It will form the last entry in the returned path.
+  string name = 2;
+  // The menu path the command will appear under. This can be empty if you want
+  // the command to be on the first level under the F10 menu. This path must
+  // already have been created.
+  repeated string path = 3;
+  // A struct containing data that will be included in the emitted event to the
+  // DCS-gRPC clients
+  google.protobuf.Struct details = 4;
+}
+
+message AddGroupCommandResponse {
+  // The full path to the command, including the command name. Use this path to
+  // delete the command.
+  repeated string path = 1;
+}
+
+message AddGroupCommandSubMenuRequest {
+  // The name of the group whose players will be able to see the submenu
+  string group_name = 1;
+  // The name of the submenu that is displayed to the player.
+  // It will form the last entry in the returned path.
+  string name = 2;
+  // The menu path the submenu will appear under. This can be empty if you want
+  // the submenu to be on the first level under the F10 menu. This path must
+  // already have been created using this command. you cannot create a nested
+  // submenu tree in one command.
+  repeated string path = 3;
+}
+
+message AddGroupCommandSubMenuResponse {
+  // The full path to the submenu, including the submenu name. Use this path to
+  // add another submenu or command underneath it or delete the submenu.
+  repeated string path = 1;
+}
+
+message RemoveGroupCommandItemRequest {
+  // The group whose players will have the menu item removed
+  string group_name = 1;
+  // The full path to the menu item, which can be a submenu or a command, to be
+  // removed. Deleting a menu item will delete all children it may have.
+  repeated string path = 2;
+}
+
+message RemoveGroupCommandItemResponse {
+}

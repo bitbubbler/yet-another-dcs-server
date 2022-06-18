@@ -1,0 +1,42 @@
+{
+  "devDependencies": {
+    "@babel/core": "^7.18.0",
+    "@babel/preset-env": "^7.18.0",
+    "@babel/preset-typescript": "^7.17.12",
+    "@grpc/grpc-js": "^1.6.7",
+    "@grpc/proto-loader": "^0.6.12",
+    "@rollup/plugin-commonjs": "^22.0.0",
+    "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-node-resolve": "^13.3.0",
+    "@rollup/plugin-typescript": "^8.3.2",
+    "@types/jest": "^27.5.1",
+    "@types/node": "^17.0.35",
+    "@typescript-eslint/eslint-plugin": "^5.27.0",
+    "@typescript-eslint/parser": "^5.27.0",
+    "babel-jest": "^28.1.0",
+    "eslint": "^8.17.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.2.1",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-promise": "^6.0.0",
+    "jest": "^28.1.0",
+    "rollup": "^2.75.6",
+    "ts-node": "^10.8.0",
+    "typescript": "^4.6.4"
+  },
+  "scripts": {
+    "start": "ts-node --compilerOptions {\\\"module\\\":\\\"CommonJS\\\"} src/index.ts",
+    "test": "jest",
+    "full-build": "npm run codegen && npm run build",
+    "build": "rm -rf build/ && rollup --config && cp -r src/proto/ build/ && cp -r migrations/ build/ && cp -r package*.json build/",
+    "codegen": "rm -rf generated/ && proto-loader-gen-types -I src/proto/ -O generated/ --oneofs --grpcLib=@grpc/grpc-js src/proto/dcs/dcs.proto"
+  },
+  "dependencies": {
+    "better-sqlite3": "^7.5.3",
+    "knex": "^2.1.0",
+    "pino": "^8.0.0",
+    "rxjs": "^7.5.5",
+    "string-similarity": "^4.0.4"
+  }
+}
