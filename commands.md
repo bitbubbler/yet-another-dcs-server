@@ -10,7 +10,7 @@ Spawn one or more units of one or more types on the map marker
 **syntax**
 
 ```
-!spawn [<count:optional> <unitName:required>]...
+!spawn <unitName:required>
 ```
 
 **examples**
@@ -21,22 +21,16 @@ Spawn a single T55:
 !spawn t55
 ```
 
-Spawn three T55(s)
+Spawn an abrams
 
 ```
-!spawn 3 t55
+!spawn abrams
 ```
 
-Spawn a T55 and an abrams
+Spawn a Hawk track radar
 
 ```
-!spawn t55 abrams
-```
-
-Spawn 4 T55 and 2 abrams
-
-```
-!spawn 4 t55 2 abrams
+!spawn tr
 ```
 
 ### !destroy
