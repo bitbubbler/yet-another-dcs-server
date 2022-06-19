@@ -1,18 +1,15 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import { findBestMatch } from 'string-similarity'
-import { GROUND_UNITS, EveryObject } from '../everyObject'
+import fuzzysort from 'fuzzysort'
+import {
+  GROUND_UNITS,
+  AIR_DEFENCE,
+  ARTILLERY,
+  EveryObject,
+} from '../everyObject'
 
 export function searchUnits(input: string): EveryObject {
-  const units = Array.from(GROUND_UNITS.values())
-
-  const displayNames = units.map(unit => unit.desc!.displayName)
-  // TODO: also use typeNames for fuzzy searching, compare accuracy on each lookup set to pick one
-  const typeNames = units.map(unit => unit.desc!.typeName)
-
-  const matchIndex = match(input, displayNames)
-
-  const unitToSpawn: EveryObject | undefined = units[matchIndex]
+  const unitToSpawn: EveryObject | undefined = match(input)
 
   if (typeof unitToSpawn === 'undefined') {
     throw new Error(`failed to find unit matching input: ${input}`)
@@ -21,8 +18,19 @@ export function searchUnits(input: string): EveryObject {
   return unitToSpawn
 }
 
-function match(input: string, lookups: string[]): number {
-  const { bestMatchIndex } = findBestMatch(input, lookups)
+const lookups = [GROUND_UNITS, AIR_DEFENCE, ARTILLERY].reduce<EveryObject[]>(
+  (previous, map) => previous.concat(Array.from(map.values())),
+  []
+)
 
-  return bestMatchIndex
+function match(input: string): EveryObject {
+  const result = fuzzysort.go(input, lookups, {
+    keys: ['desc.displayName', 'desc.typeName'],
+  })
+
+  if (!result[0]) {
+    throw new Error('missing result from fuzzysort')
+  }
+
+  return result[0].obj
 }

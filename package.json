@@ -34,9 +34,9 @@
   },
   "dependencies": {
     "better-sqlite3": "^7.5.3",
+    "fuzzysort": "^2.0.1",
     "knex": "^2.1.0",
     "pino": "^8.0.0",
-    "rxjs": "^7.5.5",
-    "string-similarity": "^4.0.4"
+    "rxjs": "^7.5.5"
   }
 }

@@ -64,7 +64,7 @@ export function lexer(reader: Reader) {
     }
 
     // strings start with quotes
-    if ('"' === nextChar) {
+    if ('"' === nextChar || "'" === nextChar) {
       return processString()
     }
 
@@ -195,7 +195,10 @@ export function lexer(reader: Reader) {
 
   function processQuoationMark(): void {
     const char = reader.consume()
-    strictEqual(char, '"', 'char was not a quotation mark')
+
+    if (typeof char !== 'string' || ['"', "'"].includes(char) === false) {
+      throw new Error('char was not a quotation mark')
+    }
   }
 
   function isNumber(char: Character): boolean {

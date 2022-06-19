@@ -26,6 +26,8 @@ export interface EveryObject {
   }
 }
 
+export const ALL_UNITS = new Map<string, EveryObject>()
+
 export const GROUND_UNITS = new Map<string, EveryObject>()
 export const AIR_DEFENCE = new Map<string, EveryObject>()
 export const FORTIFICATIONS = new Map<string, EveryObject>()
@@ -86,4 +88,6 @@ Object.keys(everyObject).forEach(key => {
   } else if (attributes.includes('Cargos')) {
     CARGOS.set(key, data)
   }
+
+  ALL_UNITS.set(key, data)
 })
