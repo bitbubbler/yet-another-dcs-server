@@ -14,7 +14,10 @@ export function parse(reader: Reader): Value {
 
   if (TokenKind.Exclamation === nextToken.kind) {
     // assume the input will be a command
-
+    return processCommand(lexer)
+  }
+  if (TokenKind.Hyphen === nextToken.kind) {
+    // assume the input will be a command
     return processCommand(lexer)
   }
 
