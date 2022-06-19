@@ -1,7 +1,8 @@
 import { equal } from 'assert'
-import { Position, Position__Output } from '../generated/dcs/common/v0/Position'
+import { Position__Output } from '../generated/dcs/common/v0/Position'
 import { Struct } from '../generated/google/protobuf/Struct'
 import { Value } from '../generated/google/protobuf/Value'
+import { Position } from './db'
 import { DetailsValue, DetailsValueShape } from './events'
 import { Position3, PositionLL, Vec3 } from './types'
 
@@ -11,6 +12,21 @@ export function deg(radians: number): number {
 
 export function rad(degrees: number): number {
   return degrees * (Math.PI / 180)
+}
+
+export function metersToDegree(meter: number): number {
+  // magic number
+  // https://gis.stackexchange.com/questions/2951/algorithm-for-offsetting-a-latitude-longitude-by-some-amount-of-meters
+  return meter / 111111
+}
+
+/**
+ * Returns a distance in meters given two PositionLL
+ * @param positiona PositionLL
+ * @param positionb PositionLL
+ */
+export function distanceFrom(a: PositionLL, b: PositionLL): number {
+  return Math.sqrt(Math.pow(a.lat - b.lat, 2) + Math.pow(a.lon - b.lon, 2))
 }
 
 export function vec3From(maybeVec3: Partial<Vec3>): Vec3 {

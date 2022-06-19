@@ -92,6 +92,21 @@ export async function spawnGroundUnit({
   })
 }
 
+export async function destroy(unitName: string): Promise<void> {
+  const lua = `
+    Unit.getByName("${unitName}"):destroy()
+`
+
+  return new Promise<void>((resolve, reject) =>
+    services.custom.eval({ lua }, (error, _result) => {
+      if (error) {
+        reject(error)
+      }
+      resolve()
+    })
+  )
+}
+
 export async function getPositionVelocity(
   unitName: string
 ): Promise<[Position3, Velocity]> {

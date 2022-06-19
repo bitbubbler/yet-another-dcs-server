@@ -1,12 +1,12 @@
 import { Coalition } from '../generated/dcs/common/v0/Coalition'
-import { Position } from '../generated/dcs/common/v0/Position'
 import { MarkPanelsMissingError } from './errors'
 import { services } from './services'
+import { PositionLL } from './types'
 
 export interface MarkPanel {
   id: number
   coalition: Coalition
-  position: Position
+  position: PositionLL
   text?: string
   groupId: number
 }

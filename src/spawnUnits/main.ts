@@ -16,13 +16,16 @@ import { MarkPanelsMissingError } from '../errors'
 import { groupFromGroupName } from '../group'
 import { countryFrom } from '../country'
 import { searchUnits } from './searchUnits'
-import { spawnGroundUnit } from '../unit'
+import { destroy, spawnGroundUnit } from '../unit'
 import { CommandType as EventCommandType } from '../commands/types'
 import {
   addGroupCommand,
   addGroupCommandSubMenu,
   removeGroupCommandItem,
 } from '../mission'
+import { knex, nearbyUnits } from '../db'
+import { distanceFrom, metersToDegree, positionLLFrom } from '../common'
+import { PositionLL } from '../types'
 
 type GroupID = number
 
@@ -104,6 +107,45 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
 
       // remove the map marker
       await removeMapMark(id)
+      return
+    }
+    if (EventCommandType.Destroy === command.type) {
+      let markPanels: MarkPanel[]
+      try {
+        markPanels = await getMarkPanels()
+      } catch (error) {
+        if (error instanceof MarkPanelsMissingError) {
+          // no-op
+          return
+        }
+        throw error
+      }
+
+      const addedMark = markPanels.find(mark => mark.id === id)
+
+      if (!addedMark) {
+        throw new Error('expected addedMark')
+      }
+
+      // TODO: use the map marker to post errors back to the user
+
+      const { position: markPosition } = addedMark
+
+      const accuracy = 250 // meters
+
+      const foundUnits = await nearbyUnits(markPosition, accuracy)
+
+      const closestUnit = foundUnits
+        .map(unit => {
+          const { lat, lon, alt } = unit
+          const unitPosition = { lat, lon, alt }
+          return { unit, distance: distanceFrom(markPosition, unitPosition) }
+        })
+        .sort((a, b) => a.distance - b.distance)[0].unit
+
+      await destroy(closestUnit.name)
+      // TODO: remove the unit from persistence (mark the unit as gone)
+      await removeMapMark(addedMark.id)
     }
   }
 

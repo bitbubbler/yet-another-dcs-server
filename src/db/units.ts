@@ -1,8 +1,9 @@
 import { knex } from './db'
 import { countryFrom } from '../country'
 import { getPositionVelocity, Unit } from '../unit'
-import { deg } from '../common'
+import { deg, metersToDegree } from '../common'
 import { equal } from 'assert'
+import { PositionLL } from '../types'
 
 export async function insertOrUpdateUnit(unit: Unit): Promise<void> {
   const { name, position: positionLL, type: typeName, coalition } = unit
@@ -88,4 +89,28 @@ export async function insertOrUpdateUnit(unit: Unit): Promise<void> {
         positionId,
       })
   }
+}
+
+/**
+ * Search for units nearby a given PositionLL within a given accuracy.
+ * Search uses a very simple box model algorithm
+ * @param position PositionLL
+ * @param accuracy accuracy of serch in meters
+ */
+export async function nearbyUnits(position: PositionLL, accuracy: number) {
+  const { lat, lon } = position
+
+  return await knex('units')
+    .leftOuterJoin('positions', function () {
+      this.on('units.positionId', '=', 'positions.positionId')
+    })
+    .select(['unitId', 'name', 'country', 'lat', 'lon', 'alt'])
+    .whereBetween('lat', [
+      lat - metersToDegree(accuracy),
+      lat + metersToDegree(accuracy),
+    ])
+    .whereBetween('lon', [
+      lon - metersToDegree(accuracy),
+      lon + metersToDegree(accuracy),
+    ])
 }

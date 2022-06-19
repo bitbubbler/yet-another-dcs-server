@@ -53,6 +53,12 @@ function processCommand(lexer: Lexer): Command {
     }
   }
 
+  if (CommandType.Destroy === type) {
+    return {
+      type: CommandType.Destroy,
+    }
+  }
+
   return { type: CommandType.Unknown }
 }
 
@@ -85,6 +91,9 @@ function processArguments(lexer: Lexer): Argument[] {
 function matchCommand(input: string): CommandType {
   if ('spawn' === input) {
     return CommandType.Spawn
+  }
+  if ('destroy' === input) {
+    return CommandType.Destroy
   }
 
   return CommandType.Unknown
