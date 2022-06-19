@@ -6,9 +6,11 @@ export enum TokenKind {
   EOF,
   Exclamation,
   String,
+  Word,
   Hyphen,
   Number,
   Equals,
+  And,
 }
 
 export interface EOFToken {
@@ -21,6 +23,11 @@ export interface ExclamationToken {
 
 export interface StringToken {
   kind: TokenKind.String
+  value: string
+}
+
+export interface WordToken {
+  kind: TokenKind.Word
   value: string
 }
 
@@ -37,6 +44,10 @@ export interface EqualsToken {
   kind: TokenKind.Equals
 }
 
+export interface AndToken {
+  kind: TokenKind.And
+}
+
 export type Token =
   | EOFToken
   | ExclamationToken
@@ -44,3 +55,5 @@ export type Token =
   | NumberToken
   | HyphenToken
   | EqualsToken
+  | AndToken
+  | WordToken

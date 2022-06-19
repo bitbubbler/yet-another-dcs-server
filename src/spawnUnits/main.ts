@@ -97,13 +97,19 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
         throw new Error('position missing from addedMark')
       }
 
-      const unitToSpawn = searchUnits(command.unitName)
+      await Promise.all(
+        command.units.map(async ({ unitName, count }) => {
+          // TODO handle count to spawn multiple units in the area,
+          // they probably shouldn't spawn on top of each other
+          const unitToSpawn = searchUnits(unitName)
 
-      await spawnGroundUnit({
-        country: countryFrom(addedMark.coalition),
-        typeName: unitToSpawn.desc!.typeName,
-        position: addedMark.position,
-      })
+          await spawnGroundUnit({
+            country: countryFrom(addedMark.coalition),
+            typeName: unitToSpawn.desc!.typeName,
+            position: addedMark.position,
+          })
+        })
+      )
 
       // remove the map marker
       await removeMapMark(id)

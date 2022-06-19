@@ -17,7 +17,7 @@ export interface DestroyCommand extends Omit<CommandShape, 'args'> {
 
 export interface SpawnCommand extends Omit<CommandShape, 'args'> {
   type: CommandType.Spawn
-  unitName: string
+  units: { unitName: string; count?: number }[]
 }
 
 export interface UnknownCommand extends Omit<CommandShape, 'args'> {

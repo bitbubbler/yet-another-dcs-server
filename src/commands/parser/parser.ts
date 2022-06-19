@@ -28,7 +28,10 @@ function processCommand(lexer: Lexer): Command {
   const typeToken = lexer.nextToken()
 
   // assume next token is the command type
-  if (TokenKind.String !== typeToken.kind) {
+  if (
+    TokenKind.String !== typeToken.kind &&
+    TokenKind.Word !== typeToken.kind
+  ) {
     throw new ParserUnexpectedTokenError({
       expected: TokenKind.String,
       found: typeToken,
@@ -37,22 +40,56 @@ function processCommand(lexer: Lexer): Command {
 
   const type = matchCommand(typeToken.value)
 
-  const args = processArguments(lexer)
-
   if (CommandType.Spawn === type) {
-    if (args.length < 1) {
-      // TODO: typed error
-      throw new Error('expected 1 argument, recieved 0')
-    }
-    if (typeof args[0] !== 'string') {
-      throw new Error('expected string argument, found numer')
+    type Units = { unitName: string; count?: number }[]
+
+    const units: Units = []
+
+    // process all remaining tokens
+    const parseParts = (units: Units): void => {
+      const nextToken = lexer.nextToken()
+
+      if (TokenKind.EOF === nextToken.kind) {
+        return
+      }
+
+      // if string or word, assume it's a unitName
+      if (
+        TokenKind.String === nextToken.kind ||
+        TokenKind.Word === nextToken.kind
+      ) {
+        const unitName = nextToken.value
+
+        units.push({ unitName })
+
+        return parseParts(units)
+      }
+
+      // if number, assume name will follow
+      if (TokenKind.Number === nextToken.kind) {
+        const count = nextToken.value
+        const unitNameToken = lexer.nextToken()
+
+        if (
+          TokenKind.String === unitNameToken.kind ||
+          TokenKind.Word === unitNameToken.kind
+        ) {
+          const unitName = unitNameToken.value
+
+          units.push({ unitName, count })
+
+          return parseParts(units)
+        }
+        throw new Error('unitNameToken was not a string')
+      }
+      throw new Error('unexpected token parsing arguments')
     }
 
-    const unitName = args[0]
+    parseParts(units)
 
     return {
       type: CommandType.Spawn,
-      unitName,
+      units,
     }
   }
 
@@ -63,32 +100,6 @@ function processCommand(lexer: Lexer): Command {
   }
 
   return { type: CommandType.Unknown }
-}
-
-function processArguments(lexer: Lexer): Argument[] {
-  const args: Argument[] = []
-
-  // process all remaining tokens
-  while (true) {
-    const nextToken = lexer.nextToken()
-
-    if (TokenKind.EOF === nextToken.kind) {
-      break
-    }
-
-    if (TokenKind.String === nextToken.kind) {
-      args.push(nextToken.value)
-      continue
-    }
-    if (TokenKind.Number === nextToken.kind) {
-      args.push(nextToken.value)
-      continue
-    }
-    // TODO: use a typed error here
-    throw new Error('unexpected token parsing arguments')
-  }
-
-  return args
 }
 
 function matchCommand(input: string): CommandType {
