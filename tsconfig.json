@@ -2,10 +2,10 @@
   "compilerOptions": {
     "module": "commonjs",
     "moduleResolution": "node",
-    "strictNullChecks": true,
     "exactOptionalPropertyTypes": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "strict": true
   }
 }

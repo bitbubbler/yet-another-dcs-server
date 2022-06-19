@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import { findBestMatch } from 'string-similarity'
 import { GROUND_UNITS, EveryObject } from '../everyObject'
 

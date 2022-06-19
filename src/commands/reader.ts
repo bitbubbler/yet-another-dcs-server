@@ -42,6 +42,6 @@ export function reader(input: string): Reader {
   }
 }
 
-function isEOF(input, position): boolean {
+function isEOF(input: string, position: number): boolean {
   return position > input.length - 1
 }

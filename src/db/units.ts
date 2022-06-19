@@ -91,6 +91,17 @@ export async function insertOrUpdateUnit(unit: Unit): Promise<void> {
   }
 }
 
+export async function unitGone(unitId: number): Promise<void> {
+  const timestamp = new Date()
+
+  await knex('units')
+    .update({
+      updatedAt: timestamp,
+      goneAt: timestamp,
+    })
+    .where({ unitId })
+}
+
 /**
  * Search for units nearby a given PositionLL within a given accuracy.
  * Search uses a very simple box model algorithm

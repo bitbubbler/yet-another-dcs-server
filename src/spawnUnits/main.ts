@@ -23,7 +23,7 @@ import {
   addGroupCommandSubMenu,
   removeGroupCommandItem,
 } from '../mission'
-import { knex, nearbyUnits } from '../db'
+import { knex, nearbyUnits, unitGone } from '../db'
 import { distanceFrom, metersToDegree, positionLLFrom } from '../common'
 import { PositionLL } from '../types'
 
@@ -144,7 +144,7 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
         .sort((a, b) => a.distance - b.distance)[0].unit
 
       await destroy(closestUnit.name)
-      // TODO: remove the unit from persistence (mark the unit as gone)
+      await unitGone(closestUnit.unitId)
       await removeMapMark(addedMark.id)
     }
   }

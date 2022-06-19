@@ -24,7 +24,7 @@ export function pingpong(): () => void {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         equal(JSON.parse(result!.json!), 'pong')
       } catch (error) {
-        stop(error)
+        stop(error as Error)
       }
     })
   }, 5000) // adjust this if there continue to be issues recieving events when there's a long deadtime
