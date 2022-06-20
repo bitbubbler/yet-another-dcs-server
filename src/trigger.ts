@@ -1,6 +1,23 @@
 import { services } from './services'
 
-const { trigger } = services
+const { trigger, net } = services
+
+export async function outUnitText(playerId: number, message: string) {
+  return new Promise<void>((resolve, reject) =>
+    net.SendChatTo(
+      {
+        targetPlayerId: playerId,
+        message,
+      },
+      (error, _result) => {
+        if (error) {
+          return reject(error)
+        }
+        resolve()
+      }
+    )
+  )
+}
 
 export async function outGroupText(
   groupId: number,

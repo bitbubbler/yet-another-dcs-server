@@ -1,4 +1,9 @@
-import { Argument, Command, CommandType } from '../types'
+import {
+  Argument,
+  Command,
+  CommandType,
+  DefineSpawnGroupCommand,
+} from '../types'
 import { Reader } from '../reader'
 import { lexer as Lexer, TokenKind } from '../lexer'
 import { ParserUnexpectedTokenError, ParserUnknownTokenError } from './errors'
@@ -7,7 +12,7 @@ export type Value = string | number | (string | number)[] | Command
 
 type Lexer = ReturnType<typeof Lexer>
 
-export function parse(reader: Reader): Value {
+export function parse(reader: Reader): Command {
   const lexer = Lexer(reader)
 
   const nextToken = lexer.nextToken()
@@ -41,12 +46,12 @@ function processCommand(lexer: Lexer): Command {
   const type = matchCommand(typeToken.value)
 
   if (CommandType.Spawn === type) {
-    type Units = { unitName: string; count?: number }[]
+    type Units = { fuzzyUnitName: string; count?: number }[]
 
     const units: Units = []
 
     // process all remaining tokens
-    const parseParts = (units: Units): void => {
+    const parseParts = (): void => {
       const nextToken = lexer.nextToken()
 
       if (TokenKind.EOF === nextToken.kind) {
@@ -58,11 +63,11 @@ function processCommand(lexer: Lexer): Command {
         TokenKind.String === nextToken.kind ||
         TokenKind.Word === nextToken.kind
       ) {
-        const unitName = nextToken.value
+        const fuzzyUnitName = nextToken.value
 
-        units.push({ unitName })
+        units.push({ fuzzyUnitName })
 
-        return parseParts(units)
+        return parseParts()
       }
 
       // if number, assume name will follow
@@ -74,18 +79,18 @@ function processCommand(lexer: Lexer): Command {
           TokenKind.String === unitNameToken.kind ||
           TokenKind.Word === unitNameToken.kind
         ) {
-          const unitName = unitNameToken.value
+          const fuzzyUnitName = unitNameToken.value
 
-          units.push({ unitName, count })
+          units.push({ fuzzyUnitName, count })
 
-          return parseParts(units)
+          return parseParts()
         }
         throw new Error('unitNameToken was not a string')
       }
       throw new Error('unexpected token parsing arguments')
     }
 
-    parseParts(units)
+    parseParts()
 
     return {
       type: CommandType.Spawn,
@@ -99,15 +104,111 @@ function processCommand(lexer: Lexer): Command {
     }
   }
 
+  if (CommandType.DefineSpawnGroup === type) {
+    const units: DefineSpawnGroupCommand['units'] = []
+    let groupName: string
+
+    const groupNameToken = lexer.nextToken()
+
+    if (
+      TokenKind.Word === groupNameToken.kind ||
+      TokenKind.String === groupNameToken.kind
+    ) {
+      groupName = groupNameToken.value
+    } else {
+      throw new Error('invalid groupNameToken')
+    }
+
+    const parseUnitNames = (): void => {
+      const nextToken = lexer.nextToken()
+
+      if (
+        TokenKind.Word === nextToken.kind ||
+        TokenKind.String === nextToken.kind
+      ) {
+        units.push({ fuzzyUnitName: nextToken.value })
+
+        return parseUnitNames()
+      }
+    }
+
+    parseUnitNames()
+
+    return {
+      type: CommandType.DefineSpawnGroup,
+      groupName,
+      units,
+    }
+  }
+
+  if (CommandType.SpawnGroup === type) {
+    const nextToken = lexer.nextToken()
+
+    if (
+      TokenKind.Word === nextToken.kind ||
+      TokenKind.String === nextToken.kind
+    ) {
+      const groupName = nextToken.value
+
+      let radius: number | undefined = undefined
+
+      const parseParts = () => {
+        const nextToken = lexer.nextToken()
+
+        if (
+          TokenKind.Word === nextToken.kind ||
+          TokenKind.String === nextToken.kind
+        ) {
+          const lowerValue = nextToken.value.toLowerCase()
+          // except a radius by name
+          if (lowerValue === 'radius') {
+            const radiusValueToken = lexer.nextToken()
+
+            if (TokenKind.Number !== radiusValueToken.kind) {
+              throw new Error('expected number token following radius keyword')
+            }
+
+            radius = radiusValueToken.value
+          }
+        }
+      }
+
+      parseParts()
+
+      if (radius) {
+        return {
+          type: CommandType.SpawnGroup,
+          groupName,
+          radius,
+        }
+      }
+
+      return {
+        type: CommandType.SpawnGroup,
+        groupName,
+      }
+    }
+
+    throw new Error('unexpected token parsing spawnGroup')
+  }
+
   return { type: CommandType.Unknown }
 }
 
 function matchCommand(input: string): CommandType {
-  if ('spawn' === input) {
+  const lowerInput = input.toLowerCase()
+
+  if ('spawn' === lowerInput) {
     return CommandType.Spawn
   }
-  if ('destroy' === input) {
+  if ('destroy' === lowerInput) {
     return CommandType.Destroy
+  }
+  if ('defgroup' === lowerInput || 'definegroup' === lowerInput) {
+    return CommandType.DefineSpawnGroup
+  }
+  if ('spawngroup' === lowerInput) {
+    return CommandType.SpawnGroup
   }
 
   return CommandType.Unknown

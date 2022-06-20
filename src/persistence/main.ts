@@ -91,7 +91,7 @@ export async function trySpawnUnits() {
   // spawn the missing units
   await Promise.all(
     unitsToSpawn.map(async unit => {
-      const { unitId, name, country, typeName, lat, lon, alt, heading } = unit
+      const { unitId, name, country, typeName, lat, lon, heading } = unit
 
       await spawnGroundUnit({
         unitId,
@@ -102,7 +102,6 @@ export async function trySpawnUnits() {
         position: {
           lat,
           lon,
-          alt,
         },
       })
     })

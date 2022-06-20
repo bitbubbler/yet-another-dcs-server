@@ -1,4 +1,5 @@
 import { Coalition } from '../generated/dcs/common/v0/Coalition'
+import { positionLLFrom } from './common'
 import { MarkPanelsMissingError } from './errors'
 import { services } from './services'
 import { PositionLL } from './types'
@@ -12,6 +13,23 @@ export interface MarkPanel {
 }
 
 const { custom } = services
+
+export async function getMarkById(id: number): Promise<MarkPanel | undefined> {
+  let markPanels: MarkPanel[]
+  try {
+    markPanels = await getMarkPanels()
+  } catch (error) {
+    if (error instanceof MarkPanelsMissingError) {
+      // no-op
+      return
+    }
+    throw error
+  }
+
+  const addedMark = markPanels.find(mark => mark.id === id)
+
+  return addedMark
+}
 
 /**
  * this might fail if the user in is in a jtac/tac command/game masters slot. not sure why
@@ -56,7 +74,7 @@ export async function getMarkPanels(): Promise<MarkPanel[]> {
             id: maybeMark.idx,
             groupId: maybeMark.groupID,
             coalition,
-            position: maybeMark.pos,
+            position: positionLLFrom(maybeMark.pos),
             text: maybeMark.text,
           } as MarkPanel
 
