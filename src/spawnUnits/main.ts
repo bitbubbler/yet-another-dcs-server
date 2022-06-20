@@ -14,6 +14,7 @@ import { outGroupText, outUnitText, removeMapMark } from '../trigger'
 import {
   ARTILLERY,
   EveryObject,
+  everyObjectFrom,
   IFV,
   MLRS,
   TANKS,
@@ -24,17 +25,32 @@ import { MarkPanelsMissingError } from '../errors'
 import { groupFromGroupName } from '../group'
 import { countryFrom } from '../country'
 import { searchUnits } from './searchUnits'
-import { destroy, spawnGroundUnit } from '../unit'
+import {
+  destroy,
+  spawnGroundUnit,
+  spawnGroundUnitsInCircle,
+  spawnGroundUnitsOnCircle,
+} from '../unit'
 import { CommandType as EventCommandType } from '../commands/types'
 import {
   addGroupCommand,
   addGroupCommandSubMenu,
   removeGroupCommandItem,
 } from '../mission'
-import { knex, nearbyUnits, unitGone } from '../db'
-import { distanceFrom, metersToDegree, positionLLFrom } from '../common'
+import { knex, nearbyUnits, Unit, unitGone } from '../db'
+import {
+  distanceFrom,
+  metersToDegree,
+  positionLLFrom,
+  randomPositionOnCircle,
+} from '../common'
 import { PositionLL } from '../types'
-import { insertOrUpdateSpawnGroup } from '../db/spawnGroups'
+import {
+  findSpawnGroupBy,
+  insertOrUpdateSpawnGroup,
+  typeNamesFrom,
+} from '../db/spawnGroups'
+import { Country } from '../../generated/dcs/common/v0/Country'
 
 type GroupID = number
 
@@ -112,35 +128,51 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
 
       // TODO: use the map marker to post errors back to the user
 
-      const unitsToSpawn = (
-        await Promise.all(
-          command.units.map(async ({ fuzzyUnitName, count }) => {
-            // TODO handle count to spawn multiple units in the area,
-            // they probably shouldn't spawn on top of each other
-            const unitToSpawn = searchUnits(fuzzyUnitName)
+      const unitsToSpawn = command.units
+        .map(({ fuzzyUnitName, count }) => {
+          // TODO handle count to spawn multiple units in the area,
+          // they probably shouldn't spawn on top of each other
+          const unitToSpawn = searchUnits(fuzzyUnitName)
 
-            if (!unitToSpawn.desc) {
-              return undefined
-            }
+          if (!unitToSpawn.desc) {
+            return undefined
+          }
 
-            return unitToSpawn
-          })
-        )
-      ).filter((a): a is EveryObject => typeof a !== 'undefined')
+          const unit = {
+            typeName: unitToSpawn.desc.typeName,
+          }
 
-      // spawn the units
-      await Promise.all(
-        unitsToSpawn.map(async unitToSpawn => {
-          await spawnGroundUnit({
-            country: countryFrom(addedMark.coalition),
-            typeName: unitToSpawn.desc!.typeName,
-            position: addedMark.position,
-          })
+          if (count) {
+            return Array.from({ length: count }).map(() => unit)
+          }
+
+          return unit
         })
-      )
+        .flat(2)
+        .filter((a): a is { typeName: string } => Boolean(a))
 
-      // remove the map marker
-      await removeMapMark(id)
+      if (unitsToSpawn.length > 0) {
+        const country = countryFrom(addedMark.coalition)
+        if (unitsToSpawn.length > 1) {
+          // multiple units
+          await spawnGroundUnitsInCircle(
+            country,
+            addedMark.position,
+            100, // TODO: handle radius here
+            unitsToSpawn
+          )
+        } else {
+          // single unit
+          await spawnGroundUnit({
+            country,
+            position: addedMark.position,
+            typeName: unitsToSpawn[0].typeName,
+          })
+        }
+        // remove the map marker
+        await removeMapMark(id)
+      }
+
       return
     }
     if (EventCommandType.Destroy === command.type) {
@@ -169,6 +201,44 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
       await destroy(closestUnit.name)
       await unitGone(closestUnit.unitId)
       await removeMapMark(addedMark.id)
+    }
+    if (EventCommandType.SpawnGroup === command.type) {
+      const addedMark = await getMarkById(id)
+
+      if (!addedMark) {
+        throw new Error('expected addedMark')
+      }
+
+      const { groupName } = command
+
+      const spawnGroup = await findSpawnGroupBy(groupName)
+
+      if (!spawnGroup) {
+        throw new Error('could not find spawn group with given name')
+      }
+
+      let radius = 50 // default to 50 meters
+
+      if (command.radius) {
+        radius = command.radius
+      }
+
+      const unitsToSpawn = typeNamesFrom(spawnGroup.typeNamesJson).map(
+        typeName => {
+          return { typeName }
+        }
+      )
+
+      await spawnGroundUnitsOnCircle(
+        countryFrom(addedMark.coalition),
+        addedMark.position,
+        radius,
+        unitsToSpawn
+      )
+
+      // remove the map marker
+      await removeMapMark(id)
+      return
     }
   }
 
@@ -321,7 +391,7 @@ async function handleGroupCommand(event: GroupCommandEvent) {
     await spawnGroundUnit({
       country: countryFrom(group.coalition as Coalition),
       typeName,
-      position,
+      position: positionLLFrom(position),
     })
 
     // remove the map marker

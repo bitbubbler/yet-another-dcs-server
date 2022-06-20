@@ -1,16 +1,13 @@
 import { knex, SpawnGroup, Unit } from './db'
 
-export async function findSpawnGroupBy(name: string): Promise<SpawnGroup> {
-  const spawnGroup = await knex('spawnGroups')
-    .select('*')
-    .where({ name })
-    .first()
+export async function findSpawnGroupBy(
+  name: string
+): Promise<SpawnGroup | undefined> {
+  return await knex('spawnGroups').select('*').where({ name }).first()
+}
 
-  if (!spawnGroup) {
-    throw new Error(`spawn group with name ${name} was not found`)
-  }
-
-  return spawnGroup
+export function typeNamesFrom(typeNamesJson: string): Unit['typeName'][] {
+  return JSON.parse(typeNamesJson)
 }
 
 export async function insertOrUpdateSpawnGroup(

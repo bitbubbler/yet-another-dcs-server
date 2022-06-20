@@ -150,6 +150,39 @@ function processCommand(lexer: Lexer): Command {
     ) {
       const groupName = nextToken.value
 
+      let radius: number | undefined = undefined
+
+      const parseParts = () => {
+        const nextToken = lexer.nextToken()
+
+        if (
+          TokenKind.Word === nextToken.kind ||
+          TokenKind.String === nextToken.kind
+        ) {
+          const lowerValue = nextToken.value.toLowerCase()
+          // except a radius by name
+          if (lowerValue === 'radius') {
+            const radiusValueToken = lexer.nextToken()
+
+            if (TokenKind.Number !== radiusValueToken.kind) {
+              throw new Error('expected number token following radius keyword')
+            }
+
+            radius = radiusValueToken.value
+          }
+        }
+      }
+
+      parseParts()
+
+      if (radius) {
+        return {
+          type: CommandType.SpawnGroup,
+          groupName,
+          radius,
+        }
+      }
+
       return {
         type: CommandType.SpawnGroup,
         groupName,

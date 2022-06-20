@@ -10,10 +10,18 @@ import { GroupCategory } from '../generated/dcs/common/v0/GroupCategory'
 import { Position } from '../generated/dcs/common/v0/Position'
 import { StreamUnitsResponse__Output } from '../generated/dcs/mission/v0/StreamUnitsResponse'
 import { Coalition } from '../generated/dcs/common/v0/Coalition'
-import { deg, position3From, positionLLFrom, rad, vec3From } from './common'
-import { Position3, Velocity } from './types'
+import {
+  deg,
+  position3From,
+  positionLLFrom,
+  rad,
+  randomPositionInCircle,
+  randomPositionOnCircle,
+  vec3From,
+} from './common'
+import { Position3, PositionLL, Velocity } from './types'
 import { countryFrom } from './country'
-import { knex } from './db/db'
+import { knex, Unit as DbUnit } from './db'
 import { equal } from 'assert'
 
 const { coalition } = services
@@ -33,10 +41,58 @@ export interface Unit {
 export interface SpawnGroundUnitOptions {
   country: Country
   typeName: string
-  position: Position
+  position: Pick<PositionLL, 'lat' | 'lon'>
   unitId?: number
   name?: string
   heading?: number
+}
+
+export async function spawnGroundUnitsOnCircle(
+  country: Country,
+  focus: PositionLL,
+  radius: number,
+  units: Pick<DbUnit, 'typeName'>[]
+) {
+  const circleUnits = units.map(unit => ({
+    ...unit,
+    position: randomPositionOnCircle(focus, radius),
+  }))
+
+  await Promise.all(
+    circleUnits.map(async unitToSpawn => {
+      const { typeName, position } = unitToSpawn
+
+      await spawnGroundUnit({
+        country,
+        typeName,
+        position,
+      })
+    })
+  )
+}
+
+export async function spawnGroundUnitsInCircle(
+  country: Country,
+  focus: PositionLL,
+  radius: number,
+  units: Pick<DbUnit, 'typeName'>[]
+) {
+  const circleUnits = units.map(unit => ({
+    ...unit,
+    position: randomPositionInCircle(focus, radius),
+  }))
+
+  await Promise.all(
+    circleUnits.map(async unitToSpawn => {
+      const { typeName, position } = unitToSpawn
+
+      await spawnGroundUnit({
+        country,
+        typeName,
+        position,
+      })
+    })
+  )
 }
 
 export async function spawnGroundUnit({

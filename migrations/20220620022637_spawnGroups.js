@@ -19,6 +19,5 @@ exports.up = async function (knex) {
  */
 exports.down = async function (knex) {
   await knex.schema.dropTable('spawnGroups')
-  await knex.schema.dropTable('spawnGroupUnits')
 }
 

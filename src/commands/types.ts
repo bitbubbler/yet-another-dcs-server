@@ -33,6 +33,7 @@ export interface SpawnCommand extends Omit<CommandShape, 'args'> {
 export interface SpawnGroupCommand extends Omit<CommandShape, 'args'> {
   type: CommandType.SpawnGroup
   groupName: string
+  radius?: number
 }
 
 export interface UnknownCommand extends Omit<CommandShape, 'args'> {

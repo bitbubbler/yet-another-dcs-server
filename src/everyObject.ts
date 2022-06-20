@@ -91,3 +91,9 @@ Object.keys(everyObject).forEach(key => {
 
   ALL_UNITS.set(key, data)
 })
+
+export function everyObjectFrom(typeName: string): EveryObject | undefined {
+  return Array.from(ALL_UNITS.values()).find(
+    unit => unit.desc?.typeName === typeName
+  )
+}
