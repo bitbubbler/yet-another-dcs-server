@@ -6,6 +6,7 @@ Type the command into the marker and then click off of the marker to execute the
 ### !spawn
 
 Spawn one or more units of one or more types on the map marker
+- `unitName` fuzzy match string for a unit name, can be partial names
 
 **syntax**
 
