@@ -7,11 +7,19 @@ import {
   GroupCommandEvent,
   MarkAddEvent,
   MarkChangeEvent,
+  PlayerSendChatEvent,
 } from '../events'
-import { outGroupText, removeMapMark } from '../trigger'
+import { outGroupText, outUnitText, removeMapMark } from '../trigger'
 
-import { ARTILLERY, IFV, MLRS, TANKS, TRUCKS } from '../everyObject'
-import { getMarkPanels, MarkPanel } from '../custom'
+import {
+  ARTILLERY,
+  EveryObject,
+  IFV,
+  MLRS,
+  TANKS,
+  TRUCKS,
+} from '../everyObject'
+import { getMarkById, getMarkPanels, MarkPanel } from '../custom'
 import { MarkPanelsMissingError } from '../errors'
 import { groupFromGroupName } from '../group'
 import { countryFrom } from '../country'
@@ -26,6 +34,7 @@ import {
 import { knex, nearbyUnits, unitGone } from '../db'
 import { distanceFrom, metersToDegree, positionLLFrom } from '../common'
 import { PositionLL } from '../types'
+import { insertOrUpdateSpawnGroup } from '../db/spawnGroups'
 
 type GroupID = number
 
@@ -59,10 +68,33 @@ export async function main(): Promise<() => Promise<void>> {
     if (EventType.MarkChange === event.type) {
       return handleMarkChangeEvent(event as MarkChangeEvent)
     }
+    if (EventType.PlayerSendChat === event.type) {
+      return handlePlayerSendChatEvent(event as PlayerSendChatEvent)
+    }
   })
 
   return async () => {
     subscription.unsubscribe()
+  }
+}
+
+async function handlePlayerSendChatEvent(event: PlayerSendChatEvent) {
+  const { playerId, command } = event
+
+  if (command) {
+    if (EventCommandType.DefineSpawnGroup === command.type) {
+      const { groupName, units } = command
+      const typeNames = units
+        .map(({ fuzzyUnitName }) => searchUnits(fuzzyUnitName).desc?.typeName)
+        .filter((a): a is string => typeof a === 'string')
+
+      await insertOrUpdateSpawnGroup(groupName, typeNames)
+
+      await outUnitText(
+        playerId,
+        `Spawn group ${groupName} updated with units: ${typeNames.join(',')}`
+      )
+    }
   }
 }
 
@@ -72,37 +104,33 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
   // attempt to handle command(s) from markers
   if (command) {
     if (EventCommandType.Spawn === command.type) {
-      let markPanels: MarkPanel[]
-      try {
-        markPanels = await getMarkPanels()
-      } catch (error) {
-        if (error instanceof MarkPanelsMissingError) {
-          // no-op
-          return
-        }
-        throw error
-      }
-
-      const addedMark = markPanels.find(mark => mark.id === id)
+      const addedMark = await getMarkById(id)
 
       if (!addedMark) {
-        throw new Error('mark missing from markPanels')
+        throw new Error('expected addedMark')
       }
 
-      if (!addedMark.coalition) {
-        throw new Error('coalition missing from addedMark')
-      }
+      // TODO: use the map marker to post errors back to the user
 
-      if (!addedMark.position) {
-        throw new Error('position missing from addedMark')
-      }
+      const unitsToSpawn = (
+        await Promise.all(
+          command.units.map(async ({ fuzzyUnitName, count }) => {
+            // TODO handle count to spawn multiple units in the area,
+            // they probably shouldn't spawn on top of each other
+            const unitToSpawn = searchUnits(fuzzyUnitName)
 
+            if (!unitToSpawn.desc) {
+              return undefined
+            }
+
+            return unitToSpawn
+          })
+        )
+      ).filter((a): a is EveryObject => typeof a !== 'undefined')
+
+      // spawn the units
       await Promise.all(
-        command.units.map(async ({ unitName, count }) => {
-          // TODO handle count to spawn multiple units in the area,
-          // they probably shouldn't spawn on top of each other
-          const unitToSpawn = searchUnits(unitName)
-
+        unitsToSpawn.map(async unitToSpawn => {
           await spawnGroundUnit({
             country: countryFrom(addedMark.coalition),
             typeName: unitToSpawn.desc!.typeName,
@@ -116,18 +144,7 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
       return
     }
     if (EventCommandType.Destroy === command.type) {
-      let markPanels: MarkPanel[]
-      try {
-        markPanels = await getMarkPanels()
-      } catch (error) {
-        if (error instanceof MarkPanelsMissingError) {
-          // no-op
-          return
-        }
-        throw error
-      }
-
-      const addedMark = markPanels.find(mark => mark.id === id)
+      const addedMark = await getMarkById(id)
 
       if (!addedMark) {
         throw new Error('expected addedMark')

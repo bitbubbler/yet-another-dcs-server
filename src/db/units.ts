@@ -38,6 +38,7 @@ export async function insertOrUpdateUnit(unit: Unit): Promise<void> {
     })
     .where('units.name', name)
     .select('*')
+    .limit(1)
 
   // unit not exists, insert
   if (existingUnitResult.length < 1) {

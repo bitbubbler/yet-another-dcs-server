@@ -56,11 +56,31 @@ export type PositionInsert = Pick<
 export type PositionUpdate = Pick<Position, 'updatedAt'> &
   Partial<Omit<Position, 'positionId' | 'createdAt'>>
 
+export interface SpawnGroup {
+  name: string
+  typeNamesJson: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type SpawnGroupInsert = Pick<
+  SpawnGroup,
+  'name' | 'typeNamesJson' | 'createdAt' | 'updatedAt'
+>
+
+export type SpawnGroupUpdate = Pick<SpawnGroup, 'updatedAt'> &
+  Partial<Omit<SpawnGroup, 'createdAt'>>
+
 // Put table types here
 // see https://knexjs.org/guide/#typescript
 declare module 'knex/types/tables' {
   interface Tables {
     units: Knex.CompositeTableType<Unit, UnitInsert, UnitUpdate>
     positions: Knex.CompositeTableType<Position, PositionInsert, PositionUpdate>
+    spawnGroups: Knex.CompositeTableType<
+      SpawnGroup,
+      SpawnGroupInsert,
+      SpawnGroupUpdate
+    >
   }
 }

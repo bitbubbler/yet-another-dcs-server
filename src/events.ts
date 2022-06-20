@@ -20,6 +20,7 @@ export enum EventType {
   GroupCommand,
   MissionCommand,
   Birth,
+  PlayerSendChat,
 }
 
 export interface EventShape {
@@ -70,8 +71,15 @@ export interface MissionCommandEvent extends EventShape {
 }
 
 export interface BirthEvent extends EventShape {
+  type: EventType.Birth
   initiator: Initiator
   place: Airbase__Output | undefined
+}
+export interface PlayerSendChatEvent extends EventShape {
+  type: EventType.PlayerSendChat
+  playerId: number
+  message: string
+  command?: Command
 }
 
 export type Event =
@@ -80,6 +88,7 @@ export type Event =
   | GroupCommandEvent
   | MissionCommandEvent
   | BirthEvent
+  | PlayerSendChatEvent
 
 export const Events = new Subject<Event>()
 
@@ -276,6 +285,43 @@ async function handleEvent(data: StreamEventsResponse__Output): Promise<void> {
         unit: initiator.unit,
       },
       place,
+    }
+
+    return Events.next(event)
+  }
+  if ('playerSendChat' in data) {
+    const { playerSendChat } = data
+
+    const { playerId, message } = playerSendChat
+
+    if (!playerId) {
+      throw new Error('missing playerId from playerSendChat')
+    }
+
+    if (!message) {
+      throw new Error('missing message from playerSendChat')
+    }
+
+    try {
+      const command = parse(reader(message))
+
+      const event: PlayerSendChatEvent = {
+        type: EventType.PlayerSendChat,
+        playerId,
+        message,
+        command,
+      }
+
+      return Events.next(event)
+    } catch (error) {
+      // parsing failed, assume no command
+      // no-op
+    }
+
+    const event: PlayerSendChatEvent = {
+      type: EventType.PlayerSendChat,
+      playerId,
+      message,
     }
 
     return Events.next(event)

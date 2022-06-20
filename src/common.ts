@@ -1,9 +1,5 @@
 import { equal } from 'assert'
 import { Position__Output } from '../generated/dcs/common/v0/Position'
-import { Struct } from '../generated/google/protobuf/Struct'
-import { Value } from '../generated/google/protobuf/Value'
-import { Position } from './db'
-import { DetailsValue, DetailsValueShape } from './events'
 import { Position3, PositionLL, Vec3 } from './types'
 
 export function deg(radians: number): number {
@@ -18,6 +14,20 @@ export function metersToDegree(meter: number): number {
   // magic number
   // https://gis.stackexchange.com/questions/2951/algorithm-for-offsetting-a-latitude-longitude-by-some-amount-of-meters
   return meter / 111111
+}
+
+/**
+ * @returns a random floating point angle in radians
+ */
+export function randomAngleRad(): number {
+  return 2 * Math.PI * Math.random()
+}
+
+/**
+ * @returns a random floating point angle in degrees
+ */
+export function randomAngleDeg(): number {
+  return 360 * Math.random()
 }
 
 /**
