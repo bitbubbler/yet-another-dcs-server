@@ -55,7 +55,7 @@ Destroy unit closest the map marker:
 
 ### !spawngroup
 
-Spawn a previously saved group of units.
+Spawn a previous saved group. The group must exist (create with !defgroup)
 Radius is optional. Default radius is 100 meters.
 Units will spawn randomly within a circle of given radius
 
