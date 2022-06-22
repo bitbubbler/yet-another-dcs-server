@@ -65,7 +65,7 @@ async function main() {
         await start()
       } catch (error) {
         console.log('restarting error, trying again', error)
-        start()
+        await start()
       }
     }
 
