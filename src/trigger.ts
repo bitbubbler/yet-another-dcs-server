@@ -1,4 +1,5 @@
 import { services } from './services'
+import { PositionLL } from "./types"
 
 const { trigger, net } = services
 
@@ -76,4 +77,75 @@ export async function removeMapMark(id: number): Promise<void> {
       }
     )
   )
+}
+
+export async function smoke(
+  position: PositionLL,
+  color : number
+) {
+  return new Promise<void>((resolve, reject) => {
+    trigger.smoke(
+      {
+        position,
+        color
+      },
+      (error, result) => {
+        if (error) {
+          console.log('smoke failed', error)
+          return reject(error)
+        }
+        console.log('deploying smoke', result)
+        resolve()
+      }
+    )
+  })
+}
+
+export async function signalFlare(
+  position: PositionLL,
+  color : number,
+  azimuth : number
+) {
+  return new Promise<void>((resolve, reject) => {
+    trigger.signalFlare(
+      {
+        position,
+        color,
+        azimuth
+      },
+      (error, result) => {
+        if (error) {
+          console.log('flare failed', error)
+          return reject(error)
+        }
+        console.log('deploying flare', result)
+        resolve()
+      }
+    )
+  })
+}
+
+export async function illumination(
+  position: PositionLL
+) {
+
+  position.alt = 500 //drop illum bomb 500m AGL
+  const power = 1
+
+  return new Promise<void>((resolve, reject) => {
+    trigger.illuminationBomb(
+      {
+        position,
+        power
+      },
+      (error, result) => {
+        if (error) {
+          console.log('illumination failed', error)
+          return reject(error)
+        }
+        console.log('deploying illumination', result)
+        resolve()
+      }
+    )
+  })
 }

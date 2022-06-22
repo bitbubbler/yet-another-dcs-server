@@ -5,6 +5,7 @@ import { startUnitEvents, UnitEvents } from './unitEvents'
 import { main as spawnUnitsMain } from './spawnUnits/main'
 import { main as persistenceMain } from './persistence/main'
 import { main as restartMissionMain, Restarts } from './restartMission/main'
+import { main as visualMarkersMain} from './visualMarkers/main'
 import { prepare as prepareDatabase } from './db/db'
 import { pingpong } from './pingpong'
 
@@ -39,12 +40,14 @@ async function main() {
     const teardownSpawnUnits = await spawnUnitsMain()
     const teardownPersistence = await persistenceMain()
     const teardownRestartMission = await restartMissionMain()
+    const teardownVisualMarkers = await visualMarkersMain()
 
     return async () => {
       await teardownPingpong()
       await teardownSpawnUnits()
       await teardownPersistence()
       await teardownRestartMission()
+      await teardownVisualMarkers()
     }
   }
 
