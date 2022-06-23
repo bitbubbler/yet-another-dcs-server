@@ -30,7 +30,7 @@
     "test": "jest",
     "full-build": "npm run codegen && npm run build",
     "build": "rm -rf build/ && rollup --config && cp -r src/proto/ build/ && cp -r migrations/ build/ && cp -r package*.json build/",
-    "codegen": "rm -rf generated/ && proto-loader-gen-types -I src/proto/ -O generated/ --oneofs --grpcLib=@grpc/grpc-js src/proto/dcs/dcs.proto"
+    "codegen": "node generate-types.js"
   },
   "dependencies": {
     "better-sqlite3": "^7.5.3",
