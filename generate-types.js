@@ -12,8 +12,11 @@ async function main() {
 
     const pwd = resolve('.')
     const npmBin = resolve('node_modules', '.bin')
+    const bin = resolve(npmBin, 'proto-loader-gen-types')
+    const protoDir = resolve('src', 'proto')
+    const dcsProtoFile = resolve(protoDir, 'dcs', 'dcs.proto')
 
-    const generateTypes = `${npmBin}/proto-loader-gen-types -I ${pwd}/src/proto/ -O generated/ --oneofs --grpcLib=@grpc/grpc-js ${pwd}/src/proto/dcs/dcs.proto`
+    const generateTypes = `${bin} -I ${protoDir} -O ${generatedDir} --oneofs --grpcLib=@grpc/grpc-js ${dcsProtoFile}`
 
     exec(generateTypes)
 }
