@@ -10,34 +10,34 @@ describe('commands/parser', () => {
     it('should parse a spawn command with a basic unit name', () => {
       expect(parse(reader('!spawn T55'))).toEqual({
         type: CommandType.Spawn,
-        units: [{ unitName: 'T55' }],
+        units: [{ fuzzyUnitName: 'T55' }],
       })
     })
     describe('unit count', () => {
-      it('should parse unit count before unitName', () => {
+      it('should parse unit count before fuzzyUnitName', () => {
         expect(parse(reader('!spawn 3 T55'))).toEqual({
           type: CommandType.Spawn,
-          units: [{ unitName: 'T55', count: 3 }],
+          units: [{ fuzzyUnitName: 'T55', count: 3 }],
         })
       })
       it('should parse two units with a number between', () => {
         expect(parse(reader('!spawn T55 3 abrams'))).toEqual({
           type: CommandType.Spawn,
-          units: [{ unitName: 'T55' }, { unitName: 'abrams', count: 3 }],
+          units: [{ fuzzyUnitName: 'T55' }, { fuzzyUnitName: 'abrams', count: 3 }],
         })
       })
       it('should parse two units, first with a number ', () => {
         expect(parse(reader('!spawn 6 T55 abrams'))).toEqual({
           type: CommandType.Spawn,
-          units: [{ unitName: 'T55', count: 6 }, { unitName: 'abrams' }],
+          units: [{ fuzzyUnitName: 'T55', count: 6 }, { fuzzyUnitName: 'abrams' }],
         })
       })
       it('should parse two units, both with a number before', () => {
         expect(parse(reader('!spawn 2 T55 4 abrams'))).toEqual({
           type: CommandType.Spawn,
           units: [
-            { unitName: 'T55', count: 2 },
-            { unitName: 'abrams', count: 4 },
+            { fuzzyUnitName: 'T55', count: 2 },
+            { fuzzyUnitName: 'abrams', count: 4 },
           ],
         })
       })
