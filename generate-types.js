@@ -10,7 +10,6 @@ async function main() {
     // delete existing generated files
     await rm(generatedDir, { recursive: true, force: true })
 
-    const pwd = resolve('.')
     const npmBin = resolve('node_modules', '.bin')
     const bin = resolve(npmBin, 'proto-loader-gen-types')
     const protoDir = resolve('src', 'proto')
