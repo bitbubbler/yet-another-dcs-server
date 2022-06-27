@@ -1,5 +1,7 @@
 import { services } from './services'
 import { PositionLL } from "./types"
+import { _dcs_trigger_v0_SmokeRequest_SmokeColor as SmokeColor } from '../generated/dcs/trigger/v0/SmokeRequest'
+import { _dcs_trigger_v0_SignalFlareRequest_FlareColor as FlareColor } from '../generated/dcs/trigger/v0/SignalFlareRequest'
 
 const { trigger, net } = services
 
@@ -81,7 +83,7 @@ export async function removeMapMark(id: number): Promise<void> {
 
 export async function smoke(
   position: PositionLL,
-  color : number
+  color : SmokeColor
 ) {
   return new Promise<void>((resolve, reject) => {
     trigger.smoke(
@@ -103,7 +105,7 @@ export async function smoke(
 
 export async function signalFlare(
   position: PositionLL,
-  color : number,
+  color : FlareColor,
   azimuth : number
 ) {
   return new Promise<void>((resolve, reject) => {

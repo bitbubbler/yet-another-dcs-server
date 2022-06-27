@@ -8,24 +8,20 @@ import { illumination, removeMapMark, signalFlare, smoke } from '../trigger'
 import { getMarkById } from '../custom'
 import { CommandType as EventCommandType } from '../commands/types'
 import { randomAngleDeg } from '../common'
+import { _dcs_trigger_v0_SmokeRequest_SmokeColor as SmokeColor } from '../../generated/dcs/trigger/v0/SmokeRequest'
+import { _dcs_trigger_v0_SignalFlareRequest_FlareColor as FlareColor } from '../../generated/dcs/trigger/v0/SignalFlareRequest'
 
-// const colorArray = Object.keys(SmokeColor).filter((v) => isNaN(Number(v))) can be used alternatively, but uses DCS smoke color names
-const smokeColor:string[] = [
-  'unspecified',
+// defines available colors
+const colors: string[] = [
   'green',
   'red',
   'white',
   'orange',
-  'blue'
-] 
-
-const flareColor:string[] = [
-  'unspecified',
-  'green',
-  'red',
-  'white',
+  'blue',
   'yellow'
 ] 
+
+type Color = typeof colors[number]
 
 export async function main(): Promise<() => Promise<void>> {
     const subscription = Events.subscribe(async event => {
@@ -51,10 +47,16 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
         throw new Error('expected addedMark')
       }
 
-      let color = 1 //default green smoke
+      let color = SmokeColor.SMOKE_COLOR_GREEN //default green smoke
       
-      if (command.color){
-        color = match(command.color, smokeColor)
+      if (command.color) {
+        const colorMatch = match(command.color, colors)
+        if (isColor(colorMatch)) {
+          color = smokeColorFrom(colorMatch)
+        }
+        else {
+          console.log("invalid smoke color, using green")
+        }
       }
 
       await smoke(
@@ -72,11 +74,17 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
         throw new Error('expected addedMark')
       }
 
-      let color = 1 //default green flare
+      let color = FlareColor.FLARE_COLOR_GREEN //default green flare
       const azimuth = randomAngleDeg()
       
       if (command.color){
-        color = match(command.color, flareColor)
+        const colorMatch = match(command.color, colors)
+        if (isColor(colorMatch)) {
+          color = flareColorFrom(colorMatch)
+        }
+        else {
+          console.log("invalid flare color, using green")
+        }
       }
 
       await signalFlare(
@@ -105,13 +113,54 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
   }
 }
 
-//try to match color string with available colors
-function match(input: string, colors: string[]){
+// try to match color string with available colors
+function match(input: string, colors: string[]) {
   const result = fuzzysort.go(input, colors)
 
   if (!result[0]) {
     throw new Error('missing result from fuzzysort')
   }
 
-  return colors.indexOf(result[0].target)
+  return result[0].target
+}
+
+// check if string is available color
+function isColor(color: string): color is Color {
+  return colors.includes(color as Color)
+}
+
+// use color enums from DCS
+function smokeColorFrom(color: Color): SmokeColor{
+  if (color == 'green') {
+    return SmokeColor.SMOKE_COLOR_GREEN
+  }
+  if (color == 'red') {
+    return SmokeColor.SMOKE_COLOR_RED
+  }
+  if (color == 'white') {
+    return SmokeColor.SMOKE_COLOR_WHITE
+  }
+  if (color == 'orange') {
+    return SmokeColor.SMOKE_COLOR_ORANGE
+  }
+  if (color == 'blue') {
+    return SmokeColor.SMOKE_COLOR_BLUE
+  }
+  return SmokeColor.SMOKE_COLOR_GREEN
+}
+
+function flareColorFrom(color: Color): FlareColor{
+  if (color == 'green') {
+    return FlareColor.FLARE_COLOR_GREEN
+  }
+  if (color == 'red') {
+    return FlareColor.FLARE_COLOR_RED
+  }
+  if (color == 'white') {
+    return FlareColor.FLARE_COLOR_WHITE
+  }
+  if (color == 'yellow') {
+    return FlareColor.FLARE_COLOR_YELLOW
+  }
+  return FlareColor.FLARE_COLOR_GREEN
 }
