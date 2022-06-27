@@ -8,6 +8,9 @@ export enum CommandType {
   Spawn,
   DefineSpawnGroup,
   SpawnGroup,
+  Smoke,
+  Flare,
+  Illumination,
 }
 
 export interface CommandShape {
@@ -36,6 +39,20 @@ export interface SpawnGroupCommand extends Omit<CommandShape, 'args'> {
   radius?: number
 }
 
+export interface SmokeCommand extends Omit<CommandShape, 'args'> {
+  type: CommandType.Smoke
+  color?: string
+}
+
+export interface FlareCommand extends Omit<CommandShape, 'args'> {
+  type: CommandType.Flare
+  color?: string
+}
+
+export interface IlluminationCommand extends Omit<CommandShape, 'args'> {
+  type: CommandType.Illumination
+}
+
 export interface UnknownCommand extends Omit<CommandShape, 'args'> {
   type: CommandType.Unknown
 }
@@ -46,3 +63,6 @@ export type Command =
   | DestroyCommand
   | SpawnCommand
   | SpawnGroupCommand
+  | SmokeCommand
+  | FlareCommand
+  | IlluminationCommand

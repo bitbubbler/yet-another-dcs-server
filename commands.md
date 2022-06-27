@@ -79,6 +79,101 @@ Spawn a previous named `tanks` group in a 1000 meter radius
 !spawngroup tanks radius 1000
 ```
 
+### !smoke
+
+Create a smoke marker with the specified color on the map marker. The marker will last 5 minutes.
+If no color is given, a green smoke marker will be created.
+
+- `color` fuzzy match string for a color name, can be a partial color name
+  
+**syntax**
+
+```
+!smoke <color:optional>
+```
+
+available colors:
+```
+green
+red
+orange
+white
+blue
+```
+
+**examples**
+
+Create red smoke:
+
+```
+!smoke red
+```
+
+Create white smoke with partial color name:
+
+```
+!smoke wh
+```
+
+### !flare
+
+Fire a flare with the specified color on the map marker. One flare will be fired into the air.
+If no color is given, a green flare will be fired.
+
+- `color` fuzzy match string for a color name, can be a partial color name
+  
+**syntax**
+
+```
+!flare <color:optional>
+```
+
+available colors:
+```
+green
+red
+white
+yellow
+```
+
+**examples**
+
+Fire red flare:
+
+```
+!flare red
+```
+
+Fire white flare with partial color name:
+
+```
+!flare wh
+```
+
+### !illumination
+
+Drops an illumination bomb from 500 meters AGL on the map marker. Illumination bombs drift with wind in the mission.
+
+**syntax**
+
+```
+!illumination
+```
+
+a short version of the command is also available:
+
+```
+!illum
+```
+
+**examples**
+
+drop illumination bomb on map marker:
+
+```
+!illumination
+```
+
 ## Chat commands
 
 Chat commands should be typed into the chat box that comes up when you hit tab.

@@ -191,6 +191,49 @@ function processCommand(lexer: Lexer): Command {
 
     throw new Error('unexpected token parsing spawnGroup')
   }
+  
+  if (CommandType.Smoke === type) {
+    const nextToken = lexer.nextToken()
+    
+    if (
+      TokenKind.Word === nextToken.kind ||
+      TokenKind.String === nextToken.kind
+    ) {
+      const color = nextToken.value
+    
+    return {
+      type: CommandType.Smoke,
+      color
+    }
+  }
+    return {
+    type: CommandType.Smoke
+  }
+  }
+
+  if (CommandType.Flare === type) {
+    const nextToken = lexer.nextToken()
+    if (
+      TokenKind.Word === nextToken.kind ||
+      TokenKind.String === nextToken.kind
+    ) {
+      const color = nextToken.value
+    
+    return {
+      type: CommandType.Flare,
+      color
+    }
+  }
+    return {
+    type: CommandType.Flare
+  }
+  }
+
+  if (CommandType.Illumination === type) {
+    return {
+    type: CommandType.Illumination
+    }
+  }
 
   return { type: CommandType.Unknown }
 }
@@ -209,6 +252,15 @@ function matchCommand(input: string): CommandType {
   }
   if ('spawngroup' === lowerInput) {
     return CommandType.SpawnGroup
+  }
+  if ('smoke' === lowerInput) {
+    return CommandType.Smoke
+  }
+  if ('flare' === lowerInput) {
+    return CommandType.Flare
+  }
+  if ('illum' === lowerInput || 'illumination' === lowerInput) {
+    return CommandType.Illumination
   }
 
   return CommandType.Unknown
