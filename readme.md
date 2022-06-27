@@ -1,14 +1,20 @@
-**To run this repo:**
+# YADS - Yet Another DCS Server
+![logo-placeholder](/images/logo.png)
 
-- make an empty mission (any map)
-- modify your dcs to run [dcs-grpc](https://github.com/DCS-gRPC/rust-server)
-- clone this repo
-- install deps with `npm install`
-- create generated code with `npm run codegen`
-- start the server with a grpc address `GRPC_ADDRESS=localhost:50051 npm start`
+# Abstract
+Best quotes to describe the overall goal of this project: 
 
-**vscode extensions you should have:**
+- @bitbubbler "Build some cool shit, make it public. Have fun"
+- @skeletonwburg "Broad plan is to build an Open Source software, based on DCS-gRPC, that adds functions to a running mission to build a dynamic frontline ground war."
 
-- [eslint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) for code standards enforcement
-- [prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) for code formatting
-- [lua](https://marketplace.visualstudio.com/items?itemName=sumneko.lua) for lua. Only needed if you plan to work on the lua bits. (You probably don't need this)
+In other words:
+- focus on dynamically changing the state of a mission (adding, removing units)
+- D&D esque Gamemaster toolkit, based on F10 map markers
+- PvE focused 
+- event driven AI behavior based on mission types (e.g CAS, Strike, CAP, etc.)
+- persistence of mission state to enable 24x7 server operations
+
+# Table of content
+* [Abstract](#abstract)
+* [Onboarding & Setup](/docs/onboarding.md)
+* [Map Marker commands](/docs/commands.md)
