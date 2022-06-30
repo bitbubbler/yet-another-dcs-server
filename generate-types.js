@@ -19,7 +19,7 @@ async function main() {
 
     const args = ['-I', protoDir, '-O', generatedDir, '--oneofs', '--grpcLib=@grpc/grpc-js', dcsProtoFile]
 
-    await execFile(bin, args)
+    await execFile(bin, args, { shell: true }) // shell:true makes this work on windows
 }
 
 main().catch(error => {
