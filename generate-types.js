@@ -15,11 +15,11 @@ async function main() {
     const protoDir = resolve('src', 'proto')
     const dcsProtoFile = resolve(protoDir, 'dcs', 'dcs.proto')
 
-    console.log(await readdir(npmBin))
-
     const args = ['-I', protoDir, '-O', generatedDir, '--oneofs', '--grpcLib=@grpc/grpc-js', dcsProtoFile]
 
     await execFile(bin, args, { shell: true }) // shell:true makes this work on windows
+
+    console.log(`generated types in ${generatedDir}`)
 }
 
 main().catch(error => {
