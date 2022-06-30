@@ -10,15 +10,17 @@ async function main() {
     // delete existing generated files
     await rm(generatedDir, { recursive: true, force: true })
 
-    const npmBin = resolve('node_modules', '.bin')
+    const npmBin = resolve(__dirname, 'node_modules', '.bin')
     const bin = resolve(npmBin, 'proto-loader-gen-types')
     const protoDir = resolve('src', 'proto')
     const dcsProtoFile = resolve(protoDir, 'dcs', 'dcs.proto')
 
     const args = ['-I', protoDir, '-O', generatedDir, '--oneofs', '--grpcLib=@grpc/grpc-js', dcsProtoFile]
 
-    execFile(bin, args)
+    await execFile(bin, args)
 }
 
-main()
+main().catch(error => {
+    console.error('failed', error)
+})
 
