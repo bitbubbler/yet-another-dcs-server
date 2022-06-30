@@ -2,7 +2,7 @@
 const { rm } = require('fs/promises')
 const { resolve } = require('path')
 const util = require('util')
-const exec = util.promisify(require('child_process').exec);
+const execFile = util.promisify(require('child_process').execFile);
 
 const generatedDir = resolve('generated')
 
@@ -15,9 +15,9 @@ async function main() {
     const protoDir = resolve('src', 'proto')
     const dcsProtoFile = resolve(protoDir, 'dcs', 'dcs.proto')
 
-    const generateTypes = `${bin} -I ${protoDir} -O ${generatedDir} --oneofs --grpcLib=@grpc/grpc-js ${dcsProtoFile}`
+    const args = ['-I', protoDir, '-O', generatedDir, '--oneofs', '--grpcLib=@grpc/grpc-js', dcsProtoFile]
 
-    exec(generateTypes)
+    execFile(bin, args)
 }
 
 main()
