@@ -19,12 +19,14 @@ jobs:
           node-version: 14
           cache: 'npm'
       - uses: actions/cache@v1
+        id: cache-node-modules
         with:
           path: node_modules
           key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-npm-
       - run: npm install
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
       - run: npm run codegen
       - run: npm run test
   lint:
@@ -39,12 +41,14 @@ jobs:
           node-version: 14
           cache: 'npm'
       - uses: actions/cache@v1
+        id: cache-node-modules
         with:
           path: node_modules
           key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-npm-
       - run: npm install
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
       - run: npm run codegen
       - run: npm run lint
   typecheck:
@@ -59,12 +63,14 @@ jobs:
           node-version: 14
           cache: 'npm'
       - uses: actions/cache@v1
+        id: cache-node-modules
         with:
           path: node_modules
           key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-npm-
       - run: npm install
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
       - run: npm run codegen
       - run: npm run typecheck
   build:
@@ -79,11 +85,13 @@ jobs:
           node-version: 14
           cache: 'npm'
       - uses: actions/cache@v1
+        id: cache-node-modules
         with:
           path: node_modules
           key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-npm-
       - run: npm install
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
       - run: npm run codegen
       - run: npm run build
