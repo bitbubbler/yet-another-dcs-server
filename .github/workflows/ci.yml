@@ -97,6 +97,36 @@ jobs:
       - run: npm run codegen
         if: steps.cache-generated.outputs.cache-hit != 'true'
       - run: npm run typecheck
+  prettier:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 14
+          cache: 'npm'
+      - uses: actions/cache@v1
+        id: cache-node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+      - uses: actions/cache@v1
+        id: cache-generated
+        with:
+          path: generated
+          key: ${{ runner.os }}-proto-${{ hashFiles('src/proto/**') }}
+          restore-keys: |
+            ${{ runner.os }}-proto-
+      - run: npm install
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+      - run: npm run codegen
+        if: steps.cache-generated.outputs.cache-hit != 'true'
+      - run: npm run prettier
   build:
     strategy:
       matrix:
