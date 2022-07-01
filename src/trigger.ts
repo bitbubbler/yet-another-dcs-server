@@ -1,5 +1,5 @@
 import { services } from './services'
-import { PositionLL } from "./types"
+import { PositionLL } from './types'
 import { _dcs_trigger_v0_SmokeRequest_SmokeColor as SmokeColor } from '../generated/dcs/trigger/v0/SmokeRequest'
 import { _dcs_trigger_v0_SignalFlareRequest_FlareColor as FlareColor } from '../generated/dcs/trigger/v0/SignalFlareRequest'
 
@@ -81,15 +81,12 @@ export async function removeMapMark(id: number): Promise<void> {
   )
 }
 
-export async function smoke(
-  position: PositionLL,
-  color : SmokeColor
-) {
+export async function smoke(position: PositionLL, color: SmokeColor) {
   return new Promise<void>((resolve, reject) => {
     trigger.smoke(
       {
         position,
-        color
+        color,
       },
       (error, result) => {
         if (error) {
@@ -105,15 +102,15 @@ export async function smoke(
 
 export async function signalFlare(
   position: PositionLL,
-  color : FlareColor,
-  azimuth : number
+  color: FlareColor,
+  azimuth: number
 ) {
   return new Promise<void>((resolve, reject) => {
     trigger.signalFlare(
       {
         position,
         color,
-        azimuth
+        azimuth,
       },
       (error, result) => {
         if (error) {
@@ -127,10 +124,7 @@ export async function signalFlare(
   })
 }
 
-export async function illumination(
-  position: PositionLL
-) {
-
+export async function illumination(position: PositionLL) {
   position.alt = 500 //drop illum bomb 500m AGL
   const power = 1
 
@@ -138,7 +132,7 @@ export async function illumination(
     trigger.illuminationBomb(
       {
         position,
-        power
+        power,
       },
       (error, result) => {
         if (error) {

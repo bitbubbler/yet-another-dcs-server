@@ -191,24 +191,24 @@ function processCommand(lexer: Lexer): Command {
 
     throw new Error('unexpected token parsing spawnGroup')
   }
-  
+
   if (CommandType.Smoke === type) {
     const nextToken = lexer.nextToken()
-    
+
     if (
       TokenKind.Word === nextToken.kind ||
       TokenKind.String === nextToken.kind
     ) {
       const color = nextToken.value
-    
+
+      return {
+        type: CommandType.Smoke,
+        color,
+      }
+    }
     return {
       type: CommandType.Smoke,
-      color
     }
-  }
-    return {
-    type: CommandType.Smoke
-  }
   }
 
   if (CommandType.Flare === type) {
@@ -218,20 +218,20 @@ function processCommand(lexer: Lexer): Command {
       TokenKind.String === nextToken.kind
     ) {
       const color = nextToken.value
-    
+
+      return {
+        type: CommandType.Flare,
+        color,
+      }
+    }
     return {
       type: CommandType.Flare,
-      color
     }
-  }
-    return {
-    type: CommandType.Flare
-  }
   }
 
   if (CommandType.Illumination === type) {
     return {
-    type: CommandType.Illumination
+      type: CommandType.Illumination,
     }
   }
 
