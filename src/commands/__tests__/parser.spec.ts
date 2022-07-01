@@ -23,13 +23,19 @@ describe('commands/parser', () => {
       it('should parse two units with a number between', () => {
         expect(parse(reader('!spawn T55 3 abrams'))).toEqual({
           type: CommandType.Spawn,
-          units: [{ fuzzyUnitName: 'T55' }, { fuzzyUnitName: 'abrams', count: 3 }],
+          units: [
+            { fuzzyUnitName: 'T55' },
+            { fuzzyUnitName: 'abrams', count: 3 },
+          ],
         })
       })
       it('should parse two units, first with a number ', () => {
         expect(parse(reader('!spawn 6 T55 abrams'))).toEqual({
           type: CommandType.Spawn,
-          units: [{ fuzzyUnitName: 'T55', count: 6 }, { fuzzyUnitName: 'abrams' }],
+          units: [
+            { fuzzyUnitName: 'T55', count: 6 },
+            { fuzzyUnitName: 'abrams' },
+          ],
         })
       })
       it('should parse two units, both with a number before', () => {

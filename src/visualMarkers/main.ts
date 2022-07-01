@@ -1,9 +1,5 @@
 import fuzzysort from 'fuzzysort'
-import {
-  Events,
-  EventType,
-  MarkChangeEvent,
-} from '../events'
+import { Events, EventType, MarkChangeEvent } from '../events'
 import { illumination, removeMapMark, signalFlare, smoke } from '../trigger'
 import { getMarkById } from '../custom'
 import { CommandType as EventCommandType } from '../commands/types'
@@ -31,7 +27,7 @@ export async function visualMarkersMain(): Promise<() => Promise<void>> {
 async function handleMarkChangeEvent(event: MarkChangeEvent) {
   const { id, command } = event
   // attempt to handle command(s) from markers
-  
+
   if (command) {
     if (EventCommandType.Smoke === command.type) {
       const addedMark = await getMarkById(id)
@@ -41,21 +37,17 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
       }
 
       let color = SmokeColor.SMOKE_COLOR_GREEN //default green smoke
-      
+
       if (command.color) {
         const colorMatch = match(command.color, colors)
         if (isColor(colorMatch)) {
           color = smokeColorFrom(colorMatch)
-        }
-        else {
-          console.log("invalid smoke color, using green")
+        } else {
+          console.log('invalid smoke color, using green')
         }
       }
 
-      await smoke(
-        addedMark.position, 
-        color,
-      )
+      await smoke(addedMark.position, color)
 
       // remove the map marker
       await removeMapMark(id)
@@ -69,22 +61,17 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
 
       let color = FlareColor.FLARE_COLOR_GREEN //default green flare
       const azimuth = randomAngleDeg()
-      
-      if (command.color){
+
+      if (command.color) {
         const colorMatch = match(command.color, colors)
         if (isColor(colorMatch)) {
           color = flareColorFrom(colorMatch)
-        }
-        else {
-          console.log("invalid flare color, using green")
+        } else {
+          console.log('invalid flare color, using green')
         }
       }
 
-      await signalFlare(
-        addedMark.position, 
-        color,
-        azimuth
-      )
+      await signalFlare(addedMark.position, color, azimuth)
 
       // remove the map marker
       await removeMapMark(id)
@@ -96,9 +83,7 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
         throw new Error('expected addedMark')
       }
 
-      await illumination(
-        addedMark.position
-      )
+      await illumination(addedMark.position)
 
       // remove the map marker
       await removeMapMark(id)
@@ -123,7 +108,7 @@ function isColor(color: string): color is Color {
 }
 
 // use color enums from DCS
-function smokeColorFrom(color: Color): SmokeColor{
+function smokeColorFrom(color: Color): SmokeColor {
   if (color == 'green') {
     return SmokeColor.SMOKE_COLOR_GREEN
   }
@@ -142,7 +127,7 @@ function smokeColorFrom(color: Color): SmokeColor{
   return SmokeColor.SMOKE_COLOR_GREEN
 }
 
-function flareColorFrom(color: Color): FlareColor{
+function flareColorFrom(color: Color): FlareColor {
   if (color == 'green') {
     return FlareColor.FLARE_COLOR_GREEN
   }
