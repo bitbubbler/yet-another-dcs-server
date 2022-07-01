@@ -70,7 +70,7 @@ const groupSpawnLocation = new Map<
   }
 >()
 
-export async function main(): Promise<() => Promise<void>> {
+export async function spawnUnitsMain(): Promise<() => Promise<void>> {
   const subscription = Events.subscribe(async event => {
     if (EventType.GroupCommand === event.type) {
       return handleGroupCommand(event as GroupCommandEvent)

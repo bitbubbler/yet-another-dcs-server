@@ -12,23 +12,16 @@ import { _dcs_trigger_v0_SmokeRequest_SmokeColor as SmokeColor } from '../../gen
 import { _dcs_trigger_v0_SignalFlareRequest_FlareColor as FlareColor } from '../../generated/dcs/trigger/v0/SignalFlareRequest'
 
 // defines available colors
-const colors: string[] = [
-  'green',
-  'red',
-  'white',
-  'orange',
-  'blue',
-  'yellow'
-] 
+const colors: string[] = ['green', 'red', 'white', 'orange', 'blue', 'yellow']
 
 type Color = typeof colors[number]
 
-export async function main(): Promise<() => Promise<void>> {
-    const subscription = Events.subscribe(async event => {
-      if (EventType.MarkChange === event.type) {
-        return handleMarkChangeEvent(event as MarkChangeEvent)
-      }
-    })
+export async function visualMarkersMain(): Promise<() => Promise<void>> {
+  const subscription = Events.subscribe(async event => {
+    if (EventType.MarkChange === event.type) {
+      return handleMarkChangeEvent(event as MarkChangeEvent)
+    }
+  })
 
   return async () => {
     subscription.unsubscribe()

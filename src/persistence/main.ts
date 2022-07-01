@@ -4,7 +4,7 @@ import { spawnGroundUnit, Unit } from '../unit'
 import { UnitEventKind, UnitEvents } from '../unitEvents'
 import { insertOrUpdateUnit, Position, Unit as UnitTable } from '../db'
 
-export async function main(): Promise<() => Promise<void>> {
+export async function persistenceMain(): Promise<() => Promise<void>> {
   await trySpawnUnits()
 
   // handle unit updates

@@ -10,7 +10,7 @@ import { outText } from '../trigger'
  */
 export const Restarts = new Subject<void>()
 
-export async function main(): Promise<() => Promise<void>> {
+export async function restartMissionMain(): Promise<() => Promise<void>> {
   await createRestartMissionMenu()
 
   const subscription = Events.subscribe(async event => {
