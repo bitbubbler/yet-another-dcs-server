@@ -1,23 +1,33 @@
+import { backOff } from 'exponential-backoff'
+
 import { getAvailableSlots, Slot, SlotID } from './dcs'
+
+// dependencies
 import { address, services } from './services'
+import { prepare as prepareDatabase } from './db/db'
+
+// building blocks
 import { Events, startEvents } from './events'
 import { startUnitEvents, UnitEvents } from './unitEvents'
-import { main as spawnUnitsMain } from './spawnUnits/main'
-import { main as persistenceMain } from './persistence/main'
-import { main as restartMissionMain, Restarts } from './restartMission/main'
-import { main as visualMarkersMain} from './visualMarkers/main'
-import { prepare as prepareDatabase } from './db/db'
 import { pingpong } from './pingpong'
+
+// bigger things
+import { spawnUnitsMain } from './spawnUnits/main'
+import { persistenceMain } from './persistence/main'
+import { restartMissionMain, Restarts } from './restartMission/main'
+import { visualMarkersMain } from './visualMarkers/main'
 
 // const missionCoalitions = new Set<> // TODO
 const missionSlots = new Map<SlotID, Slot>()
 
 async function main() {
+  // things here only happen once
   // prepare the database
   await prepareDatabase()
 
   await start()
 
+  // things inside here happen every time we disconnect/restart due to an error
   async function setupMission(): Promise<() => Promise<void>> {
     console.log(`connecting to ${address}`)
     await services.ready()
@@ -52,37 +62,28 @@ async function main() {
   }
 
   async function start() {
-    const teardown = await setupMission()
+    backOff(
+      async () => {
+        const teardown = await setupMission()
 
-    let restarted = false
-
-    async function restart() {
-      if (restarted) {
-        // only allow one restart
-        // scoping will reset thing on next start
-        return
-      }
-      restarted = true
-      try {
-        await teardown()
-        await start()
-      } catch (error) {
-        console.log('restarting error, trying again', error)
-        await start()
-      }
-    }
-
-    Events.subscribe({
-      error() {
-        restart()
+        const subscription = Restarts.subscribe(async () => {
+          subscription.unsubscribe()
+          await teardown()
+          await start()
+        })
       },
-    })
-    UnitEvents.subscribe({
-      error() {
-        restart()
-      },
-    })
-    Restarts.subscribe(() => restart())
+      {
+        delayFirstAttempt: false,
+        retry: error => {
+          console.log('Startup failed', error)
+          console.log('Retrying...')
+          return true
+        },
+        jitter: 'full',
+        maxDelay: 1000 * 10,
+        numOfAttempts: Infinity,
+      }
+    )
   }
 }
 
