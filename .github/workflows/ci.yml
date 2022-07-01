@@ -40,7 +40,7 @@ jobs:
   lint:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest] # only run on ubuntu to save actions time
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -70,7 +70,7 @@ jobs:
   typecheck:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest] # only run on ubuntu to save actions time
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -100,7 +100,7 @@ jobs:
   prettier:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest] # only run on ubuntu to save actions time
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
