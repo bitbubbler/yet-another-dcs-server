@@ -30,7 +30,7 @@
     "test": "jest",
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit",
-    "prettier": "prettier --check src/",
+    "prettier": "npx prettier --check src/",
     "full-build": "npm run codegen && npm run build",
     "build": "rm -rf build/ && rollup --config && cp -r src/proto/ build/ && cp -r migrations/ build/ && cp -r package*.json build/",
     "codegen": "node generate-types.js"
