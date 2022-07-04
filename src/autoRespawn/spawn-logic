@@ -1,0 +1,38 @@
+Spawn logic
+Spawners are the backbone of the dynamic frontline and keep the map alive without 24/7 work for gamemasters.
+
+Infantry is excluded from respawns.
+
+Different grades of spawners. Harder spawners include lighter spawners units:
+
+Light: unarmed, Technicals, maybe APCs
+Medium: IFVs, AAA
+Hard: tanks, SAMs
+
+When a unit gets killed, it checks for the closest compatible spawner. The unit gets added to a respawn queue with the death position stored. This queue is persistent over restarts.
+Each spawner operates in a cycle. One global running cycle will spawn a group of two units if more than one is in the queue every 60-120 seconds. Grouping two units from the respawn queue creates a more dynamic experience and adds some randomness.
+The group will take the position of death of one of the units (default 1st to keep it simple) and creates waypoints to this position. Search for closest road, set first waypoint. Search for closest road near death position, set 2nd waypoint. Set offroad waypoint close to death position as destination. Don't use the exact same position to keep units out of carcasses and add some randomness.
+
+Spawners are defined by mapmarkers and can be invisible (without static buildings)
+Additional onroad argument for the command sets spawn point on closest road.
+
+Spawners with static buildings:
+Onroad spawners (roadblocks) can be set onroad and take the rotation by aligning it with the road. If offroad, set rotation via argument in the command. Alternative: Add onroad argument to command and get closest road position -> spawner statics get spawned on road, aligned + spawn point for units onroad.
+Hard spawner (factory): set rotation via argument. Marker is center of factory building.
+For positioning of respawns: search for road in 1km square around factory marker once. Use always this position for respawns. If no road in 1km square: Use offroad spawn 500m south of the mapmarker.
+
+Capture logic
+Required groups for capture when intact:
+light: 2
+medium: 3
+hard: 5
+
+If blue group is detected in a 1km square around spawner: Half spawn rate. (skip every 2nd cycle for this spawner)
+If building destroyed: half amount of groups required for capture (l:1, m:2, h:3)
+
+Capturing a spawner disables it fully (deletes the marker, keeps the buildings from respawning after restart)
+
+- [ ] create and destroy spawner
+- [ ] unit death/gone create spawner queue entry
+- [ ] 
+- [ ] capture check for units

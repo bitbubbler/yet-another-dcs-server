@@ -37,20 +37,33 @@ Spawn a Hawk track radar
 
 ### !destroy
 
-Destroy a unit near the map marker. The closest unit to the marker will be destroyed
+Destroy a unit or spawner near the map marker. The closest unit or spawner to the marker will be destroyed.
+You can also specific either unit or spawner type to destroy, and it will only destroy that type.
 
 **syntax**
 
 ```
-!destroy
+!destroy <toDestroy:optional>
 ```
 
 **examples**
 
-Destroy unit closest the map marker:
+Destroy the closest thing the map marker (either unit or spawner):
 
 ```
 !destroy
+```
+
+Destroy unit closest the map marker:
+
+```
+!destroy unit
+```
+
+Destroy spawner closest the map marker:
+
+```
+!destroy spawner
 ```
 
 ### !spawngroup
@@ -85,7 +98,7 @@ Create a smoke marker with the specified color on the map marker. The marker wil
 If no color is given, a green smoke marker will be created.
 
 - `color` fuzzy match string for a color name, can be a partial color name
-  
+
 **syntax**
 
 ```
@@ -93,6 +106,7 @@ If no color is given, a green smoke marker will be created.
 ```
 
 available colors:
+
 ```
 green
 red
@@ -121,7 +135,7 @@ Fire a flare with the specified color on the map marker. One flare will be fired
 If no color is given, a green flare will be fired.
 
 - `color` fuzzy match string for a color name, can be a partial color name
-  
+
 **syntax**
 
 ```
@@ -129,6 +143,7 @@ If no color is given, a green flare will be fired.
 ```
 
 available colors:
+
 ```
 green
 red

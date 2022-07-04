@@ -107,7 +107,7 @@ export async function unitGone(unitId: number): Promise<void> {
  * Search for units nearby a given PositionLL within a given accuracy.
  * Search uses a very simple box model algorithm
  * @param position PositionLL
- * @param accuracy accuracy of serch in meters
+ * @param accuracy accuracy of search in meters
  */
 export async function nearbyUnits(position: PositionLL, accuracy: number) {
   const { lat, lon } = position

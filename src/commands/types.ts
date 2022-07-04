@@ -1,4 +1,5 @@
-import { Unit } from '../db'
+import { Coalition } from '../../generated/dcs/common/v0/Coalition'
+import { SpawnerType } from '../autoRespawn/types'
 
 export type Argument = string | number
 
@@ -11,6 +12,12 @@ export enum CommandType {
   Smoke,
   Flare,
   Illumination,
+  CreateSpawner,
+}
+
+export enum ToDestroy {
+  Unit,
+  Spawner,
 }
 
 export interface CommandShape {
@@ -26,6 +33,7 @@ export interface DefineSpawnGroupCommand extends Omit<CommandShape, 'args'> {
 
 export interface DestroyCommand extends Omit<CommandShape, 'args'> {
   type: CommandType.Destroy
+  toDestroy?: ToDestroy
 }
 
 export interface SpawnCommand extends Omit<CommandShape, 'args'> {
@@ -53,6 +61,13 @@ export interface IlluminationCommand extends Omit<CommandShape, 'args'> {
   type: CommandType.Illumination
 }
 
+export interface CreateSpawner extends Omit<CommandShape, 'args'> {
+  type: CommandType.CreateSpawner
+  coalition: Coalition | undefined
+  spawnerType: SpawnerType | undefined
+  onRoad: boolean | undefined
+}
+
 export interface UnknownCommand extends Omit<CommandShape, 'args'> {
   type: CommandType.Unknown
 }
@@ -66,3 +81,4 @@ export type Command =
   | SmokeCommand
   | FlareCommand
   | IlluminationCommand
+  | CreateSpawner
