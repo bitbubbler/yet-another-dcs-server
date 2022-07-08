@@ -40,10 +40,10 @@ import {
 import { closestPointOnRoads, findPathOnRoads, RoadType } from '../land'
 import { driveGroundGroup } from '../group'
 
-const UNIT_MAXIMUM_DISPLACEMENT_TO_SPAWNER_METERS = 10000
+const UNIT_MAXIMUM_DISPLACEMENT_TO_SPAWNER_METERS = 100000
 const SPAWNER_MINIMUM_DISPLACEMENT_METERS = 250
 const SPAWNER_MAXIMUM_UNITS_PER_CYCLE = 2 // (per spawner)
-const SPAWNER_UNIT_RANDOM_FOCUS_RADIUS = 50
+const SPAWNER_UNIT_RANDOM_FOCUS_RADIUS = 150
 const SPAWNER_DETECT_CAPTURE_INTERVAL_SECONDS = 5
 
 let spawnersVisible = true // show/hide spawners on f10
@@ -284,8 +284,8 @@ function respawnQueue(): () => void {
 }
 
 function randomQueueTime(): number {
-  const oneMinute = 1000 // 1000 * 60
-  const twoMinutes = 1000 // oneMinute * 2
+  const oneMinute = 1000 * 60
+  const twoMinutes = oneMinute * 2
 
   return randomBetween(oneMinute, twoMinutes)
 }
