@@ -1,15 +1,18 @@
-import { knex } from './db'
+import { knex, Spawner as DBSpawner } from './db'
 import { Spawner } from '../autoRespawn/types'
 import { distanceFrom, metersToDegree } from '../common'
 import { equal } from 'assert'
 import { PositionLL } from '../types'
+import { Coalition } from '../../generated/dcs/common/v0/Coalition'
 
 /**
  *
  * @param spawner spawner to insert
  * @returns created spawnerId
  */
-export async function insertSpawner(spawner: Spawner): Promise<number> {
+export async function insertSpawner(
+  spawner: Omit<Spawner, 'spawnerId'>
+): Promise<number> {
   const { coalition, position, type } = spawner
 
   const { lat, lon, alt } = position
@@ -95,8 +98,42 @@ export async function spawnerDestroyed(spawnerId: number): Promise<void> {
     .update({
       updatedAt: timestamp,
       destroyedAt: timestamp,
+      goneAt: timestamp,
     })
     .where({ spawnerId })
+}
+
+export async function spawnerGone(spawnerId: number): Promise<void> {
+  const timestamp = new Date()
+
+  await knex('spawners')
+    .update({
+      updatedAt: timestamp,
+      goneAt: timestamp,
+    })
+    .where({ spawnerId })
+}
+
+export async function allSpawners(): Promise<Spawner[]> {
+  const spawners = await knex('spawners')
+    .leftJoin('positions', 'spawners.positionId', 'positions.positionId')
+    .whereNull('goneAt')
+    .whereNull('capturedAt')
+
+  return spawners.map(spawner => {
+    const { spawnerId, lat, lon, alt, coalition, type } = spawner
+
+    return {
+      coalition,
+      position: {
+        alt,
+        lat,
+        lon,
+      },
+      spawnerId,
+      type,
+    }
+  })
 }
 
 /**
@@ -105,10 +142,18 @@ export async function spawnerDestroyed(spawnerId: number): Promise<void> {
  * @param position PositionLL
  * @param accuracy accuracy of search in meters
  */
-export async function nearbySpawners(position: PositionLL, accuracy: number) {
+export async function nearbySpawners({
+  position,
+  accuracy,
+  coalition,
+}: {
+  position: PositionLL
+  accuracy: number
+  coalition: Coalition
+}) {
   const { lat, lon } = position
 
-  const nearby = await knex('spawners')
+  let query = knex('spawners')
     .leftOuterJoin('positions', function () {
       this.on('spawners.positionId', '=', 'positions.positionId')
     })
@@ -121,6 +166,15 @@ export async function nearbySpawners(position: PositionLL, accuracy: number) {
       lon - metersToDegree(accuracy),
       lon + metersToDegree(accuracy),
     ])
+    .whereNull('goneAt')
+    .whereNull('capturedAt')
+
+  // if not all, search by coalition
+  if (Coalition.COALITION_ALL !== coalition) {
+    query = query.where({ coalition })
+  }
+
+  const nearby = await query
 
   return nearby
     .map(unit => {

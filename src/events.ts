@@ -4,13 +4,14 @@ import { Coalition } from '../generated/dcs/common/v0/Coalition'
 import { GroupCategory } from '../generated/dcs/common/v0/GroupCategory'
 import { Unit } from '../generated/dcs/common/v0/Unit'
 import { StreamEventsResponse__Output } from '../generated/dcs/mission/v0/StreamEventsResponse'
-import { Struct, Struct__Output } from '../generated/google/protobuf/Struct'
-import { Value, Value__Output } from '../generated/google/protobuf/Value'
+import { Struct } from '../generated/google/protobuf/Struct'
+import { Value } from '../generated/google/protobuf/Value'
 import { Airbase__Output } from '../generated/dcs/common/v0/Airbase'
 
 import { services } from './services'
 import { Command } from './commands/types'
 import { parse, reader } from './commands'
+import { Restarts } from './signals'
 
 const { mission } = services
 
@@ -96,7 +97,7 @@ export function startEvents() {
   const call = mission.StreamEvents({})
 
   call.on('data', async (data: StreamEventsResponse__Output) => {
-    console.log('data', JSON.stringify(data, undefined, 2))
+    // console.log('data', JSON.stringify(data, undefined, 2))
     try {
       await handleEvent(data)
     } catch (error) {
@@ -106,12 +107,12 @@ export function startEvents() {
 
   call.on('error', error => {
     console.log('events error', error)
-    // Events.error(error)
+    Restarts.next()
   })
 
   call.on('end', () => {
     console.log('events end')
-    // Events.error(new Error('events stream close'))
+    Restarts.next()
   })
 }
 

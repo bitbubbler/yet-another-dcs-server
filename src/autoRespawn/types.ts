@@ -14,6 +14,7 @@ export enum SpawnerType {
 }
 
 export interface Spawner {
+  spawnerId: number
   coalition: Coalition
   position: PositionLL
   type: SpawnerType

@@ -12,6 +12,7 @@ exports.up = async function (knex) {
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('destroyedAt')
     table.timestamp('capturedAt')
+    table.timestamp('goneAt')
 
     table.primary('spawnerId')
   })

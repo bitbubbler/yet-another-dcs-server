@@ -80,17 +80,9 @@ export async function getMarkPanels(): Promise<MarkPanel[]> {
 
           marks.push(mark)
         })
-
-        return resolve(marks)
       }
 
-      return reject(new Error('failed to handle getMarkPanels response'))
-
-      // if (!markPanels) {
-      //   return reject(new MarkPanelsMissingError())
-      // }
-
-      // resolve(markPanels)
+      return resolve(marks)
     })
   )
 }
@@ -104,6 +96,9 @@ function coalitionFrom(luaCoalition: number): Coalition {
   }
   if (2 === luaCoalition) {
     return Coalition.COALITION_BLUE
+  }
+  if (255 === luaCoalition) {
+    return Coalition.COALITION_ALL
   }
   throw new Error('unknown coalition value from lua')
 }

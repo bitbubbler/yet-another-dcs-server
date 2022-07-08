@@ -1,7 +1,7 @@
-import { knex } from '../db'
+import { knex, unitGone } from '../db'
 import { groups as getGroups, getUnits } from '../group'
 import { spawnGroundUnit, Unit } from '../unit'
-import { UnitEventKind, UnitEvents } from '../unitEvents'
+import { UnitEventType, UnitEvents } from '../unitEvents'
 import { insertOrUpdateUnit, Position, Unit as UnitTable } from '../db'
 
 export async function persistenceMain(): Promise<() => Promise<void>> {
@@ -9,14 +9,15 @@ export async function persistenceMain(): Promise<() => Promise<void>> {
 
   // handle unit updates
   const subscription = UnitEvents.subscribe(async event => {
-    if (UnitEventKind.Update === event.type) {
+    if (UnitEventType.Update === event.type) {
       const { unit } = event
 
-      insertOrUpdateUnit(unit)
+      await insertOrUpdateUnit(unit)
     }
-    if (UnitEventKind.Gone === event.type) {
-      // handle unit gone
-      console.log('unit gone', event)
+    if (UnitEventType.Gone === event.type) {
+      const { unit } = event
+
+      await unitGone(unit)
     }
   })
 

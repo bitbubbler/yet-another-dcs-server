@@ -1,5 +1,6 @@
 import { equal } from 'assert'
 import { services } from './services'
+import { Restarts } from './signals'
 
 const { custom } = services
 
@@ -31,6 +32,8 @@ export function pingpong(): () => void {
 
   function stop(error?: Error) {
     if (error) {
+      // restart on pingpong error
+      Restarts.next()
       console.log('pingpong error', error)
     }
     clearInterval(interval) // stop

@@ -80,8 +80,9 @@ export interface Spawner {
   type: SpawnerType
   createdAt: Date
   updatedAt: Date
-  destroyedAt: Date
-  capturedAt: Date
+  capturedAt?: Date
+  destroyedAt?: Date
+  goneAt?: Date
 }
 
 export type SpawnerInsert = Pick<
