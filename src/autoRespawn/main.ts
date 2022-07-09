@@ -138,6 +138,8 @@ function respawnQueue(): () => void {
         >
       >('unitId as depth')
       .whereNull('doneAt')
+      .whereNull('spawners.capturedAt')
+      .whereNull('spawners.goneAt')
       .groupBy('spawners.spawnerId')
       .orderBy('spawnerQueues.createdAt', 'asc')
 
