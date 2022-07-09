@@ -5,7 +5,7 @@
 - clone this repo
 - install deps with `npm install`
 - create generated code with `npm run codegen`
-- start the server with a grpc address `npm start -- grpcAddress=`
+- start the server with a grpc address `npm start -- --address "localhost:50051"`
 
 **vscode extensions you should have:**
 

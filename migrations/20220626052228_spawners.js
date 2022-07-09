@@ -10,9 +10,9 @@ exports.up = async function (knex) {
     table.integer('type').notNullable()
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
-    table.timestamp('destroyedAt')
-    table.timestamp('capturedAt')
-    table.timestamp('goneAt')
+    table.timestamp('destroyedAt') // destroyed by players
+    table.timestamp('capturedAt') // captured by players
+    table.timestamp('goneAt') // no longer exists (if destroyed by players, both goneAt and destroyedAt should be set)
 
     table.primary('spawnerId')
   })
