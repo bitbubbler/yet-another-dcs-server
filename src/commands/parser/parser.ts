@@ -3,10 +3,13 @@ import {
   Command,
   CommandType,
   DefineSpawnGroupCommand,
+  ToDestroy,
 } from '../types'
 import { Reader } from '../reader'
 import { lexer as Lexer, TokenKind } from '../lexer'
 import { ParserUnexpectedTokenError, ParserUnknownTokenError } from './errors'
+import { Coalition } from '../../../generated/dcs/common/v0/Coalition'
+import { Spawner, SpawnerType } from '../../autoRespawn/types'
 
 export type Value = string | number | (string | number)[] | Command
 
@@ -49,6 +52,7 @@ function processCommand(lexer: Lexer): Command {
     type Units = { fuzzyUnitName: string; count?: number }[]
 
     const units: Units = []
+    let coalition: Coalition | undefined
 
     // process all remaining tokens
     const parseParts = (): void => {
@@ -63,6 +67,18 @@ function processCommand(lexer: Lexer): Command {
         TokenKind.String === nextToken.kind ||
         TokenKind.Word === nextToken.kind
       ) {
+        const lowerValue = nextToken.value.toLowerCase()
+
+        // coalition
+        if ('red' === lowerValue) {
+          coalition = Coalition.COALITION_RED
+          return parseParts()
+        }
+        if ('blue' === lowerValue) {
+          coalition = Coalition.COALITION_BLUE
+          return parseParts()
+        }
+
         const fuzzyUnitName = nextToken.value
 
         units.push({ fuzzyUnitName })
@@ -95,10 +111,34 @@ function processCommand(lexer: Lexer): Command {
     return {
       type: CommandType.Spawn,
       units,
+      coalition,
     }
   }
 
   if (CommandType.Destroy === type) {
+    // destroy takes an optional type to destroy, otherwise it destroys the closest thing
+    // destroy will destroy units and spawners
+    const typeToDestroyToken = lexer.nextToken()
+    if (
+      TokenKind.String === typeToDestroyToken.kind ||
+      TokenKind.Word === typeToDestroyToken.kind
+    ) {
+      // try to match the typeToDestroy token value to a known type token
+      const lowerMaybeTypeToDestroy = typeToDestroyToken.value.toLowerCase()
+
+      if (/^unit/.test(lowerMaybeTypeToDestroy) === true) {
+        return {
+          type: CommandType.Destroy,
+          toDestroy: ToDestroy.Unit,
+        }
+      }
+      if (/^spawner/.test(lowerMaybeTypeToDestroy) === true) {
+        return {
+          type: CommandType.Destroy,
+          toDestroy: ToDestroy.Spawner,
+        }
+      }
+    }
     return {
       type: CommandType.Destroy,
     }
@@ -235,6 +275,55 @@ function processCommand(lexer: Lexer): Command {
     }
   }
 
+  if (CommandType.CreateSpawner === type) {
+    let spawnerType: SpawnerType | undefined
+    let coalition: Coalition | undefined
+    let onRoad: boolean | undefined
+
+    const parseParts = () => {
+      const nextToken = lexer.nextToken()
+
+      if (
+        TokenKind.String === nextToken.kind ||
+        TokenKind.Word === nextToken.kind
+      ) {
+        const lowerValue = nextToken.value.toLowerCase()
+
+        // coalition
+        if ('red' === lowerValue) {
+          coalition = Coalition.COALITION_RED
+        }
+        if ('blue' === lowerValue) {
+          coalition = Coalition.COALITION_BLUE
+        }
+
+        // spawner type
+        if ('easy' === lowerValue) {
+          spawnerType = SpawnerType.Easy
+        }
+        if ('medium' === lowerValue) {
+          spawnerType = SpawnerType.Medium
+        }
+        if ('hard' === lowerValue) {
+          spawnerType = SpawnerType.Hard
+        }
+
+        if ('onroad' === lowerValue) {
+          onRoad = true
+        }
+      }
+    }
+
+    parseParts()
+
+    return {
+      type: CommandType.CreateSpawner,
+      coalition,
+      onRoad,
+      spawnerType,
+    }
+  }
+
   return { type: CommandType.Unknown }
 }
 
@@ -261,6 +350,9 @@ function matchCommand(input: string): CommandType {
   }
   if ('illum' === lowerInput || 'illumination' === lowerInput) {
     return CommandType.Illumination
+  }
+  if ('spawner' === lowerInput) {
+    return CommandType.CreateSpawner
   }
 
   return CommandType.Unknown

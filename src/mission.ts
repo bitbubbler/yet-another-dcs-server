@@ -2,6 +2,8 @@ import { AddGroupCommandRequest } from '../generated/dcs/mission/v0/AddGroupComm
 import { AddGroupCommandSubMenuRequest } from '../generated/dcs/mission/v0/AddGroupCommandSubMenuRequest'
 import { AddGroupCommandSubMenuResponse__Output } from '../generated/dcs/mission/v0/AddGroupCommandSubMenuResponse'
 import { AddMissionCommandRequest } from '../generated/dcs/mission/v0/AddMissionCommandRequest'
+import { AddMissionCommandSubMenuRequest } from '../generated/dcs/mission/v0/AddMissionCommandSubMenuRequest'
+import { AddMissionCommandSubMenuResponse__Output } from '../generated/dcs/mission/v0/AddMissionCommandSubMenuResponse'
 import { RemoveMissionCommandItemRequest } from '../generated/dcs/mission/v0/RemoveMissionCommandItemRequest'
 import { detailsFrom, DetailsValueShape, structFrom } from './events'
 import { services } from './services'
@@ -50,6 +52,34 @@ export async function addMissionCommand({
       resolve()
     })
   })
+}
+
+export async function addMissionCommandSubMenu({
+  name,
+  path,
+}: {
+  name: string
+  path?: string[]
+}): Promise<AddMissionCommandSubMenuResponse__Output> {
+  return new Promise<AddMissionCommandSubMenuResponse__Output>(
+    (resolve, reject) => {
+      const options: AddMissionCommandSubMenuRequest = {
+        name,
+      }
+      if (path) {
+        options.path = path
+      }
+      mission.addMissionCommandSubMenu(options, (error, result) => {
+        if (error) {
+          return reject(error)
+        }
+        if (!result || !result.path) {
+          return reject(new Error('missing results'))
+        }
+        resolve(result)
+      })
+    }
+  )
 }
 
 export async function removeGroupCommandItem({

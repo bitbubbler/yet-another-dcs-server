@@ -8,11 +8,12 @@ Type the command into the marker and then click off of the marker to execute the
 Spawn one or more units of one or more types on the map marker
 
 - `unitName` fuzzy match string for a unit name, can be partial names
+- `coalition` 'red' or 'blue'
 
 **syntax**
 
 ```
-!spawn <unitName:required>
+!spawn <unitName:required> <coalition:optional>
 ```
 
 **examples**
@@ -35,22 +36,47 @@ Spawn a Hawk track radar
 !spawn tr
 ```
 
+Spawn a red ural
+
+```
+!spawn red ural
+```
+
+Spawn a blue abrams
+
+```
+!spawn blue abrams
+```
+
 ### !destroy
 
-Destroy a unit near the map marker. The closest unit to the marker will be destroyed
+Destroy a unit or spawner near the map marker. The closest unit or spawner to the marker will be destroyed.
+You can also specific either unit or spawner type to destroy, and it will only destroy that type.
 
 **syntax**
 
 ```
-!destroy
+!destroy <toDestroy:optional>
 ```
 
 **examples**
 
-Destroy unit closest the map marker:
+Destroy the closest thing the map marker (either unit or spawner):
 
 ```
 !destroy
+```
+
+Destroy unit closest the map marker:
+
+```
+!destroy unit
+```
+
+Destroy spawner closest the map marker:
+
+```
+!destroy spawner
 ```
 
 ### !spawngroup
@@ -85,7 +111,7 @@ Create a smoke marker with the specified color on the map marker. The marker wil
 If no color is given, a green smoke marker will be created.
 
 - `color` fuzzy match string for a color name, can be a partial color name
-  
+
 **syntax**
 
 ```
@@ -93,6 +119,7 @@ If no color is given, a green smoke marker will be created.
 ```
 
 available colors:
+
 ```
 green
 red
@@ -121,7 +148,7 @@ Fire a flare with the specified color on the map marker. One flare will be fired
 If no color is given, a green flare will be fired.
 
 - `color` fuzzy match string for a color name, can be a partial color name
-  
+
 **syntax**
 
 ```
@@ -129,6 +156,7 @@ If no color is given, a green flare will be fired.
 ```
 
 available colors:
+
 ```
 green
 red
@@ -172,6 +200,45 @@ drop illumination bomb on map marker:
 
 ```
 !illumination
+```
+
+### !spanwer
+
+Create a spanwer on the map marker. You can set the spawners type and coalition when you create it
+
+- `type` the type/difficulty of the spawner you want to create. 'easy' 'medium' and 'hard' are valid values. Defaults to easy
+- `coalition` the coalition of the spawner you want to create. 'red' and 'blue' are valid values. Defaults to the coalition of the map marker
+
+**syntax**
+
+```
+!spawner <coalition:optional> <type:optional>
+```
+
+**examples**
+
+Create a spawner for your own coalition with default type:
+
+```
+!spawner
+```
+
+Create blue spawner with default type:
+
+```
+!spawner blue medium
+```
+
+Create blue medium spawner:
+
+```
+!spawner blue medium
+```
+
+Create a red hard spawner:
+
+```
+!spawner red hard
 ```
 
 ## Chat commands

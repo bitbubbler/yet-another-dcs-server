@@ -14,6 +14,7 @@ import { UnitServiceClient as UnitService } from '../generated/dcs/unit/v0/UnitS
 import { WorldServiceClient as WorldService } from '../generated/dcs/world/v0/WorldService'
 import { CustomServiceClient as CustomService } from '../generated/dcs/custom/v0/CustomService'
 import { ProtoGrpcType } from '../generated/dcs'
+import { options } from './cli'
 
 export interface Services {
   readonly coalition: CoalitionService
@@ -27,12 +28,8 @@ export interface Services {
   readonly world: WorldService
 }
 
-export const address = process.env.GRPC_ADDRESS
+export const address = options.address
 
-if (!address) {
-  console.log(`GRPC_ADDRESS is not defined. exiting..`)
-  process.exit(1)
-}
 const PROTO_PATH = path.resolve(
   path.join(__dirname, 'proto', 'dcs', 'dcs.proto')
 )

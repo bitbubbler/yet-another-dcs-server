@@ -31,7 +31,7 @@ import {
   spawnGroundUnitsInCircle,
   spawnGroundUnitsOnCircle,
 } from '../unit'
-import { CommandType as EventCommandType } from '../commands/types'
+import { CommandType as EventCommandType, ToDestroy } from '../commands/types'
 import {
   addGroupCommand,
   addGroupCommandSubMenu,
@@ -126,12 +126,12 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
         throw new Error('expected addedMark')
       }
 
+      const { coalition = addedMark.coalition } = command
+
       // TODO: use the map marker to post errors back to the user
 
       const unitsToSpawn = command.units
         .map(({ fuzzyUnitName, count }) => {
-          // TODO handle count to spawn multiple units in the area,
-          // they probably shouldn't spawn on top of each other
           const unitToSpawn = searchUnits(fuzzyUnitName)
 
           if (!unitToSpawn.desc) {
@@ -152,7 +152,7 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
         .filter((a): a is { typeName: string } => Boolean(a))
 
       if (unitsToSpawn.length > 0) {
-        const country = countryFrom(addedMark.coalition)
+        const country = countryFrom(coalition)
         if (unitsToSpawn.length > 1) {
           // multiple units
           await spawnGroundUnitsInCircle(
@@ -176,6 +176,10 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
       return
     }
     if (EventCommandType.Destroy === command.type) {
+      if ('toDestroy' in command && command.toDestroy !== ToDestroy.Unit) {
+        // don't destroy non-units when toDestroy is not correct
+        return
+      }
       const addedMark = await getMarkById(id)
 
       if (!addedMark) {
@@ -188,18 +192,24 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
 
       const accuracy = 250 // meters
 
-      const foundUnits = await nearbyUnits(markPosition, accuracy)
-
-      const closestUnit = foundUnits
+      const foundUnits = (await nearbyUnits(markPosition, accuracy))
         .map(unit => {
           const { lat, lon, alt } = unit
           const unitPosition = { lat, lon, alt }
           return { unit, distance: distanceFrom(markPosition, unitPosition) }
         })
-        .sort((a, b) => a.distance - b.distance)[0].unit
+        .sort((a, b) => a.distance - b.distance)
 
-      await destroy(closestUnit.name)
-      await unitGone(closestUnit.unitId)
+      if (foundUnits.length < 1) {
+        throw new Error('no nearby units found to destroy')
+      }
+
+      const closestUnit = foundUnits[0].unit
+
+      const { name } = closestUnit
+
+      await destroy(name)
+      await unitGone({ name })
       await removeMapMark(addedMark.id)
     }
     if (EventCommandType.SpawnGroup === command.type) {

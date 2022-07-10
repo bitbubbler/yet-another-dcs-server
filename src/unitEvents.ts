@@ -4,30 +4,31 @@ import { GroupCategory } from '../generated/dcs/common/v0/GroupCategory'
 import { StreamUnitsResponse__Output } from '../generated/dcs/mission/v0/StreamUnitsResponse'
 
 import { services } from './services'
+import { Restarts } from './signals'
 import { Unit, unitFrom } from './unit'
 
 const { mission } = services
 
-export enum UnitEventKind {
+export enum UnitEventType {
   Update,
   Gone,
 }
 
 export interface UnitEventShape {
-  type: UnitEventKind
+  type: UnitEventType
 }
 
-export interface UnitUpdate extends UnitEventShape {
-  type: UnitEventKind.Update
+export interface UnitUpdateEvent extends UnitEventShape {
+  type: UnitEventType.Update
   unit: Unit
 }
 
-export interface UnitGone extends UnitEventShape {
-  type: UnitEventKind.Gone
+export interface UnitGoneEvent extends UnitEventShape {
+  type: UnitEventType.Gone
   unit: Pick<Unit, 'id' | 'name'>
 }
 
-export type UnitEvent = UnitUpdate | UnitGone
+export type UnitEvent = UnitUpdateEvent | UnitGoneEvent
 
 export const UnitEvents = new Subject<UnitEvent>()
 
@@ -39,7 +40,7 @@ export function startUnitEvents(): void {
   })
 
   call.on('data', async (data: StreamUnitsResponse__Output) => {
-    console.log('data', JSON.stringify(data, undefined, 2))
+    // console.log('data', JSON.stringify(data, undefined, 2))
     try {
       await handleUnitEvent(data)
     } catch (error) {
@@ -48,12 +49,12 @@ export function startUnitEvents(): void {
   })
   call.on('error', error => {
     console.log('unit events error', error)
-    // UnitEvents.error(error)
+    Restarts.next()
   })
 
   call.on('end', () => {
     console.log('unit events end')
-    // UnitEvents.error(new Error('unit events stream close'))
+    Restarts.next()
   })
 }
 
@@ -65,7 +66,7 @@ async function handleUnitEvent(
       const unit = unitFrom(event.unit)
 
       return UnitEvents.next({
-        type: UnitEventKind.Update,
+        type: UnitEventType.Update,
         unit,
       })
     } catch (error) {
@@ -83,7 +84,7 @@ async function handleUnitEvent(
     }
 
     return UnitEvents.next({
-      type: UnitEventKind.Gone,
+      type: UnitEventType.Gone,
       unit: {
         id: gone.id,
         name: gone.name,

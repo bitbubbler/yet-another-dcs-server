@@ -5,10 +5,11 @@
 - clone this repo
 - install deps with `npm install`
 - create generated code with `npm run codegen`
-- start the server with a grpc address `GRPC_ADDRESS=localhost:50051 npm start`
+- start the server with a grpc address `npm start -- --address "localhost:50051"`
 
 **vscode extensions you should have:**
 
 - [eslint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) for code standards enforcement
 - [prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) for code formatting
+- [Markdown All in One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one) for markdown formatting preview in vscode
 - [lua](https://marketplace.visualstudio.com/items?itemName=sumneko.lua) for lua. Only needed if you plan to work on the lua bits. (You probably don't need this)

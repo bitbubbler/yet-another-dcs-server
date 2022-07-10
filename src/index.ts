@@ -1,10 +1,12 @@
 import { backOff } from 'exponential-backoff'
+import { program } from 'commander'
 
 import { getAvailableSlots, Slot, SlotID } from './dcs'
 
 // dependencies
 import { address, services } from './services'
 import { prepare as prepareDatabase } from './db/db'
+import { Restarts } from './signals'
 
 // building blocks
 import { Events, startEvents } from './events'
@@ -14,8 +16,9 @@ import { pingpong } from './pingpong'
 // bigger things
 import { spawnUnitsMain } from './spawnUnits/main'
 import { persistenceMain } from './persistence/main'
-import { restartMissionMain, Restarts } from './restartMission/main'
+import { restartMissionMain } from './restartMission/main'
 import { visualMarkersMain } from './visualMarkers/main'
+import { autoRespawnMain } from './autoRespawn/main'
 
 // const missionCoalitions = new Set<> // TODO
 const missionSlots = new Map<SlotID, Slot>()
@@ -31,6 +34,7 @@ async function main() {
   async function setupMission(): Promise<() => Promise<void>> {
     console.log(`connecting to ${address}`)
     await services.ready()
+    console.log(`connected`)
 
     // load mission slots
     const slots = await getSlots()
@@ -51,6 +55,7 @@ async function main() {
     const teardownPersistence = await persistenceMain()
     const teardownRestartMission = await restartMissionMain()
     const teardownVisualMarkers = await visualMarkersMain()
+    const teardownAutoRespawn = await autoRespawnMain()
 
     return async () => {
       await teardownPingpong()
@@ -58,6 +63,7 @@ async function main() {
       await teardownPersistence()
       await teardownRestartMission()
       await teardownVisualMarkers()
+      await teardownAutoRespawn()
     }
   }
 

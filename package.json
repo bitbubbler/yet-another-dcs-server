@@ -37,6 +37,7 @@
   },
   "dependencies": {
     "better-sqlite3": "^7.5.3",
+    "commander": "^9.3.0",
     "exponential-backoff": "^3.1.0",
     "fuzzysort": "^2.0.1",
     "knex": "^2.1.0",

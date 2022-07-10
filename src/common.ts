@@ -1,6 +1,6 @@
 import { equal } from 'assert'
 import { Position } from '../generated/dcs/common/v0/Position'
-import { Position3, PositionLL, Vec3 } from './types'
+import { Position3, PositionLL, Vec2, Vec3 } from './types'
 
 export function deg(radians: number): number {
   return radians * (180 / Math.PI)
@@ -8,6 +8,13 @@ export function deg(radians: number): number {
 
 export function rad(degrees: number): number {
   return degrees * (Math.PI / 180)
+}
+
+export function vec2From(vec3: Vec3): Vec2 {
+  return {
+    x: vec3.x,
+    y: vec3.z,
+  }
 }
 
 /**

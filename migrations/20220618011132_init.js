@@ -30,7 +30,7 @@ exports.up = async function (knex) {
 
     table.foreign('positionId').references('positions.positionId')
   })
-};
+}
 
 /**
  * @param { import("knex").Knex } knex
@@ -39,4 +39,4 @@ exports.up = async function (knex) {
 exports.down = async function (knex) {
   await knex.schema.dropTable('units')
   await knex.schema.dropTable('positions')
-};
+}

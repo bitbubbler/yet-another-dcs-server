@@ -1,5 +1,6 @@
-json = require "dkjson"
+local json = require "dkjson"
 
-dofile([[../DCS-miscScripts/ObjectDB/everyObject.lua]]) 
+dofile([[../DCS-miscScripts/ObjectDB/everyObject.lua]])
 
+---@diagnostic disable-next-line: undefined-global
 print(json.encode(everyObject))

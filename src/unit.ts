@@ -7,11 +7,9 @@ import {
 } from '../generated/dcs/coalition/v0/AddGroupRequest'
 import { Country } from '../generated/dcs/common/v0/Country'
 import { GroupCategory } from '../generated/dcs/common/v0/GroupCategory'
-import { Position } from '../generated/dcs/common/v0/Position'
 import { StreamUnitsResponse__Output } from '../generated/dcs/mission/v0/StreamUnitsResponse'
 import { Coalition } from '../generated/dcs/common/v0/Coalition'
 import {
-  deg,
   position3From,
   positionLLFrom,
   rad,
@@ -20,9 +18,7 @@ import {
   vec3From,
 } from './common'
 import { Position3, PositionLL, Velocity } from './types'
-import { countryFrom } from './country'
-import { knex, Unit as DbUnit } from './db'
-import { equal } from 'assert'
+import { Unit as DbUnit } from './db'
 
 const { coalition } = services
 
@@ -32,10 +28,10 @@ export interface Unit {
   callsign: string | undefined
   coalition: Coalition
   type: string
-  position: Position
+  position: PositionLL
   playerName: string | undefined
-  groupName: string
-  numberInGroup: number
+  groupName: string | undefined
+  numberInGroup: number | undefined
 }
 
 export interface SpawnGroundUnitOptions {
@@ -77,22 +73,26 @@ export async function spawnGroundUnitsInCircle(
   radius: number,
   units: Pick<DbUnit, 'typeName'>[]
 ) {
-  const circleUnits = units.map(unit => ({
-    ...unit,
-    position: randomPositionInCircle(focus, radius),
-  }))
-
-  await Promise.all(
-    circleUnits.map(async unitToSpawn => {
-      const { typeName, position } = unitToSpawn
-
-      await spawnGroundUnit({
-        country,
-        typeName,
-        position,
-      })
-    })
+  return Promise.all(
+    units.map(unit => spawnGroundUnitInCircle(country, focus, radius, unit))
   )
+}
+
+export async function spawnGroundUnitInCircle(
+  country: Country,
+  focus: PositionLL,
+  radius: number,
+  unit: Pick<DbUnit, 'typeName'>
+) {
+  const position = randomPositionInCircle(focus, radius)
+
+  const { typeName } = unit
+
+  return spawnGroundUnit({
+    country,
+    typeName,
+    position,
+  })
 }
 
 export async function spawnGroundUnit({
@@ -104,7 +104,7 @@ export async function spawnGroundUnit({
   heading = 0,
 }: SpawnGroundUnitOptions) {
   console.log('trying to spawn')
-  return new Promise<void>((resolve, reject) => {
+  return new Promise<{ groupName: string }>((resolve, reject) => {
     const id = Math.floor(1000 + Math.random() * 9000)
 
     const name = unitName || `spawned unit ${id}`
@@ -141,8 +141,10 @@ export async function spawnGroundUnit({
           console.log('add group failed', error)
           return reject(error)
         }
-        console.log('add grounp', result)
-        resolve()
+        console.log('add group', result)
+        resolve({
+          groupName: name,
+        })
       }
     )
   })

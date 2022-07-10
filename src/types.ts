@@ -2,6 +2,11 @@ import { Position__Output } from '../generated/dcs/common/v0/Position'
 
 export type Distance = number
 
+export interface Vec2 {
+  x: Distance
+  y: Distance
+}
+
 export interface Vec3 {
   x: Distance
   y: Distance

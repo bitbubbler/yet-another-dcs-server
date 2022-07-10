@@ -63,6 +63,32 @@ export async function outText(text: string, displayTime = 10) {
   )
 }
 
+export async function markToAll(options: {
+  position: PositionLL
+  text: string
+  readonly?: boolean
+}): Promise<void> {
+  const { position, text, readonly = false } = options
+
+  return new Promise((resolve, reject) =>
+    trigger.markToAll(
+      {
+        position,
+        readOnly: readonly,
+        text,
+      },
+      (error, result) => {
+        if (error) {
+          console.log('failed to add mark to all', error)
+          return reject(error)
+        }
+        resolve()
+        console.log('added mark', result)
+      }
+    )
+  )
+}
+
 export async function removeMapMark(id: number): Promise<void> {
   return new Promise((resolve, reject) =>
     trigger.removeMark(
@@ -75,7 +101,7 @@ export async function removeMapMark(id: number): Promise<void> {
           return reject(error)
         }
         resolve()
-        console.log('remove mark', result)
+        console.log('removed mark', result)
       }
     )
   )

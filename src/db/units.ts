@@ -4,6 +4,7 @@ import { getPositionVelocity, Unit } from '../unit'
 import { deg, metersToDegree } from '../common'
 import { equal } from 'assert'
 import { PositionLL } from '../types'
+import { coalitionFrom } from '../coalition'
 
 export async function insertOrUpdateUnit(unit: Unit): Promise<void> {
   const { name, position: positionLL, type: typeName, coalition } = unit
@@ -92,7 +93,9 @@ export async function insertOrUpdateUnit(unit: Unit): Promise<void> {
   }
 }
 
-export async function unitGone(unitId: number): Promise<void> {
+export async function unitGone(unit: Pick<Unit, 'name'>): Promise<void> {
+  const { name } = unit
+
   const timestamp = new Date()
 
   await knex('units')
@@ -100,14 +103,59 @@ export async function unitGone(unitId: number): Promise<void> {
       updatedAt: timestamp,
       goneAt: timestamp,
     })
-    .where({ unitId })
+    .where({ name })
+}
+
+export async function unitDestroyed(unit: Pick<Unit, 'name'>): Promise<void> {
+  const { name } = unit
+
+  const timestamp = new Date()
+
+  await knex('units')
+    .update({
+      updatedAt: timestamp,
+      destroyedAt: timestamp,
+      goneAt: timestamp, // if we're setting destroyedAt, we must also set goneAT
+    })
+    .where({ name })
+}
+
+export async function findUnit(name: string): Promise<Unit | undefined> {
+  const foundUnit = await knex('units')
+    .select('*')
+    .leftJoin('positions', 'units.positionId', 'positions.positionId')
+    .where({ name })
+    .whereNull('destroyedAt')
+    .whereNull('goneAt')
+    .first()
+
+  if (foundUnit) {
+    const { alt, country, lat, lon, name, typeName, unitId: id } = foundUnit
+    return {
+      id,
+      name,
+      coalition: coalitionFrom(country),
+      type: typeName,
+      position: {
+        lat,
+        lon,
+        alt,
+      },
+      // TODO: determine what to do with the below in the types
+      callsign: undefined,
+      playerName: undefined,
+      groupName: undefined,
+      numberInGroup: undefined,
+    }
+  }
+  return undefined
 }
 
 /**
  * Search for units nearby a given PositionLL within a given accuracy.
  * Search uses a very simple box model algorithm
  * @param position PositionLL
- * @param accuracy accuracy of serch in meters
+ * @param accuracy accuracy of search in meters
  */
 export async function nearbyUnits(position: PositionLL, accuracy: number) {
   const { lat, lon } = position
@@ -125,4 +173,6 @@ export async function nearbyUnits(position: PositionLL, accuracy: number) {
       lon - metersToDegree(accuracy),
       lon + metersToDegree(accuracy),
     ])
+    .whereNull('destroyedAt')
+    .whereNull('goneAt')
 }
