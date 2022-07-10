@@ -106,6 +106,20 @@ export async function unitGone(unit: Pick<Unit, 'name'>): Promise<void> {
     .where({ name })
 }
 
+export async function unitDestroyed(unit: Pick<Unit, 'name'>): Promise<void> {
+  const { name } = unit
+
+  const timestamp = new Date()
+
+  await knex('units')
+    .update({
+      updatedAt: timestamp,
+      destroyedAt: timestamp,
+      goneAt: timestamp, // if we're setting destroyedAt, we must also set goneAT
+    })
+    .where({ name })
+}
+
 export async function findUnit(name: string): Promise<Unit | undefined> {
   const foundUnit = await knex('units')
     .select('*')

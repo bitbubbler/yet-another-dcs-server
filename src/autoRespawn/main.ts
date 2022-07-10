@@ -27,6 +27,7 @@ import {
   SpawnerQueue,
   Unit,
   Spawner as DBSpawner,
+  unitDestroyed,
 } from '../db'
 import { PositionLL } from '../types'
 import { spawnGroundUnitsInCircle } from '../unit'
@@ -296,7 +297,7 @@ async function handleUnitGoneEvent(event: UnitGoneEvent) {
   const unit = await findUnit(event.unit.name)
 
   if (!unit) {
-    throw new Error('gone unit not found in db')
+    throw new Error('gone unit not found in db, or already destroyed/gone')
   }
 
   const { coalition, id: unitId, position, type } = unit
@@ -317,7 +318,10 @@ async function handleUnitGoneEvent(event: UnitGoneEvent) {
   const { spawnerId } = firstSpawner
 
   // add unit to respawn queue if spawner nearby
-  await insertSpawnerQueue(spawnerId, unitId)
+  await Promise.all([
+    unitDestroyed(unit),
+    insertSpawnerQueue(spawnerId, unitId),
+  ])
 
   console.log(`unit ${unitId} of type ${type} queued to spawner ${spawnerId}`)
 }
