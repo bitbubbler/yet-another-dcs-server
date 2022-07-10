@@ -5,7 +5,7 @@ import { Subject } from 'rxjs'
  *
  * This file exists to solve circular dependencies
  *
- * This file should ONLY IMPORT
+ * This file should NOT IMPORT from any other files in `src/`
  */
 
 /**
