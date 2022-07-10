@@ -109,8 +109,10 @@ export async function unitGone(unit: Pick<Unit, 'name'>): Promise<void> {
 export async function findUnit(name: string): Promise<Unit | undefined> {
   const foundUnit = await knex('units')
     .select('*')
-    .where({ name })
     .leftJoin('positions', 'units.positionId', 'positions.positionId')
+    .where({ name })
+    .whereNull('destroyedAt')
+    .whereNull('goneAt')
     .first()
 
   if (foundUnit) {
@@ -157,4 +159,6 @@ export async function nearbyUnits(position: PositionLL, accuracy: number) {
       lon - metersToDegree(accuracy),
       lon + metersToDegree(accuracy),
     ])
+    .whereNull('destroyedAt')
+    .whereNull('goneAt')
 }
