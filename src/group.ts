@@ -71,11 +71,13 @@ export async function driveGroundGroup(
   options: DriveGroundGroupOptions
 ): Promise<void> {
   const { groupName, position, destination, onroad } = options
-  const points: Point[] = [
-    [position, onroad],
-    ...options.points.map<Point>(point => [point, onroad]),
-    [destination, onroad],
-  ]
+  const points: Point[] = []
+
+  points.push([position, onroad])
+
+  points.push(...options.points.map<Point>(point => [point, onroad]))
+  points.push([destination, onroad])
+
   const lua = `
     local group = Group.getByName("${groupName}")
     local controller = group:getController()
