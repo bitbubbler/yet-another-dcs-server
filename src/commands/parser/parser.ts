@@ -52,6 +52,7 @@ function processCommand(lexer: Lexer): Command {
     type Units = { fuzzyUnitName: string; count?: number }[]
 
     const units: Units = []
+    let coalition: Coalition | undefined
 
     // process all remaining tokens
     const parseParts = (): void => {
@@ -66,6 +67,16 @@ function processCommand(lexer: Lexer): Command {
         TokenKind.String === nextToken.kind ||
         TokenKind.Word === nextToken.kind
       ) {
+        const lowerValue = nextToken.value.toLowerCase()
+
+        // coalition
+        if ('red' === lowerValue) {
+          coalition = Coalition.COALITION_RED
+        }
+        if ('blue' === lowerValue) {
+          coalition = Coalition.COALITION_BLUE
+        }
+
         const fuzzyUnitName = nextToken.value
 
         units.push({ fuzzyUnitName })
@@ -98,6 +109,7 @@ function processCommand(lexer: Lexer): Command {
     return {
       type: CommandType.Spawn,
       units,
+      coalition,
     }
   }
 

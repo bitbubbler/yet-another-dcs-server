@@ -126,12 +126,12 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
         throw new Error('expected addedMark')
       }
 
+      const { coalition = addedMark.coalition } = command
+
       // TODO: use the map marker to post errors back to the user
 
       const unitsToSpawn = command.units
         .map(({ fuzzyUnitName, count }) => {
-          // TODO handle count to spawn multiple units in the area,
-          // they probably shouldn't spawn on top of each other
           const unitToSpawn = searchUnits(fuzzyUnitName)
 
           if (!unitToSpawn.desc) {
@@ -152,7 +152,7 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
         .filter((a): a is { typeName: string } => Boolean(a))
 
       if (unitsToSpawn.length > 0) {
-        const country = countryFrom(addedMark.coalition)
+        const country = countryFrom(coalition)
         if (unitsToSpawn.length > 1) {
           // multiple units
           await spawnGroundUnitsInCircle(

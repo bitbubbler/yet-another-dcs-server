@@ -39,6 +39,7 @@ export interface DestroyCommand extends Omit<CommandShape, 'args'> {
 export interface SpawnCommand extends Omit<CommandShape, 'args'> {
   type: CommandType.Spawn
   units: { fuzzyUnitName: string; count?: number }[]
+  coalition: Coalition | undefined
 }
 
 export interface SpawnGroupCommand extends Omit<CommandShape, 'args'> {
