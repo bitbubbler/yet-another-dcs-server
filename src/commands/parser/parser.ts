@@ -72,9 +72,11 @@ function processCommand(lexer: Lexer): Command {
         // coalition
         if ('red' === lowerValue) {
           coalition = Coalition.COALITION_RED
+          return parseParts()
         }
         if ('blue' === lowerValue) {
           coalition = Coalition.COALITION_BLUE
+          return parseParts()
         }
 
         const fuzzyUnitName = nextToken.value
