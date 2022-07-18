@@ -118,29 +118,98 @@ function processCommand(lexer: Lexer): Command {
   if (CommandType.Destroy === type) {
     // destroy takes an optional type to destroy, otherwise it destroys the closest thing
     // destroy will destroy units and spawners
-    const typeToDestroyToken = lexer.nextToken()
-    if (
-      TokenKind.String === typeToDestroyToken.kind ||
-      TokenKind.Word === typeToDestroyToken.kind
-    ) {
-      // try to match the typeToDestroy token value to a known type token
-      const lowerMaybeTypeToDestroy = typeToDestroyToken.value.toLowerCase()
+    // destroy takes an optional radius
+    let typeToDestroy: ToDestroy | undefined
+    let coalition: Coalition | undefined
+    let radius: number | undefined
+    
+    const parseParts = (): void => {
+      const nextToken = lexer.nextToken()
 
-      if (/^unit/.test(lowerMaybeTypeToDestroy) === true) {
-        return {
-          type: CommandType.Destroy,
-          toDestroy: ToDestroy.Unit,
-        }
+      if (TokenKind.EOF === nextToken.kind) {
+        return
       }
-      if (/^spawner/.test(lowerMaybeTypeToDestroy) === true) {
-        return {
-          type: CommandType.Destroy,
-          toDestroy: ToDestroy.Spawner,
+
+      // if string or word, assume it's typeToDestroy
+      if (
+        TokenKind.String === nextToken.kind ||
+        TokenKind.Word === nextToken.kind
+      ) {
+        const lowerValue = nextToken.value.toLowerCase()
+
+        // try to match string token value to a known type or coalition token
+        if (/^unit/.test(lowerValue) === true) {
+          typeToDestroy = ToDestroy.Unit
+          return parseParts()
         }
+        if (/^spawner/.test(lowerValue) === true) {
+          typeToDestroy = ToDestroy.Spawner
+          return parseParts()
+        }
+
+        // check for coalition
+        if (lowerValue === 'red') {
+          coalition = Coalition.COALITION_RED
+          return parseParts()
+        }
+        if (lowerValue === 'blue') {
+          coalition = Coalition.COALITION_BLUE
+          return parseParts()
+        }
+        if (lowerValue === 'all') {
+          coalition = Coalition.COALITION_ALL
+          return parseParts()
+        }
+
+        // takes rad(ius) as keyword and expects value in meters in next token
+        if (/^rad/.test(lowerValue) === true) {
+          const radiusValueToken = lexer.nextToken()
+
+          if (TokenKind.Number !== radiusValueToken.kind) {
+            throw new Error('expected number token following radius keyword')
+          }
+
+          radius = radiusValueToken.value
+          
+          return parseParts()
+        }
+        return parseParts()
+      }
+
+      // if number, assume it's radius
+      if (TokenKind.Number === nextToken.kind) {
+        radius = nextToken.value
+        return parseParts()
+      }
+    }
+
+    parseParts()
+
+    if (typeToDestroy != undefined && radius != undefined) {
+      return {
+        type: CommandType.Destroy,
+        toDestroy: typeToDestroy,
+        radius: radius,
+        coalition: coalition,
+      }
+    }
+    if (typeToDestroy != undefined) {
+      return {
+        type: CommandType.Destroy,
+        toDestroy: typeToDestroy,
+        coalition: coalition,
+      }
+    }
+    if (radius != undefined) {
+      return {
+        type: CommandType.Destroy,
+        radius: radius,
+        coalition: coalition,
       }
     }
     return {
       type: CommandType.Destroy,
+      coalition: coalition,
     }
   }
 

@@ -50,7 +50,8 @@ import {
   insertOrUpdateSpawnGroup,
   typeNamesFrom,
 } from '../db/spawnGroups'
-import { Country } from '../../generated/dcs/common/v0/Country'
+
+const CONST_DEFAULT_DESTROY_RADIUS_METERS = 250
 
 type GroupID = number
 
@@ -189,27 +190,43 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
       // TODO: use the map marker to post errors back to the user
 
       const { position: markPosition } = addedMark
+      const { coalition = addedMark.coalition } = command
 
-      const accuracy = 250 // meters
+      let radius = CONST_DEFAULT_DESTROY_RADIUS_METERS
+      if (command.radius) {
+        radius = command.radius
+      }
 
-      const foundUnits = (await nearbyUnits(markPosition, accuracy))
+      const foundUnits = (await nearbyUnits(markPosition, radius, coalition))
         .map(unit => {
           const { lat, lon, alt } = unit
           const unitPosition = { lat, lon, alt }
           return { unit, distance: distanceFrom(markPosition, unitPosition) }
         })
-        .sort((a, b) => a.distance - b.distance)
 
       if (foundUnits.length < 1) {
         throw new Error('no nearby units found to destroy')
       }
 
-      const closestUnit = foundUnits[0].unit
+      // if radius is given delete each unit inside radius
+      if(command.radius) {
+        foundUnits.map(async (element) => {
+          if (element.distance <= radius) {
+            const { name } = element.unit
+            await destroy(name)
+            await unitGone({name})
+          }
+        })
+      }
+      // if no radius given, delete closest unit
+      else {
+        foundUnits.sort((a, b) => a.distance - b.distance)
+        const closestUnit = foundUnits[0].unit
+        const { name } = closestUnit
+        await destroy(name)
+        await unitGone({ name })
+      }
 
-      const { name } = closestUnit
-
-      await destroy(name)
-      await unitGone({ name })
       await removeMapMark(addedMark.id)
     }
     if (EventCommandType.SpawnGroup === command.type) {
