@@ -122,7 +122,7 @@ function processCommand(lexer: Lexer): Command {
     let typeToDestroy: ToDestroy | undefined
     let coalition: Coalition | undefined
     let radius: number | undefined
-    
+
     const parseParts = (): void => {
       const nextToken = lexer.nextToken()
 
@@ -170,7 +170,7 @@ function processCommand(lexer: Lexer): Command {
           }
 
           radius = radiusValueToken.value
-          
+
           return parseParts()
         }
         return parseParts()

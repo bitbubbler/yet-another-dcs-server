@@ -40,9 +40,7 @@ import {
 } from '../mission'
 import { closestPointOnRoads, findPathOnRoads, RoadType } from '../land'
 import { driveGroundGroup } from '../group'
-import {
-  distanceFrom,
-} from '../common'
+import { distanceFrom } from '../common'
 
 const UNIT_MAXIMUM_DISPLACEMENT_TO_SPAWNER_METERS = 100000
 const SPAWNER_MINIMUM_DISPLACEMENT_METERS = 250
@@ -396,30 +394,32 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
       const nearby = await nearbySpawners({
         position,
         accuracy: radius,
-        coalition: coalition, 
+        coalition: coalition,
       })
 
       equal(nearby.length > 0, true, 'No existing spawners found')
 
       // if radius is given, delete each spawner inside radius
-      if(command.radius) {
-        await Promise.all(nearby.map(async element => {
-          const { lat, lon, alt } = element
-          const spawnerPosition = { lat, lon, alt }
-          if (distanceFrom(position, spawnerPosition) <= radius) {
-            const { spawnerId } = element
-            await spawnerDestroyed(spawnerId) // destroy
+      if (command.radius) {
+        await Promise.all(
+          nearby.map(async element => {
+            const { lat, lon, alt } = element
+            const spawnerPosition = { lat, lon, alt }
+            if (distanceFrom(position, spawnerPosition) <= radius) {
+              const { spawnerId } = element
+              await spawnerDestroyed(spawnerId) // destroy
 
-            // remove existing spawner marker
-            const existingMarker = await findSpawnerMarker(spawnerId)
-      
-            if (existingMarker) {
-              await removeMapMark(existingMarker.id)
+              // remove existing spawner marker
+              const existingMarker = await findSpawnerMarker(spawnerId)
+
+              if (existingMarker) {
+                await removeMapMark(existingMarker.id)
+              }
+
+              await outText(`Spawner ${spawnerId} destroyed`)
             }
-      
-            await outText(`Spawner ${spawnerId} destroyed`)
-          }
-        }))
+          })
+        )
       }
       // if no radius given, delete closest spawner
       else {
@@ -428,11 +428,11 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
 
         // remove existing spawner marker
         const existingMarker = await findSpawnerMarker(spawnerId)
-  
+
         if (existingMarker) {
           await removeMapMark(existingMarker.id)
         }
-  
+
         await outText(`Spawner ${spawnerId} destroyed`)
       }
 

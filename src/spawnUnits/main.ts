@@ -197,26 +197,29 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
         radius = command.radius
       }
 
-      const foundUnits = (await nearbyUnits(markPosition, radius, coalition))
-        .map(unit => {
-          const { lat, lon, alt } = unit
-          const unitPosition = { lat, lon, alt }
-          return { unit, distance: distanceFrom(markPosition, unitPosition) }
-        })
+      const foundUnits = (
+        await nearbyUnits(markPosition, radius, coalition)
+      ).map(unit => {
+        const { lat, lon, alt } = unit
+        const unitPosition = { lat, lon, alt }
+        return { unit, distance: distanceFrom(markPosition, unitPosition) }
+      })
 
       if (foundUnits.length < 1) {
         throw new Error('no nearby units found to destroy')
       }
 
       // if radius is given delete each unit inside radius
-      if(command.radius) {
-        await Promise.all(foundUnits.map(async (element) => {
-          if (element.distance <= radius) {
-            const { name } = element.unit
-            await destroy(name)
-            await unitGone({name})
-          }
-        }))
+      if (command.radius) {
+        await Promise.all(
+          foundUnits.map(async element => {
+            if (element.distance <= radius) {
+              const { name } = element.unit
+              await destroy(name)
+              await unitGone({ name })
+            }
+          })
+        )
       }
       // if no radius given, delete closest unit
       else {

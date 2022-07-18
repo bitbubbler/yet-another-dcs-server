@@ -158,7 +158,11 @@ export async function findUnit(name: string): Promise<Unit | undefined> {
  * @param position PositionLL
  * @param accuracy accuracy of search in meters
  */
-export async function nearbyUnits(position: PositionLL, accuracy: number, coalition: Coalition) {
+export async function nearbyUnits(
+  position: PositionLL,
+  accuracy: number,
+  coalition: Coalition
+) {
   const { lat, lon } = position
 
   let query = knex('units')
