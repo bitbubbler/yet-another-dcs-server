@@ -403,7 +403,7 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
 
       // if radius is given, delete each spawner inside radius
       if(command.radius) {
-        nearby.map(async element => {
+        await Promise.all(nearby.map(async element => {
           const { lat, lon, alt } = element
           const spawnerPosition = { lat, lon, alt }
           if (distanceFrom(position, spawnerPosition) <= radius) {
@@ -419,7 +419,7 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
       
             await outText(`Spawner ${spawnerId} destroyed`)
           }
-        });
+        }))
       }
       // if no radius given, delete closest spawner
       else {

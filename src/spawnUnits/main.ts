@@ -210,13 +210,13 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
 
       // if radius is given delete each unit inside radius
       if(command.radius) {
-        foundUnits.map(async (element) => {
+        await Promise.all(foundUnits.map(async (element) => {
           if (element.distance <= radius) {
             const { name } = element.unit
             await destroy(name)
             await unitGone({name})
           }
-        })
+        }))
       }
       // if no radius given, delete closest unit
       else {
