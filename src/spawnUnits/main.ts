@@ -51,7 +51,7 @@ import {
   typeNamesFrom,
 } from '../db/spawnGroups'
 
-const CONST_DEFAULT_DESTROY_RADIUS_METERS = 250
+const DESTROY_SINGLE_UNIT_SEARCH_RANGE = 250
 
 type GroupID = number
 
@@ -177,7 +177,10 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
       return
     }
     if (EventCommandType.Destroy === command.type) {
-      if ('toDestroy' in command && command.toDestroy !== ToDestroy.Unit) {
+      if (
+        command.toDestroy != undefined &&
+        command.toDestroy !== ToDestroy.Unit
+      ) {
         // don't destroy non-units when toDestroy is not correct
         return
       }
@@ -189,46 +192,38 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
 
       // TODO: use the map marker to post errors back to the user
 
-      const { position: markPosition } = addedMark
+      const markPosition = addedMark.position
       const { coalition = addedMark.coalition } = command
 
-      let radius = CONST_DEFAULT_DESTROY_RADIUS_METERS
-      if (command.radius) {
-        radius = command.radius
-      }
-
-      const foundUnits = (
-        await nearbyUnits(markPosition, radius, coalition)
-      ).map(unit => {
-        const { lat, lon, alt } = unit
-        const unitPosition = { lat, lon, alt }
-        return { unit, distance: distanceFrom(markPosition, unitPosition) }
+      const foundUnits = await nearbyUnits({
+        position: markPosition,
+        accuracy: command.radius || DESTROY_SINGLE_UNIT_SEARCH_RANGE,
+        coalition: coalition,
       })
 
       if (foundUnits.length < 1) {
         throw new Error('no nearby units found to destroy')
       }
 
-      // if radius is given delete each unit inside radius
-      if (command.radius) {
-        await Promise.all(
-          foundUnits.map(async element => {
-            if (element.distance <= radius) {
-              const { name } = element.unit
-              await destroy(name)
-              await unitGone({ name })
-            }
-          })
-        )
+      // if no radius is given, only take the closest unit
+      if (typeof command.radius !== 'number') {
+        foundUnits.length = 1
       }
-      // if no radius given, delete closest unit
-      else {
-        foundUnits.sort((a, b) => a.distance - b.distance)
-        const closestUnit = foundUnits[0].unit
-        const { name } = closestUnit
-        await destroy(name)
-        await unitGone({ name })
-      }
+
+      await Promise.all(
+        foundUnits.map(async element => {
+          const { lat, lon, alt } = element
+          const unitPosition = { lat, lon, alt }
+          if (
+            distanceFrom(markPosition, unitPosition) <=
+            (command.radius || DESTROY_SINGLE_UNIT_SEARCH_RANGE)
+          ) {
+            const { name } = element
+            await destroy(name)
+            await unitGone({ name })
+          }
+        })
+      )
 
       await removeMapMark(addedMark.id)
     }

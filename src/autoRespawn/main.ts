@@ -44,6 +44,7 @@ import { distanceFrom } from '../common'
 
 const UNIT_MAXIMUM_DISPLACEMENT_TO_SPAWNER_METERS = 100000
 const SPAWNER_MINIMUM_DISPLACEMENT_METERS = 250
+const DESTROY_SINGLE_UNIT_SEARCH_RANGE = 250
 const SPAWNER_MAXIMUM_UNITS_PER_CYCLE = 2 // (per spawner)
 const SPAWNER_UNIT_RANDOM_FOCUS_RADIUS = 150
 const SPAWNER_DETECT_CAPTURE_INTERVAL_SECONDS = 5
@@ -371,7 +372,10 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
       await outText(`Spawner ${spawnerId} created`)
     }
     if (CommandType.Destroy === command.type) {
-      if ('toDestroy' in command && command.toDestroy !== ToDestroy.Spawner) {
+      if (
+        command.toDestroy != undefined &&
+        command.toDestroy !== ToDestroy.Spawner
+      ) {
         // if something else specific was specified, don't try to destroy spawners
         return
       }
@@ -381,60 +385,48 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
         throw new Error('expected addedMark')
       }
 
-      const { position } = addedMark
+      const markPosition = addedMark.position
       const { coalition = addedMark.coalition } = command
 
-      let radius = SPAWNER_MINIMUM_DISPLACEMENT_METERS
-
-      if (command.radius) {
-        radius = command.radius
-      }
-
-      // make sure spawner meets minimum displacement requirement
-      const nearby = await nearbySpawners({
-        position,
-        accuracy: radius,
+      const foundSpawners = await nearbySpawners({
+        position: markPosition,
+        accuracy: command.radius || DESTROY_SINGLE_UNIT_SEARCH_RANGE,
         coalition: coalition,
       })
 
-      equal(nearby.length > 0, true, 'No existing spawners found')
+      equal(
+        foundSpawners.length > 0,
+        true,
+        'no nearby spawners found to destroy'
+      )
 
-      // if radius is given, delete each spawner inside radius
-      if (command.radius) {
-        await Promise.all(
-          nearby.map(async element => {
-            const { lat, lon, alt } = element
-            const spawnerPosition = { lat, lon, alt }
-            if (distanceFrom(position, spawnerPosition) <= radius) {
-              const { spawnerId } = element
-              await spawnerDestroyed(spawnerId) // destroy
+      // if no radius is given, only take the closest spawner
+      if (typeof command.radius !== 'number') {
+        foundSpawners.length = 1
+      }
 
-              // remove existing spawner marker
-              const existingMarker = await findSpawnerMarker(spawnerId)
+      await Promise.all(
+        foundSpawners.map(async element => {
+          const { lat, lon, alt } = element
+          const spawnerPosition = { lat, lon, alt }
+          if (
+            distanceFrom(markPosition, spawnerPosition) <=
+            (command.radius || DESTROY_SINGLE_UNIT_SEARCH_RANGE)
+          ) {
+            const { spawnerId } = element
+            await spawnerDestroyed(spawnerId) // destroy
 
-              if (existingMarker) {
-                await removeMapMark(existingMarker.id)
-              }
+            // remove existing spawner marker
+            const existingMarker = await findSpawnerMarker(spawnerId)
 
-              await outText(`Spawner ${spawnerId} destroyed`)
+            if (existingMarker) {
+              await removeMapMark(existingMarker.id)
             }
-          })
-        )
-      }
-      // if no radius given, delete closest spawner
-      else {
-        const { spawnerId } = nearby[0]
-        await spawnerDestroyed(spawnerId) // destroy
 
-        // remove existing spawner marker
-        const existingMarker = await findSpawnerMarker(spawnerId)
-
-        if (existingMarker) {
-          await removeMapMark(existingMarker.id)
-        }
-
-        await outText(`Spawner ${spawnerId} destroyed`)
-      }
+            await outText(`Spawner ${spawnerId} destroyed`)
+          }
+        })
+      )
 
       await removeMapMark(addedMark.id)
     }

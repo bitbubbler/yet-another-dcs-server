@@ -173,7 +173,7 @@ function processCommand(lexer: Lexer): Command {
 
           return parseParts()
         }
-        return parseParts()
+        throw new Error('unexpected token found')
       }
 
       // if number, assume it's radius
@@ -185,30 +185,10 @@ function processCommand(lexer: Lexer): Command {
 
     parseParts()
 
-    if (typeToDestroy != undefined && radius != undefined) {
-      return {
-        type: CommandType.Destroy,
-        toDestroy: typeToDestroy,
-        radius: radius,
-        coalition: coalition,
-      }
-    }
-    if (typeToDestroy != undefined) {
-      return {
-        type: CommandType.Destroy,
-        toDestroy: typeToDestroy,
-        coalition: coalition,
-      }
-    }
-    if (radius != undefined) {
-      return {
-        type: CommandType.Destroy,
-        radius: radius,
-        coalition: coalition,
-      }
-    }
     return {
       type: CommandType.Destroy,
+      toDestroy: typeToDestroy,
+      radius: radius,
       coalition: coalition,
     }
   }
