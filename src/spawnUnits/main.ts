@@ -50,7 +50,8 @@ import {
   insertOrUpdateSpawnGroup,
   typeNamesFrom,
 } from '../db/spawnGroups'
-import { Country } from '../../generated/dcs/common/v0/Country'
+
+const DESTROY_SINGLE_UNIT_SEARCH_RANGE = 250
 
 type GroupID = number
 
@@ -176,7 +177,10 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
       return
     }
     if (EventCommandType.Destroy === command.type) {
-      if ('toDestroy' in command && command.toDestroy !== ToDestroy.Unit) {
+      if (
+        command.toDestroy != undefined &&
+        command.toDestroy !== ToDestroy.Unit
+      ) {
         // don't destroy non-units when toDestroy is not correct
         return
       }
@@ -188,28 +192,39 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
 
       // TODO: use the map marker to post errors back to the user
 
-      const { position: markPosition } = addedMark
+      const markPosition = addedMark.position
+      const { coalition = addedMark.coalition } = command
 
-      const accuracy = 250 // meters
-
-      const foundUnits = (await nearbyUnits(markPosition, accuracy))
-        .map(unit => {
-          const { lat, lon, alt } = unit
-          const unitPosition = { lat, lon, alt }
-          return { unit, distance: distanceFrom(markPosition, unitPosition) }
-        })
-        .sort((a, b) => a.distance - b.distance)
+      const foundUnits = await nearbyUnits({
+        position: markPosition,
+        accuracy: command.radius || DESTROY_SINGLE_UNIT_SEARCH_RANGE,
+        coalition: coalition,
+      })
 
       if (foundUnits.length < 1) {
         throw new Error('no nearby units found to destroy')
       }
 
-      const closestUnit = foundUnits[0].unit
+      // if no radius is given, only take the closest unit
+      if (typeof command.radius !== 'number') {
+        foundUnits.length = 1
+      }
 
-      const { name } = closestUnit
+      await Promise.all(
+        foundUnits.map(async element => {
+          const { lat, lon, alt } = element
+          const unitPosition = { lat, lon, alt }
+          if (
+            distanceFrom(markPosition, unitPosition) <=
+            (command.radius || DESTROY_SINGLE_UNIT_SEARCH_RANGE)
+          ) {
+            const { name } = element
+            await destroy(name)
+            await unitGone({ name })
+          }
+        })
+      )
 
-      await destroy(name)
-      await unitGone({ name })
       await removeMapMark(addedMark.id)
     }
     if (EventCommandType.SpawnGroup === command.type) {

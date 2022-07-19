@@ -1,10 +1,11 @@
 import { knex } from './db'
 import { countryFrom } from '../country'
 import { getPositionVelocity, Unit } from '../unit'
-import { deg, metersToDegree } from '../common'
+import { deg, metersToDegree, distanceFrom } from '../common'
 import { equal } from 'assert'
 import { PositionLL } from '../types'
 import { coalitionFrom } from '../coalition'
+import { Coalition } from '../../generated/dcs/common/v0/Coalition'
 
 export async function insertOrUpdateUnit(unit: Unit): Promise<void> {
   const { name, position: positionLL, type: typeName, coalition } = unit
@@ -157,10 +158,18 @@ export async function findUnit(name: string): Promise<Unit | undefined> {
  * @param position PositionLL
  * @param accuracy accuracy of search in meters
  */
-export async function nearbyUnits(position: PositionLL, accuracy: number) {
+export async function nearbyUnits({
+  position,
+  accuracy,
+  coalition,
+}: {
+  position: PositionLL
+  accuracy: number
+  coalition: Coalition
+}) {
   const { lat, lon } = position
 
-  return await knex('units')
+  let query = knex('units')
     .leftOuterJoin('positions', function () {
       this.on('units.positionId', '=', 'positions.positionId')
     })
@@ -175,4 +184,22 @@ export async function nearbyUnits(position: PositionLL, accuracy: number) {
     ])
     .whereNull('destroyedAt')
     .whereNull('goneAt')
+
+  // if not Coalition_ALL, search by country
+  if (Coalition.COALITION_ALL !== coalition) {
+    const country = countryFrom(coalition)
+    query = query.where({ country })
+  }
+
+  const nearby = await query
+
+  return await nearby
+    .map(unit => {
+      const { lat, lon, alt } = unit
+      const unitPosition = { lat, lon, alt }
+      return { unit, distance: distanceFrom(position, unitPosition) }
+    })
+    .filter(unit => unit.distance <= accuracy)
+    .sort((a, b) => a.distance - b.distance)
+    .map(unit => unit.unit)
 }

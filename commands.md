@@ -50,14 +50,35 @@ Spawn a blue abrams
 
 ### !destroy
 
-Destroy a unit or spawner near the map marker. The closest unit or spawner to the marker will be destroyed.
-You can also specific either unit or spawner type to destroy, and it will only destroy that type.
+Destroy units or spawners near the map marker. The closest unit or spawner to the marker will be destroyed, if no radius is specified.
+You can also specify either unit or spawner type to destroy, and it will only destroy that type. You can also specify the coalition. Default coalition is the coalition of the player who created the map marker.
 
 **syntax**
 
 ```
-!destroy <toDestroy:optional>
+!destroy <toDestroy:optional> <radius:optional> <coalition:optional>
 ```
+optional with rad or radius as keyword for the specified radius:
+```
+!destroy <toDestroy:optional> radius <radius:optional> <coalition:optional>
+```
+
+available types to destroy:
+
+```
+unit
+spawner
+```
+default: both
+
+available coalitions:
+
+```
+blue
+red
+all
+```
+default: player coalition
 
 **examples**
 
@@ -77,6 +98,24 @@ Destroy spawner closest the map marker:
 
 ```
 !destroy spawner
+```
+
+Destroy everything from your own coalition in 1000 meter radius:
+
+```
+!destroy 1000
+```
+
+Destroy blue units in 500 meter radius:
+
+```
+!destroy blue unit 500
+```
+
+Destroy everything of blue and red coalition using the optional radius keyword for a 1000 meter radius:
+
+```
+!destroy all radius 1000
 ```
 
 ### !spawngroup

@@ -33,7 +33,9 @@ export interface DefineSpawnGroupCommand extends Omit<CommandShape, 'args'> {
 
 export interface DestroyCommand extends Omit<CommandShape, 'args'> {
   type: CommandType.Destroy
-  toDestroy?: ToDestroy
+  toDestroy: ToDestroy | undefined
+  radius: number | undefined
+  coalition: Coalition | undefined
 }
 
 export interface SpawnCommand extends Omit<CommandShape, 'args'> {
