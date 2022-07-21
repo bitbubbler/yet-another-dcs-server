@@ -18,7 +18,7 @@ import {
   vec3From,
 } from './common'
 import { Position3, PositionLL, Velocity } from './types'
-import { Unit as DbUnit } from './db'
+import { knex, Unit as DbUnit } from './db'
 
 const { coalition } = services
 
@@ -104,10 +104,8 @@ export async function spawnGroundUnit({
   heading = 0,
 }: SpawnGroundUnitOptions) {
   console.log('trying to spawn')
-  return new Promise<{ groupName: string }>((resolve, reject) => {
-    const id = Math.floor(1000 + Math.random() * 9000)
-
-    const name = unitName || `spawned unit ${id}`
+  return new Promise<{ groupName: string }>(async (resolve, reject) => {
+    const name = unitName || (await uniqueUnitName())
 
     const unit: GroundUnitTemplate = {
       position,
@@ -150,16 +148,35 @@ export async function spawnGroundUnit({
   })
 }
 
-export async function destroy(unitName: string): Promise<void> {
-  const lua = `
-    Unit.getByName("${unitName}"):destroy()
-`
+export async function uniqueUnitName(): Promise<string> {
+  const id = Math.floor(1000 + Math.random() * 9000)
 
+  const name = `spawned unit ${id}`
+
+  // check that the name is not already in use
+  const existingUnit = await knex('units')
+    .select('unitId')
+    .where({ name })
+    .first()
+
+  // if the name is alredy in use
+  if (existingUnit) {
+    // try again
+    return uniqueUnitName()
+  }
+
+  // otherwise return this name
+  return name
+}
+
+export async function destroy(unitName: string): Promise<void> {
+  const lua = `Unit.getByName("${unitName}"):destroy()`
   return new Promise<void>((resolve, reject) =>
     services.custom.eval({ lua }, error => {
       if (error) {
-        reject(error)
+        return reject(error)
       }
+
       resolve()
     })
   )
