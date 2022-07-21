@@ -1,4 +1,3 @@
-import { Server } from '@grpc/grpc-js'
 import { Command, OptionValues } from 'commander'
 
 const program = new Command()

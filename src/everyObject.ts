@@ -48,6 +48,7 @@ export const WW2_ASSETS = new Map<string, EveryObject>()
 
 // classifications: https://github.com/mrSkortch/DCS-miscScripts/blob/dded70eb829ded86974e892d1c76d24b5082a051/ObjectDB/writeCountries.lua#L98-L137
 Object.keys(everyObject).forEach(key => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data = (everyObject as any)[key]
   if ('attributes' in data.desc === false) {
     // TODO: fiure out how to classify these

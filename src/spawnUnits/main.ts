@@ -11,15 +11,6 @@ import {
 } from '../events'
 import { outGroupText, outUnitText, removeMapMark } from '../trigger'
 
-import {
-  ARTILLERY,
-  EveryObject,
-  everyObjectFrom,
-  IFV,
-  MLRS,
-  TANKS,
-  TRUCKS,
-} from '../everyObject'
 import { getMarkById, getMarkPanels, MarkPanel } from '../custom'
 import { MarkPanelsMissingError } from '../errors'
 import { groupFromGroupName } from '../group'
@@ -32,19 +23,8 @@ import {
   spawnGroundUnitsOnCircle,
 } from '../unit'
 import { CommandType as EventCommandType, ToDestroy } from '../commands/types'
-import {
-  addGroupCommand,
-  addGroupCommandSubMenu,
-  removeGroupCommandItem,
-} from '../mission'
-import { knex, nearbyUnits, Unit, unitGone } from '../db'
-import {
-  distanceFrom,
-  metersToDegree,
-  positionLLFrom,
-  randomPositionOnCircle,
-} from '../common'
-import { PositionLL } from '../types'
+import { nearbyUnits, unitGone } from '../db'
+import { distanceFrom, positionLLFrom } from '../common'
 import {
   findSpawnGroupBy,
   insertOrUpdateSpawnGroup,
@@ -332,6 +312,7 @@ async function handleMarkAddEvent(event: MarkAddEvent) {
     throw new Error('mark missing from markPanels')
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const position = addedMark.position!
   // TODO: put below in fn(s)
   // if a mark is changed after being added it should no longer be considered a valid spawn location
@@ -361,6 +342,7 @@ async function handleMarkAddEvent(event: MarkAddEvent) {
 
   // if the player already has a pending spawn selection
   if (groupSpawnSelection.has(group.id)) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const typeName = groupSpawnSelection.get(group.id)!.typeName
 
     // use it to spawn a unit on the new marker
@@ -380,6 +362,7 @@ async function handleMarkAddEvent(event: MarkAddEvent) {
   }
 
   // otherwise update the player marker
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   groupSpawnLocation.set(group.id!, {
     markerId: id,
     position,
@@ -397,8 +380,6 @@ async function handleBirth(event: BirthEvent) {
   if (!groupName) {
     throw new Error('expected player entering unit to have groupName')
   }
-
-  await createSpawnUnitsMenu(groupName)
 }
 
 async function handleGroupCommand(event: GroupCommandEvent) {
@@ -411,6 +392,7 @@ async function handleGroupCommand(event: GroupCommandEvent) {
   }
 
   if (groupSpawnLocation.has(group.id)) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const { markerId, position } = groupSpawnLocation.get(group.id)!
     // we have a location, spawn something here
     await spawnGroundUnit({
@@ -437,67 +419,5 @@ async function handleGroupCommand(event: GroupCommandEvent) {
   await outGroupText(
     group.id,
     `Place a marker on the F10 map to spawn the ${typeName}`
-  )
-}
-
-async function createSpawnUnitsMenu(groupName: string) {
-  const rootMenuName = 'Spawn Units'
-
-  // try to remove previous instances of this menu
-  await removeGroupCommandItem({ groupName, path: [rootMenuName] })
-
-  // register menu for spawning
-
-  const rootMenu = await addGroupCommandSubMenu({
-    groupName,
-    name: rootMenuName,
-  })
-
-  const rootPath = rootMenu.path
-  const spawnable = { IFV, MLRS, ARTILLERY, TRUCKS, TANKS }
-
-  if (!rootPath) {
-    throw new Error('missing rootPath')
-  }
-
-  await Promise.all(
-    Object.keys(spawnable).map(async setName => {
-      const set = spawnable[setName as keyof typeof spawnable]
-      const name =
-        setName.charAt(0).toUpperCase() + setName.toLowerCase().slice(1)
-
-      const subMenu = await addGroupCommandSubMenu({
-        groupName,
-        name,
-        path: rootPath,
-      })
-
-      const setPath = subMenu.path
-
-      if (!setPath) {
-        throw new Error('missing setPath')
-      }
-
-      await Promise.all(
-        Array.from(set.values()).map(async data => {
-          const { desc } = data
-
-          if (!desc) {
-            throw new Error('desc missing on data')
-          }
-
-          const { typeName, displayName } = desc
-
-          await addGroupCommand({
-            groupName,
-            name: displayName,
-            path: setPath,
-            details: {
-              typeName,
-            },
-          })
-        })
-      )
-    })
   )
 }

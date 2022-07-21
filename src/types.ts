@@ -1,5 +1,7 @@
 import { Position__Output } from '../generated/dcs/common/v0/Position'
 
+export type TeardownFn = () => Promise<void>
+
 export type Distance = number
 
 export interface Vec2 {

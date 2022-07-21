@@ -11,11 +11,14 @@ export async function getPlayers(di: DI): Promise<GetPlayerInfo[]> {
     netService.getPlayers({}, (error, result) => {
       if (error) {
         console.log('getPlayers failed', error)
-        throw new Error('getPlayers failed')
+        reject(new Error('getPlayers failed'))
+        return
       }
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const { players } = result!
       if (!players) {
-        throw new Error('expected to find players in result')
+        reject(new Error('expected to find players in result'))
+        return
       }
       resolve(players)
     })

@@ -13,6 +13,7 @@ export async function groups(): Promise<Group[]> {
         return reject(error)
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const { groups } = results!
 
       if (!groups) {
@@ -154,15 +155,4 @@ export async function groupFromGroupName(groupName: string): Promise<Group> {
   }
 
   return group
-}
-
-export async function destroyGroup(groupName: string) {
-  const lua = `
-    return Group.getByName("${groupName}").destroy()
-`
-  return new Promise<void>((resolve, reject) => {
-    custom.eval({ lua }, (error, result) => {
-      // TODO: finish
-    })
-  })
 }

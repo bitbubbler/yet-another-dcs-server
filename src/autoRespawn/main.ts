@@ -10,8 +10,7 @@ import {
 import { markToAll, outText, removeMapMark } from '../trigger'
 
 import { getMarkById, getMarkPanels, MarkPanel } from '../custom'
-import { CommandType, ToDestroy } from '../commands/types'
-import { MenuCommand, MenuCommandType } from '../menuCommands/types'
+import { Command, CommandType, ToDestroy } from '../commands'
 import {
   allSpawners,
   insertSpawner,
@@ -33,11 +32,6 @@ import { PositionLL } from '../types'
 import { spawnGroundUnitsInCircle } from '../unit'
 import { insertSpawnerQueue, spawnerQueueDone } from '../db/spawnerQueues'
 import { UnitEvents, UnitEventType, UnitGoneEvent } from '../unitEvents'
-import {
-  addMissionCommand,
-  addMissionCommandSubMenu,
-  removeMissionCommandItem,
-} from '../mission'
 import { closestPointOnRoads, findPathOnRoads, RoadType } from '../land'
 import { driveGroundGroup } from '../group'
 import { distanceFrom } from '../common'
@@ -65,8 +59,6 @@ export async function autoRespawnMain(): Promise<() => Promise<void>> {
       return handleUnitGoneEvent(unitEvent as UnitGoneEvent)
     }
   })
-
-  await createSpawnersMenu()
 
   if (spawnersVisible) {
     await showSpawners()
@@ -433,48 +425,16 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
   }
 }
 
-async function createSpawnersMenu(): Promise<void> {
-  const menuName = 'Spawners'
-
-  // cleanup
-  await removeMissionCommandItem({ path: [menuName] })
-
-  // recreate
-  const rootMenu = await addMissionCommandSubMenu({ name: menuName })
-
-  const rootPath = rootMenu.path
-
-  if (!rootPath) {
-    throw new Error('missing rootPath')
-  }
-
-  await addMissionCommand({
-    name: 'Show Spawners',
-    path: rootPath,
-    details: {
-      type: MenuCommandType.ShowSpawners,
-    },
-  })
-
-  await addMissionCommand({
-    name: 'Hide Spawners',
-    path: rootPath,
-    details: {
-      type: MenuCommandType.HideSpawners,
-    },
-  })
-}
-
 async function handleMissionCommand(event: MissionCommandEvent): Promise<void> {
-  const details = event.details as unknown as MenuCommand
+  const details = event.details as unknown as Command
 
   const { type } = details
 
-  if (MenuCommandType.ShowSpawners === type) {
+  if (CommandType.ShowSpawners === type) {
     spawnersVisible = true
     await showSpawners()
   }
-  if (MenuCommandType.HideSpawners === type) {
+  if (CommandType.HideSpawners === type) {
     spawnersVisible = false
     await hideSpawners()
   }

@@ -387,6 +387,7 @@ export function structFrom(details: DetailsValueShape): Struct {
   Object.keys(details).forEach(key => {
     const field = details[key]
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     struct.fields![key] = valueFrom(field)
   })
 

@@ -25,6 +25,7 @@ export async function getAvailableSlots(
         if (error) {
           return reject(error)
         }
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const { json } = result!
 
         if (!json) {

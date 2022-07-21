@@ -1,5 +1,4 @@
 import { equal } from 'assert'
-import { vec2From } from './common'
 import { services } from './services'
 import { PositionLL } from './types'
 

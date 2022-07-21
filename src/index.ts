@@ -1,5 +1,4 @@
 import { backOff } from 'exponential-backoff'
-import { program } from 'commander'
 
 import { getAvailableSlots, Slot, SlotID } from './dcs'
 
@@ -9,19 +8,24 @@ import { prepare as prepareDatabase } from './db/db'
 import { Restarts } from './signals'
 
 // building blocks
-import { Events, startEvents } from './events'
-import { startUnitEvents, UnitEvents } from './unitEvents'
+import { startEvents } from './events'
+import { GroupMenu, menusMain, MissionMenu } from './menus'
 import { pingpong } from './pingpong'
+import { startUnitEvents } from './unitEvents'
 
 // bigger things
-import { spawnUnitsMain } from './spawnUnits/main'
-import { persistenceMain } from './persistence/main'
-import { restartMissionMain } from './restartMission/main'
-import { visualMarkersMain } from './visualMarkers/main'
-import { autoRespawnMain } from './autoRespawn/main'
+import { spawnUnitsMain, spawnUnitsMenu } from './spawnUnits'
+import { persistenceMain } from './persistence'
+import { restartMissionMain, restartMissionMenu } from './restartMission'
+import { visualMarkersMain } from './visualMarkers'
+import { autoRespawnMain, spawnersMenu } from './autoRespawn'
 
 // const missionCoalitions = new Set<> // TODO
 const missionSlots = new Map<SlotID, Slot>()
+
+// NOTE: The order of menus in this array determines their order on the client
+const missionMenus: MissionMenu[] = [spawnersMenu, restartMissionMenu]
+const groupMenus: GroupMenu[] = [spawnUnitsMenu]
 
 async function main() {
   // things here only happen once
@@ -50,6 +54,9 @@ async function main() {
     startEvents()
     startUnitEvents()
 
+    // load the menus
+    const teardownMenus = await menusMain(missionMenus, groupMenus)
+
     // bootstrap our functional modules
     const teardownSpawnUnits = await spawnUnitsMain()
     const teardownPersistence = await persistenceMain()
@@ -64,6 +71,7 @@ async function main() {
       await teardownRestartMission()
       await teardownVisualMarkers()
       await teardownAutoRespawn()
+      await teardownMenus()
     }
   }
 

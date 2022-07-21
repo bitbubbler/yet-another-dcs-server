@@ -13,6 +13,10 @@ export enum CommandType {
   Flare,
   Illumination,
   CreateSpawner,
+  RestartMission,
+  RestartMissionCancel,
+  ShowSpawners,
+  HideSpawners,
 }
 
 export enum ToDestroy {
@@ -71,6 +75,24 @@ export interface CreateSpawner extends Omit<CommandShape, 'args'> {
   onRoad: boolean | undefined
 }
 
+export interface RestartMissionCommand extends Omit<CommandShape, 'args'> {
+  type: CommandType.RestartMission
+  delay?: number // number of seconds to wait before restarting, can be canceled during this time
+}
+
+export interface RestartMissionCancelCommand
+  extends Omit<CommandShape, 'args'> {
+  type: CommandType.RestartMissionCancel
+}
+
+export interface ShowSpawnersCommand extends Omit<CommandShape, 'args'> {
+  type: CommandType.ShowSpawners
+}
+
+export interface HideSpawnersCommand extends Omit<CommandShape, 'args'> {
+  type: CommandType.HideSpawners
+}
+
 export interface UnknownCommand extends Omit<CommandShape, 'args'> {
   type: CommandType.Unknown
 }
@@ -85,3 +107,7 @@ export type Command =
   | FlareCommand
   | IlluminationCommand
   | CreateSpawner
+  | RestartMissionCommand
+  | RestartMissionCancelCommand
+  | ShowSpawnersCommand
+  | HideSpawnersCommand
