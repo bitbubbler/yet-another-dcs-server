@@ -10,6 +10,11 @@ import { _dcs_trigger_v0_SignalFlareRequest_FlareColor as FlareColor } from '../
 // defines available colors
 const colors: string[] = ['green', 'red', 'white', 'orange', 'blue', 'yellow']
 
+//these intervals are set to one grenade at a time for smoke and illum.
+const SMOKE_INTERVAL_SECONDS = 300
+const FLARE_INTERVAL_SECONDS = 10
+const ILLUMINATION_INVTERVAL_SECONDS = 180
+
 type Color = typeof colors[number]
 
 export async function visualMarkersMain(): Promise<() => Promise<void>> {
@@ -38,7 +43,7 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
 
       let color = SmokeColor.SMOKE_COLOR_GREEN //default green smoke
 
-      if (command.color) {
+      if (command.color != undefined) {
         const colorMatch = match(command.color, colors)
         if (isColor(colorMatch)) {
           color = smokeColorFrom(colorMatch)
@@ -49,6 +54,14 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
 
       await smoke(addedMark.position, color)
 
+      // if duration is set by the user, deploy smoke in interval
+      if (command.duration != undefined) {
+        const timerID = setInterval(
+          async () => await smoke(addedMark.position, color),
+          SMOKE_INTERVAL_SECONDS * 1000
+        )
+        setTimeout(() => clearInterval(timerID), command.duration * 60 * 1000)
+      }
       // remove the map marker
       await removeMapMark(id)
     }
@@ -62,7 +75,7 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
       let color = FlareColor.FLARE_COLOR_GREEN //default green flare
       const azimuth = randomAngleDeg()
 
-      if (command.color) {
+      if (command.color != undefined) {
         const colorMatch = match(command.color, colors)
         if (isColor(colorMatch)) {
           color = flareColorFrom(colorMatch)
@@ -72,6 +85,15 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
       }
 
       await signalFlare(addedMark.position, color, azimuth)
+
+      // if duration is set by the user, repeat flaring in interval
+      if (command.duration != undefined) {
+        const timerID = setInterval(
+          async () => await signalFlare(addedMark.position, color, azimuth),
+          FLARE_INTERVAL_SECONDS * 1000
+        )
+        setTimeout(() => clearInterval(timerID), command.duration * 60 * 1000)
+      }
 
       // remove the map marker
       await removeMapMark(id)
@@ -84,6 +106,15 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
       }
 
       await illumination(addedMark.position)
+
+      // if duration is set by the user, repeat illumination in interval
+      if (command.duration != undefined) {
+        const timerID = setInterval(
+          async () => await illumination(addedMark.position),
+          ILLUMINATION_INVTERVAL_SECONDS * 1000
+        )
+        setTimeout(() => clearInterval(timerID), command.duration * 60 * 1000)
+      }
 
       // remove the map marker
       await removeMapMark(id)
