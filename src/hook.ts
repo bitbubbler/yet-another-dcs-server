@@ -4,7 +4,7 @@ const { hook } = services
 
 export async function reloadCurrentMission(): Promise<void> {
   return new Promise<void>((resolve, reject) => {
-    hook.reloadCurrentMission({}, (error, _result) => {
+    hook.reloadCurrentMission({}, error => {
       if (error) {
         return reject(error)
       }

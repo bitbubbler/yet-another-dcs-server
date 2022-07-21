@@ -1,4 +1,3 @@
-import { WorldServiceClient as WorldService } from '../generated/dcs/world/v0/WorldService'
 import { MarkPanel__Output as MarkPanel } from '../generated/dcs/common/v0/MarkPanel'
 import { MarkPanelsMissingError } from './errors'
 import { services } from './services'
@@ -18,6 +17,7 @@ export async function getMarkPanels(): Promise<MarkPanel[]> {
         return reject(new MarkPanelsMissingError())
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const { markPanels } = result!
 
       if (!markPanels) {

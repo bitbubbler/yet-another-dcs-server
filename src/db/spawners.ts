@@ -1,4 +1,4 @@
-import { knex, Spawner as DBSpawner } from './db'
+import { knex } from './db'
 import { Spawner } from '../autoRespawn/types'
 import { distanceFrom, metersToDegree } from '../common'
 import { equal } from 'assert'

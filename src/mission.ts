@@ -5,7 +5,7 @@ import { AddMissionCommandRequest } from '../generated/dcs/mission/v0/AddMission
 import { AddMissionCommandSubMenuRequest } from '../generated/dcs/mission/v0/AddMissionCommandSubMenuRequest'
 import { AddMissionCommandSubMenuResponse__Output } from '../generated/dcs/mission/v0/AddMissionCommandSubMenuResponse'
 import { RemoveMissionCommandItemRequest } from '../generated/dcs/mission/v0/RemoveMissionCommandItemRequest'
-import { detailsFrom, DetailsValueShape, structFrom } from './events'
+import { DetailsValueShape, structFrom } from './events'
 import { services } from './services'
 
 const { mission } = services
@@ -19,7 +19,7 @@ export async function removeMissionCommandItem({
     const options: RemoveMissionCommandItemRequest = {
       path,
     }
-    mission.removeMissionCommandItem(options, (error, _result) => {
+    mission.removeMissionCommandItem(options, error => {
       if (error) {
         return reject(error)
       }
@@ -45,7 +45,7 @@ export async function addMissionCommand({
     if (path) {
       options.path = path
     }
-    mission.addMissionCommand(options, (error, _result) => {
+    mission.addMissionCommand(options, error => {
       if (error) {
         return reject(error)
       }
@@ -90,7 +90,7 @@ export async function removeGroupCommandItem({
   path: string[]
 }) {
   return new Promise<void>((resolve, reject) =>
-    mission.removeGroupCommandItem({ groupName, path }, (error, _result) => {
+    mission.removeGroupCommandItem({ groupName, path }, error => {
       if (error) {
         return reject(error)
       }

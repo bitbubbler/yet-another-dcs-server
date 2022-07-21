@@ -156,7 +156,7 @@ export async function destroy(unitName: string): Promise<void> {
 `
 
   return new Promise<void>((resolve, reject) =>
-    services.custom.eval({ lua }, (error, _result) => {
+    services.custom.eval({ lua }, error => {
       if (error) {
         reject(error)
       }
@@ -181,6 +181,7 @@ export async function getPositionVelocity(
       if (error) {
         reject(error)
       }
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const [maybePosition3, maybeVelocity] = JSON.parse(result!.json!)
 
       const position = position3From(maybePosition3)

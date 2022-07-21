@@ -12,7 +12,7 @@ export async function outUnitText(playerId: number, message: string) {
         targetPlayerId: playerId,
         message,
       },
-      (error, _result) => {
+      error => {
         if (error) {
           return reject(error)
         }
@@ -35,7 +35,7 @@ export async function outGroupText(
         clearView: false,
         text,
       },
-      (error, _result) => {
+      error => {
         if (error) {
           return reject(error)
         }
@@ -53,7 +53,7 @@ export async function outText(text: string, displayTime = 10) {
         clearView: false,
         text,
       },
-      (error, _result) => {
+      error => {
         if (error) {
           return reject(error)
         }

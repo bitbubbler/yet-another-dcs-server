@@ -1,4 +1,4 @@
-import { notStrictEqual, strictEqual } from 'assert'
+import { notStrictEqual } from 'assert'
 import { WordToken } from '.'
 import { Reader } from '../reader'
 import { Character, EOF, StringToken, Token, TokenKind } from './types'
@@ -93,7 +93,6 @@ export function lexer(reader: Reader) {
     const valueParts: string[] = []
 
     while (true) {
-      const lastChar = valueParts[valueParts.length - 1]
       const nextChar = reader.peek()
       if (quoteless && isWhitespace(nextChar)) {
         // end of string

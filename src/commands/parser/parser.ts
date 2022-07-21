@@ -1,5 +1,4 @@
 import {
-  Argument,
   Command,
   CommandType,
   DefineSpawnGroupCommand,
@@ -9,7 +8,7 @@ import { Reader } from '../reader'
 import { lexer as Lexer, TokenKind } from '../lexer'
 import { ParserUnexpectedTokenError, ParserUnknownTokenError } from './errors'
 import { Coalition } from '../../../generated/dcs/common/v0/Coalition'
-import { Spawner, SpawnerType } from '../../autoRespawn/types'
+import { SpawnerType } from '../../autoRespawn/types'
 
 export type Value = string | number | (string | number)[] | Command
 
