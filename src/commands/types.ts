@@ -56,16 +56,19 @@ export interface SpawnGroupCommand extends Omit<CommandShape, 'args'> {
 
 export interface SmokeCommand extends Omit<CommandShape, 'args'> {
   type: CommandType.Smoke
-  color?: string
+  color: string | undefined
+  duration: number | undefined
 }
 
 export interface FlareCommand extends Omit<CommandShape, 'args'> {
   type: CommandType.Flare
-  color?: string
+  color: string | undefined
+  duration: number | undefined
 }
 
 export interface IlluminationCommand extends Omit<CommandShape, 'args'> {
   type: CommandType.Illumination
+  duration: number | undefined
 }
 
 export interface CreateSpawner extends Omit<CommandShape, 'args'> {

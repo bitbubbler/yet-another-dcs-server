@@ -281,45 +281,93 @@ function processCommand(lexer: Lexer): Command {
   }
 
   if (CommandType.Smoke === type) {
-    const nextToken = lexer.nextToken()
+    let color = undefined
+    let duration = undefined
 
-    if (
-      TokenKind.Word === nextToken.kind ||
-      TokenKind.String === nextToken.kind
-    ) {
-      const color = nextToken.value
+    const parseParts = (): void => {
+      const nextToken = lexer.nextToken()
 
-      return {
-        type: CommandType.Smoke,
-        color,
+      if (TokenKind.EOF === nextToken.kind) {
+        return
       }
+
+      // assume string or word is color
+      if (
+        TokenKind.Word === nextToken.kind ||
+        TokenKind.String === nextToken.kind
+      ) {
+        color = nextToken.value
+        return parseParts()
+      }
+
+      // assume number is duration
+      if (TokenKind.Number === nextToken.kind) {
+        duration = nextToken.value
+        return parseParts()
+      }
+
+      throw new Error('unexpected token found')
     }
+
+    parseParts()
+
     return {
       type: CommandType.Smoke,
+      color,
+      duration,
     }
   }
 
   if (CommandType.Flare === type) {
-    const nextToken = lexer.nextToken()
-    if (
-      TokenKind.Word === nextToken.kind ||
-      TokenKind.String === nextToken.kind
-    ) {
-      const color = nextToken.value
+    let color = undefined
+    let duration = undefined
 
-      return {
-        type: CommandType.Flare,
-        color,
+    const parseParts = (): void => {
+      const nextToken = lexer.nextToken()
+
+      if (TokenKind.EOF === nextToken.kind) {
+        return
       }
+
+      // assume string or word is color
+      if (
+        TokenKind.Word === nextToken.kind ||
+        TokenKind.String === nextToken.kind
+      ) {
+        color = nextToken.value
+        return parseParts()
+      }
+
+      // assume number is duration
+      if (TokenKind.Number === nextToken.kind) {
+        duration = nextToken.value
+        return parseParts()
+      }
+
+      throw new Error('unexpected token found')
     }
+
+    parseParts()
+
     return {
       type: CommandType.Flare,
+      color,
+      duration,
     }
   }
 
   if (CommandType.Illumination === type) {
+    let duration = undefined
+
+    const nextToken = lexer.nextToken()
+    // assume number is duration
+    if (TokenKind.Number === nextToken.kind) {
+      duration = nextToken.value
+    }
+
     return {
       type: CommandType.Illumination,
+      duration,
     }
   }
 
@@ -396,7 +444,7 @@ function matchCommand(input: string): CommandType {
   if ('flare' === lowerInput) {
     return CommandType.Flare
   }
-  if ('illum' === lowerInput || 'illumination' === lowerInput) {
+  if (/^illum/.test(lowerInput) === true) {
     return CommandType.Illumination
   }
   if ('spawner' === lowerInput) {

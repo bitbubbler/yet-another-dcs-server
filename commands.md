@@ -1,13 +1,13 @@
 - [Map marker commands](#map-marker-commands)
-  * [!spawn](#spawn)
-  * [!destroy](#destroy)
-  * [!spawngroup](#spawngroup)
-  * [!smoke](#smoke)
-  * [!flare](#flare)
-  * [!illumination](#illumination)
-  * [!spawner](#spawmer)
+  - [spawn](#spawn)
+  - [destroy](#destroy)
+  - [spawngroup](#spawngroup)
+  - [smoke](#smoke)
+  - [flare](#flare)
+  - [illumination](#illumination)
+  - [spawner](#spawner)
 - [Chat commands](#chat-commands)
-  * [!defgroup](#defgroup)
+  - [defgroup](#defgroup)
 
 
 ## Map marker commands
@@ -158,7 +158,8 @@ Spawn a previous named `tanks` group in a 1000 meter radius
 
 ### smoke
 
-Create a smoke marker with the specified color on the map marker. The marker will last 5 minutes.
+Create a smoke marker with the specified color on the map marker. The marker will last for at 5 minutes. 
+The command takes a duration value in minutes. Due to DCS limitations one smoke grenade will last 5 minutes. Setting a duration of 7 minutes will result in 10 minutes smoke.
 If no color is given, a green smoke marker will be created.
 
 - `color` fuzzy match string for a color name, can be a partial color name
@@ -166,7 +167,7 @@ If no color is given, a green smoke marker will be created.
 **syntax**
 
 ```
-!smoke <color:optional>
+!smoke <color:optional> <duration:optional>
 ```
 
 available colors:
@@ -178,6 +179,8 @@ orange
 white
 blue
 ```
+
+Duration is set in minutes.
 
 **examples**
 
@@ -193,17 +196,24 @@ Create white smoke with partial color name:
 !smoke wh
 ```
 
+Create green smoke marker that lasts 30 minutes:
+
+```
+!smoke green 30
+```
+
 ### flare
 
 Fire a flare with the specified color on the map marker. One flare will be fired into the air.
 If no color is given, a green flare will be fired.
+If a duration is specified, one flare will be fired each 10 seconds for the set duration in minutes.
 
 - `color` fuzzy match string for a color name, can be a partial color name
 
 **syntax**
 
 ```
-!flare <color:optional>
+!flare <color:optional> <duration:optional>
 ```
 
 available colors:
@@ -214,6 +224,7 @@ red
 white
 yellow
 ```
+Duration is set in minutes.
 
 **examples**
 
@@ -229,20 +240,21 @@ Fire white flare with partial color name:
 !flare wh
 ```
 
+Create red flare marker that lasts 5 minutes:
+
+```
+!flare green 10
+```
+
 ### illumination
 
 Drops an illumination bomb from 500 meters AGL on the map marker. Illumination bombs drift with wind in the mission.
+One illumination bomb lasts 3 minutes. If a duration is specified, one bomb every 3 minutes is dropped for the set duration in minutes.
 
 **syntax**
 
 ```
-!illumination
-```
-
-a short version of the command is also available:
-
-```
-!illum
+!illum <duration:optional>
 ```
 
 **examples**
@@ -250,7 +262,13 @@ a short version of the command is also available:
 drop illumination bomb on map marker:
 
 ```
-!illumination
+!illum
+```
+
+Illuminate for 10 minutes:
+
+```
+!illum 10
 ```
 
 ### spawner
