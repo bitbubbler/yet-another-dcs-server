@@ -1,9 +1,21 @@
+- [Map marker commands](#map-marker-commands)
+  * [!spawn](#spawn)
+  * [!destroy](#destroy)
+  * [!spawngroup](#spawngroup)
+  * [!smoke](#smoke)
+  * [!flare](#flare)
+  * [!illumination](#illumination)
+  * [!spanwer](#spanwer)
+- [Chat commands](#chat-commands)
+  * [!defgroup](#defgroup)
+
+
 ## Map marker commands
 
 Map marker commands should be typed into the grey/dark box that comes up when you edit a map marker from the f10 map.
 Type the command into the marker and then click off of the marker to execute the command
 
-### !spawn
+### spawn
 
 Spawn one or more units of one or more types on the map marker
 
@@ -48,7 +60,7 @@ Spawn a blue abrams
 !spawn blue abrams
 ```
 
-### !destroy
+### destroy
 
 Destroy units or spawners near the map marker. The closest unit or spawner to the marker will be destroyed, if no radius is specified.
 You can also specify either unit or spawner type to destroy, and it will only destroy that type. You can also specify the coalition. Default coalition is the coalition of the player who created the map marker.
@@ -118,7 +130,7 @@ Destroy everything of blue and red coalition using the optional radius keyword f
 !destroy all radius 1000
 ```
 
-### !spawngroup
+### spawngroup
 
 Spawn a previous saved group. The group must exist (create with !defgroup)
 Radius is optional. Default radius is 100 meters.
@@ -144,7 +156,7 @@ Spawn a previous named `tanks` group in a 1000 meter radius
 !spawngroup tanks radius 1000
 ```
 
-### !smoke
+### smoke
 
 Create a smoke marker with the specified color on the map marker. The marker will last 5 minutes.
 If no color is given, a green smoke marker will be created.
@@ -181,7 +193,7 @@ Create white smoke with partial color name:
 !smoke wh
 ```
 
-### !flare
+### flare
 
 Fire a flare with the specified color on the map marker. One flare will be fired into the air.
 If no color is given, a green flare will be fired.
@@ -217,7 +229,7 @@ Fire white flare with partial color name:
 !flare wh
 ```
 
-### !illumination
+### illumination
 
 Drops an illumination bomb from 500 meters AGL on the map marker. Illumination bombs drift with wind in the mission.
 
@@ -241,7 +253,7 @@ drop illumination bomb on map marker:
 !illumination
 ```
 
-### !spanwer
+### spanwer
 
 Create a spanwer on the map marker. You can set the spawners type and coalition when you create it
 
@@ -285,7 +297,7 @@ Create a red hard spawner:
 Chat commands should be typed into the chat box that comes up when you hit tab.
 Type the command into the message line and then press enter to execute the command
 
-### !defgroup
+### defgroup
 
 Define a named group of units to spawn using f10 markers
 Group names must be unique, and are global. If person a and b both make groups named `tanks`, they will overwrite eachother.
