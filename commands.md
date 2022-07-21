@@ -5,7 +5,7 @@
   * [!smoke](#smoke)
   * [!flare](#flare)
   * [!illumination](#illumination)
-  * [!spanwer](#spanwer)
+  * [!spawner](#spawmer)
 - [Chat commands](#chat-commands)
   * [!defgroup](#defgroup)
 
@@ -253,9 +253,9 @@ drop illumination bomb on map marker:
 !illumination
 ```
 
-### spanwer
+### spawner
 
-Create a spanwer on the map marker. You can set the spawners type and coalition when you create it
+Create a spawner on the map marker. You can set the spawners type and coalition when you create it
 
 - `type` the type/difficulty of the spawner you want to create. 'easy' 'medium' and 'hard' are valid values. Defaults to easy
 - `coalition` the coalition of the spawner you want to create. 'red' and 'blue' are valid values. Defaults to the coalition of the map marker
