@@ -4,7 +4,7 @@
 # Abstract
 Best quotes to describe the overall goal of this project: 
 
-- @bitbubbler "Build some cool shit, make it public. Have fun"
+- @bitbubbler "Build some cool ****, make it public. Have fun"
 - @skeletonwburg "Broad plan is to build an Open Source software, based on DCS-gRPC, that adds functions to a running mission to build a dynamic frontline ground war."
 
 In other words:
