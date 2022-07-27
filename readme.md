@@ -1,7 +1,7 @@
 # YADS - Yet Another DCS Server
 ![logo-placeholder](/images/logo.png)
 
-# Abstract
+# Vision
 Best quotes to describe the overall goal of this project: 
 
 - @bitbubbler "Build some cool ****, make it public. Have fun"
