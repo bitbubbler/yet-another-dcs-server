@@ -1,6 +1,6 @@
 import { equal } from 'assert'
 import { services } from './services'
-import { PositionLL } from './types'
+import { PositionLL } from './common'
 
 const { custom } = services
 

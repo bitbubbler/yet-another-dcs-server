@@ -1,5 +1,5 @@
 import { BirthEvent, Events, EventType } from '../events'
-import { TeardownFn } from '../types'
+import { TeardownFn } from '../common'
 import { GroupMenu, MissionMenu } from './types'
 
 /**
@@ -40,8 +40,7 @@ export async function menusMain(
   )
 
   // then add each missions menu back, one by one to enforce our desired order
-  for (let i = 0; i < missionMenus.length; i++) {
-    const menu = missionMenus[i]
+  for (const menu of missionMenus) {
     // then (re)create the menu
     await menu.create()
   }
@@ -65,7 +64,7 @@ export async function menusMain(
       throw new Error('expected player entering unit to have groupName')
     }
 
-    // remove all mission menus concurrently
+    // remove all group menus concurrently
     await Promise.all(
       groupMenus.map(async menu => {
         await menu.remove({ groupName })
@@ -76,8 +75,7 @@ export async function menusMain(
     // it seems, through testing, that group menus persist even when you change slots.
     // so they are not tied to a client.
     // then add each missions menu back, one by one to enforce our desired order
-    for (let i = 0; i < groupMenus.length; i++) {
-      const menu = groupMenus[i]
+    for (const menu of groupMenus) {
       // then (re)create the menu
       await menu.create({ groupName })
     }

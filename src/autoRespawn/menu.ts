@@ -21,7 +21,7 @@ export const spawnersMenu = missionMenu({
     await addMissionCommand({
       name: 'Show Spawners',
       path: rootPath,
-      details: {
+      command: {
         type: CommandType.ShowSpawners,
       },
     })
@@ -29,7 +29,7 @@ export const spawnersMenu = missionMenu({
     await addMissionCommand({
       name: 'Hide Spawners',
       path: rootPath,
-      details: {
+      command: {
         type: CommandType.HideSpawners,
       },
     })

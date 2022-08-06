@@ -8,7 +8,7 @@ import { Reader } from '../reader'
 import { lexer as Lexer, TokenKind } from '../lexer'
 import { ParserUnexpectedTokenError, ParserUnknownTokenError } from './errors'
 import { Coalition } from '../../../generated/dcs/common/v0/Coalition'
-import { SpawnerType } from '../../autoRespawn/types'
+import { SpawnerType } from '../../spawner'
 
 export type Value = string | number | (string | number)[] | Command
 
@@ -47,7 +47,7 @@ function processCommand(lexer: Lexer): Command {
 
   const type = matchCommand(typeToken.value)
 
-  if (CommandType.Spawn === type) {
+  if (CommandType.SpawnGroundUnit === type) {
     type Units = { fuzzyUnitName: string; count?: number }[]
 
     const units: Units = []
@@ -108,7 +108,7 @@ function processCommand(lexer: Lexer): Command {
     parseParts()
 
     return {
-      type: CommandType.Spawn,
+      type: CommandType.SpawnGroundUnit,
       units,
       coalition,
     }
@@ -379,7 +379,7 @@ function matchCommand(input: string): CommandType {
   const lowerInput = input.toLowerCase()
 
   if ('spawn' === lowerInput) {
-    return CommandType.Spawn
+    return CommandType.SpawnGroundUnit
   }
   if ('destroy' === lowerInput) {
     return CommandType.Destroy

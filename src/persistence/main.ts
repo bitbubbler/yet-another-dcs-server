@@ -1,25 +1,67 @@
-import { knex, unitGone } from '../db'
-import { groups as getGroups, getUnits } from '../group'
-import { spawnGroundUnit, Unit } from '../unit'
+import { findUnit, knex, unitFrom as unitFromDbUnit, unitGone } from '../db'
+import { isPlayerUnit, spawnGroundUnit } from '../unit'
 import { UnitEventType, UnitEvents } from '../unitEvents'
-import { insertOrUpdateUnit, Position, Unit as UnitTable } from '../db'
+import { updateUnitPosition, Position, Unit as UnitTable } from '../db'
 
 export async function persistenceMain(): Promise<() => Promise<void>> {
   await trySpawnUnits()
 
   // handle unit updates
   const subscription = UnitEvents.subscribe(async event => {
+    /**
+     * IMPORTANT: Player controlled units MAY NOT be persisted using this module.
+     * Attempting to use the this persistence for player controlled units
+     * will result in a bad time.
+     *
+     * Player controlled units are "slotted" into, and then a unit is spawned
+     * for that player at the location of that slot in the mission file.
+     * While having the location of the player is useful, that responsibility
+     * does not belong to the persistence module, and should be done elsewhere.
+     * Player controlled units are not gone forever, which persistence assumes.
+     * Furthermore, two players can even re-use the same unit by re-slotting
+     * as described above
+     */
     if (UnitEventType.Update === event.type) {
       const { unit } = event
 
-      await insertOrUpdateUnit(unit)
+      try {
+        await updateUnitPosition(unit)
+      } catch (error) {
+        // surpress failed position updates if a unit doesn't exist in the db
+        if (/No known unit/.test((error as Error).message)) {
+          return
+        }
+        throw error
+      }
     }
     if (UnitEventType.Gone === event.type) {
-      const { unit } = event
+      const name = event.unit.name
+      const unit = await findUnit(name)
 
-      await unitGone(unit)
+      if (typeof unit === 'undefined') {
+        throw new Error(`MissingUnit: no unit found in db with name ${name}`)
+      }
+
+      // do not record gone events for player units
+      // see the giant comment block above for details
+      if (isPlayerUnit(unit) === false) {
+        await unitGone(unit)
+      }
     }
   })
+
+  /**
+   * cargos are special, they don't have a good api from dcs-grp and there isn't
+   * an api in the scripting engine that gives us a good list of all cargos on the map
+   * without being super expensive.
+   *
+   * To enable cargo persistence, we assume that all cargos are created and managed by
+   * systems within this repo. This assumption allows us maintain persistence for
+   * cargos because we CAN get information for a specifically named staticObject (using dcs apis)
+   *
+   * Along with the above assumption, each cargo gets it's own uuid that acts as the
+   * identifier for doing lookups within the game engine
+   */
 
   return async () => {
     subscription.unsubscribe()
@@ -29,40 +71,14 @@ export async function persistenceMain(): Promise<() => Promise<void>> {
 /**
  * try to spawn units from the database (called on mission start and mission restart)
  */
-export async function trySpawnUnits() {
+async function trySpawnUnits() {
   // on startup, we need to attempt to syncronize mission state with database state
   // we can get more sophisticated, but for now we assume the database is the source of truth
   // this means that on restart, even if the mission hasn't reset, we'll reset the all units
   // to the position we have for each in the database
 
-  // get the units in the mission
-  const groups = await getGroups()
-
-  const missionUnitNames: Unit['name'][] = []
-  const missionUnits: Unit[] = []
-
-  await Promise.all(
-    groups.map(async group => {
-      const { name } = group
-      if (!name) {
-        throw new Error('expected name on group')
-      }
-
-      try {
-        const groupUnits = await getUnits(name)
-
-        groupUnits.forEach(unit => {
-          missionUnitNames.push(unit.name)
-          missionUnits.push(unit)
-        })
-      } catch (error) {
-        console.log('getting units for group failed', group, error)
-      }
-    })
-  )
-
   // get the units in the db
-  const dbUnits = await knex('units')
+  const unitsToSpawn = await knex('units')
     .leftOuterJoin('positions', function () {
       this.on('units.positionId', '=', 'positions.positionId')
     })
@@ -70,41 +86,31 @@ export async function trySpawnUnits() {
     .whereNull('destroyedAt')
     .select<
       Array<
-        Pick<UnitTable, 'unitId' | 'name' | 'country' | 'typeName'> &
-          Pick<Position, 'lat' | 'lon' | 'alt' | 'heading'>
+        Pick<
+          UnitTable,
+          'country' | 'isPlayerSlot' | 'name' | 'typeName' | 'unitId'
+        > &
+          Pick<Position, 'alt' | 'heading' | 'lat' | 'lon'>
       >
     >([
-      'units.unitId',
-      'name',
+      'alt',
       'country',
-      'typeName',
+      'heading',
+      'isPlayerSlot',
       'lat',
       'lon',
-      'alt',
-      'heading',
+      'name',
+      'typeName',
+      'units.unitId',
     ])
-
-  // compare the lists to figure out what we should spawn
-  const unitsToSpawn = dbUnits.filter(
-    unit => missionUnitNames.includes(unit.name) === false
-  )
 
   // spawn the missing units
   await Promise.all(
-    unitsToSpawn.map(async unit => {
-      const { unitId, name, country, typeName, lat, lon, heading } = unit
-
-      await spawnGroundUnit({
-        unitId,
-        name,
-        country,
-        typeName,
-        heading,
-        position: {
-          lat,
-          lon,
-        },
+    unitsToSpawn
+      .map(unit => unitFromDbUnit(unit))
+      .filter(unit => unit.isPlayerSlot === false)
+      .map(async unit => {
+        await spawnGroundUnit(unit)
       })
-    })
   )
 }

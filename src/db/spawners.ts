@@ -1,9 +1,6 @@
 import { knex } from './db'
-import { Spawner } from '../autoRespawn/types'
-import { distanceFrom, metersToDegree } from '../common'
+import { Spawner } from '../spawner'
 import { equal } from 'assert'
-import { PositionLL } from '../types'
-import { Coalition } from '../../generated/dcs/common/v0/Coalition'
 
 /**
  *
@@ -79,14 +76,14 @@ export async function updateSpawnerPosition(
     equal(typeof positionId, 'number')
 
     await knex('positions')
+      .where({
+        positionId,
+      })
       .update({
         lat,
         lon,
         alt,
         updatedAt: timestamp,
-      })
-      .where({
-        positionId,
       })
   }
 }
@@ -94,29 +91,25 @@ export async function updateSpawnerPosition(
 export async function spawnerDestroyed(spawnerId: number): Promise<void> {
   const timestamp = new Date()
 
-  await knex('spawners')
-    .update({
-      updatedAt: timestamp,
-      destroyedAt: timestamp,
-      goneAt: timestamp,
-    })
-    .where({ spawnerId })
+  await knex('spawners').where({ spawnerId }).update({
+    updatedAt: timestamp,
+    destroyedAt: timestamp,
+    goneAt: timestamp,
+  })
 }
 
 export async function spawnerGone(spawnerId: number): Promise<void> {
   const timestamp = new Date()
 
-  await knex('spawners')
-    .update({
-      updatedAt: timestamp,
-      goneAt: timestamp,
-    })
-    .where({ spawnerId })
+  await knex('spawners').where({ spawnerId }).update({
+    updatedAt: timestamp,
+    goneAt: timestamp,
+  })
 }
 
 export async function allSpawners(): Promise<Spawner[]> {
   const spawners = await knex('spawners')
-    .leftJoin('positions', 'spawners.positionId', 'positions.positionId')
+    .innerJoin('positions', 'spawners.positionId', 'positions.positionId')
     .whereNull('goneAt')
     .whereNull('capturedAt')
 
@@ -134,55 +127,4 @@ export async function allSpawners(): Promise<Spawner[]> {
       type,
     }
   })
-}
-
-/**
- * Search for spawners nearby a given PositionLL within a given accuracy.
- * Search uses a very simple box model algorithm to reduce the initial search set
- * @param position PositionLL
- * @param accuracy accuracy of search in meters
- */
-export async function nearbySpawners({
-  position,
-  accuracy,
-  coalition,
-}: {
-  position: PositionLL
-  accuracy: number
-  coalition: Coalition
-}) {
-  const { lat, lon } = position
-
-  let query = knex('spawners')
-    .leftOuterJoin('positions', function () {
-      this.on('spawners.positionId', '=', 'positions.positionId')
-    })
-    .select(['spawnerId', 'lat', 'lon', 'alt'])
-    .whereBetween('lat', [
-      lat - metersToDegree(accuracy),
-      lat + metersToDegree(accuracy),
-    ])
-    .whereBetween('lon', [
-      lon - metersToDegree(accuracy),
-      lon + metersToDegree(accuracy),
-    ])
-    .whereNull('goneAt')
-    .whereNull('capturedAt')
-
-  // if not all, search by coalition
-  if (Coalition.COALITION_ALL !== coalition) {
-    query = query.where({ coalition })
-  }
-
-  const nearby = await query
-
-  return nearby
-    .map(unit => {
-      const { lat, lon, alt } = unit
-      const unitPosition = { lat, lon, alt }
-      return { unit, distance: distanceFrom(position, unitPosition) }
-    })
-    .filter(unit => unit.distance <= accuracy)
-    .sort((a, b) => a.distance - b.distance)
-    .map(unit => unit.unit)
 }
