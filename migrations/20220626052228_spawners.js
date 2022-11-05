@@ -15,6 +15,7 @@ exports.up = async function (knex) {
     table.timestamp('goneAt') // no longer exists (if destroyed by players, both goneAt and destroyedAt should be set)
 
     table.primary('spawnerId')
+    table.unique('positionId') // one spawner per position
   })
 
   await knex.schema.createTable('spawnerQueues', table => {

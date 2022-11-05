@@ -7,7 +7,7 @@ import typescript from '@rollup/plugin-typescript'
 import tsConfig from './tsconfig.json'
 
 export default {
-  input: 'src/index.ts',
+  input: 'src/bin/server.ts',
   output: {
     file: 'build/dcs-server.js',
     format: 'cjs',

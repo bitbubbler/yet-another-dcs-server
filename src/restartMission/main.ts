@@ -17,12 +17,12 @@ export async function restartMissionMain(): Promise<() => Promise<void>> {
 }
 
 async function handleMissionCommand(event: MissionCommandEvent): Promise<void> {
-  const details = event.details as unknown as Command
+  const command = event.command
 
-  const { type } = details
+  const { type } = command
 
   if (CommandType.RestartMission === type) {
-    const { delay = 10 } = details
+    const { delay = 10 } = command
 
     const miliseconds = 1000 * delay
     const seconds = Math.floor(miliseconds / 1000)

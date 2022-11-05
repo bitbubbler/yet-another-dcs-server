@@ -91,6 +91,8 @@ export const services = {
   ready(): Promise<void[]> {
     const readyDeadline = Date.now() + 1000 * 3
 
+    console.log(`connecting to ${address}`)
+
     return Promise.all([
       waitForReady(coalition, readyDeadline),
       waitForReady(group, readyDeadline),
@@ -100,7 +102,11 @@ export const services = {
       waitForReady(trigger, readyDeadline),
       waitForReady(unit, readyDeadline),
       waitForReady(world, readyDeadline),
-    ])
+    ]).then(result => {
+      console.log('connected')
+
+      return result
+    })
   },
 }
 

@@ -8,7 +8,6 @@ import {
 import { Country } from '../generated/dcs/common/v0/Country'
 import { GroupCategory } from '../generated/dcs/common/v0/GroupCategory'
 import { StreamUnitsResponse__Output } from '../generated/dcs/mission/v0/StreamUnitsResponse'
-import { Coalition } from '../generated/dcs/common/v0/Coalition'
 import {
   position3From,
   positionLLFrom,
@@ -17,52 +16,69 @@ import {
   randomPositionOnCircle,
   vec3From,
 } from './common'
-import { Position3, PositionLL, Velocity } from './types'
-import { knex, Unit as DbUnit } from './db'
+import { Position3, PositionLL, Velocity } from './common'
+import { knex, Unit as DBUnit, Position as DBPosition, insertUnit } from './db'
+import { GetTransformResponse__Output } from '../generated/dcs/unit/v0/GetTransformResponse'
+import { countryFrom } from './country'
+import { Cargo } from './cargo'
 
-const { coalition } = services
+const { coalition, custom, unit } = services
 
 export interface Unit {
-  id: number
+  country: Country
+  /** heading in radians */
+  heading: number
+  /** if the unit is a slot (slots are player controlled) */
+  isPlayerSlot: boolean
   name: string
-  callsign: string | undefined
-  coalition: Coalition
-  type: string
   position: PositionLL
-  playerName: string | undefined
-  groupName: string | undefined
-  numberInGroup: number | undefined
+  typeName: string
+  unitId: number
 }
 
-export interface SpawnGroundUnitOptions {
-  country: Country
-  typeName: string
-  position: Pick<PositionLL, 'lat' | 'lon'>
-  unitId?: number
-  name?: string
-  heading?: number
+/**
+ * The unit as represented by the game. Typically recieved from dcs-grpc or lua calls.
+ *
+ * NOTE: The `heading` returned by dcs-grpc is currently not the users real heading.
+ * https://github.com/DCS-gRPC/rust-server/issues/159
+ */
+export type GameUnit = Omit<Unit, 'heading' | 'isPlayerSlot' | 'unitId'> & {
+  groupName: string
+  playerName: string | undefined
+}
+
+export interface PlayerUnit extends Unit {
+  isPlayerSlot: true
+}
+
+export function isPlayerUnit(unit: Unit): unit is PlayerUnit {
+  return unit.isPlayerSlot === true
 }
 
 export async function spawnGroundUnitsOnCircle(
   country: Country,
   focus: PositionLL,
   radius: number,
-  units: Pick<DbUnit, 'typeName'>[]
+  units: Pick<Unit, 'typeName'>[]
 ) {
   const circleUnits = units.map(unit => ({
     ...unit,
-    position: randomPositionOnCircle(focus, radius),
+    // use a dumb default alt of 0 here. We need to assume something,
+    // but we don't really want to make a call to the game engine
+    position: { ...randomPositionOnCircle(focus, radius), alt: 0 },
   }))
 
   await Promise.all(
     circleUnits.map(async unitToSpawn => {
-      const { typeName, position } = unitToSpawn
-
-      await spawnGroundUnit({
+      const unit = await createUnit({
         country,
-        typeName,
-        position,
+        // TODO: choose the heading to spawn the unit at
+        heading: 0,
+        isPlayerSlot: false,
+        ...unitToSpawn,
       })
+
+      await spawnGroundUnit(unit)
     })
   )
 }
@@ -71,7 +87,7 @@ export async function spawnGroundUnitsInCircle(
   country: Country,
   focus: PositionLL,
   radius: number,
-  units: Pick<DbUnit, 'typeName'>[]
+  units: Pick<DBUnit, 'typeName'>[]
 ) {
   return Promise.all(
     units.map(unit => spawnGroundUnitInCircle(country, focus, radius, unit))
@@ -82,49 +98,84 @@ export async function spawnGroundUnitInCircle(
   country: Country,
   focus: PositionLL,
   radius: number,
-  unit: Pick<DbUnit, 'typeName'>
+  unitToSpawn: Pick<DBUnit, 'typeName'>
 ) {
-  const position = randomPositionInCircle(focus, radius)
+  const position: PositionLL = {
+    ...randomPositionInCircle(focus, radius),
+    // use a dumb default alt of 0 here. We need to assume something,
+    // but we don't really want to make a call to the game engine
+    alt: 0,
+  }
 
-  const { typeName } = unit
+  const { typeName } = unitToSpawn
 
-  return spawnGroundUnit({
+  const unit = await createUnit({
     country,
-    typeName,
+    // TODO: choose a heading to spawn the unit at
+    heading: 0,
+    isPlayerSlot: false,
     position,
+    typeName,
+  })
+
+  return spawnGroundUnit(unit)
+}
+
+export async function createUnit(
+  newUnit: Pick<
+    Unit,
+    'country' | 'heading' | 'isPlayerSlot' | 'position' | 'typeName'
+  > &
+    Partial<Pick<Unit, 'name'>>
+): Promise<Unit> {
+  const name = newUnit.name || (await uniqueUnitName())
+
+  const unit = await insertUnit({
+    ...newUnit,
+    name,
+  })
+
+  return unit
+}
+
+export async function setUnitInternalCargoMass(
+  unit: Unit,
+  mass: number
+): Promise<void> {
+  const lua = `return trigger.action.setUnitInternalCargo("${unit.name}", ${mass})`
+
+  return new Promise((resolve, reject) => {
+    custom.eval({ lua }, (error, result) => {
+      if (error) {
+        return reject(error)
+      }
+      return resolve()
+    })
   })
 }
 
-export async function spawnGroundUnit({
-  unitId,
-  name: unitName,
-  country,
-  typeName,
-  position,
-  heading = 0,
-}: SpawnGroundUnitOptions) {
-  console.log('trying to spawn')
+export async function spawnGroundUnit(unit: Unit) {
+  console.log('trying to spawn ground unit')
+  if (unit.isPlayerSlot) {
+    throw new Error(
+      'player slots can not be spawned as ground units. it breaks the game'
+    )
+  }
   return new Promise<{ groupName: string }>(async (resolve, reject) => {
-    const name = unitName || (await uniqueUnitName())
-
-    const unit: GroundUnitTemplate = {
-      position,
-      name,
-      type: typeName,
-      heading: rad(heading),
-      skill: Skill.SKILL_AVERAGE,
-    }
-
+    const { country, heading, name, position, typeName } = unit
     const groundTemplate: GroundGroupTemplate = {
       name,
       task: 'Ground Nothing', // wtf is this for? what values are available?
       position,
-      units: [unit],
-    }
-
-    if (typeof unitId === 'number') {
-      unit.unitId = unitId
-      groundTemplate.groupId = unitId
+      units: [
+        {
+          position,
+          name,
+          type: typeName,
+          heading,
+          skill: Skill.SKILL_AVERAGE,
+        },
+      ],
     }
 
     coalition.addGroup(
@@ -146,6 +197,52 @@ export async function spawnGroundUnit({
       }
     )
   })
+}
+
+export async function getTransform(
+  unitName: string
+): Promise<Required<GetTransformResponse__Output>> {
+  return new Promise<Required<GetTransformResponse__Output>>(
+    (resolve, reject) =>
+      unit.getTransform(
+        {
+          name: unitName,
+        },
+        (error, result) => {
+          if (error) {
+            return reject(error)
+          }
+
+          if (!result) {
+            throw new Error('missing result from getTransform call')
+          }
+
+          if (!result.heading) {
+            throw new Error('missing heading from getTransform result')
+          }
+          if (!result.orientation) {
+            throw new Error('missing orientation from getTransform result')
+          }
+          if (!result.position) {
+            throw new Error('missing position from getTransform result')
+          }
+          if (!result.velocity) {
+            throw new Error('missing velocity from getTransform result')
+          }
+          if (!result.u) {
+            throw new Error('missing u from getTransform result')
+          }
+          if (!result.v) {
+            throw new Error('missing v from getTransform result')
+          }
+          if (!result.time) {
+            throw new Error('missing time from getTransform result')
+          }
+
+          resolve(result as Required<GetTransformResponse__Output>)
+        }
+      )
+  )
 }
 
 export async function uniqueUnitName(): Promise<string> {
@@ -196,7 +293,11 @@ export async function getPositionVelocity(
   return new Promise<[Position3, Velocity]>((resolve, reject) =>
     services.custom.eval({ lua }, (error, result) => {
       if (error) {
-        reject(error)
+        return reject(error)
+      }
+
+      if (!result || !result.json) {
+        throw new Error('missing results or results json')
       }
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const [maybePosition3, maybeVelocity] = JSON.parse(result!.json!)
@@ -209,53 +310,42 @@ export async function getPositionVelocity(
   )
 }
 
-export function unitFrom(maybeUnit: StreamUnitsResponse__Output['unit']): Unit {
+export function unitFrom(
+  maybeUnit: Partial<
+    Pick<
+      Required<StreamUnitsResponse__Output>['unit'],
+      'coalition' | 'groupName' | 'name' | 'position' | 'type'
+    >
+  > &
+    Pick<Required<StreamUnitsResponse__Output>['unit'], 'playerName'>
+): GameUnit {
   if (!maybeUnit) {
-    throw new Error('maybeUnit is falsy')
+    throw new Error('missing unit')
   }
-  if ('id' in maybeUnit === false || typeof maybeUnit.id === 'undefined') {
-    throw new Error('expected id to be a number')
+  const { coalition, groupName, name, playerName, position, type } = maybeUnit
+
+  if (!coalition) {
+    throw new Error('missing coalition on unit')
   }
-  if ('name' in maybeUnit === false || typeof maybeUnit.name === 'undefined') {
-    throw new Error('expected name to be a string')
+  if (!groupName) {
+    throw new Error('missing groupName on unit')
   }
-  if (
-    'coalition' in maybeUnit === false ||
-    typeof maybeUnit.coalition === 'undefined'
-  ) {
-    throw new Error('expected coalition to be a string')
+  if (!name) {
+    throw new Error('missing name on unit')
   }
-  if ('type' in maybeUnit === false || typeof maybeUnit.type === 'undefined') {
-    throw new Error('expected type to be a string')
+  if (!position) {
+    throw new Error('missing position on unit')
   }
-  if (
-    'position' in maybeUnit === false ||
-    typeof maybeUnit.position === 'undefined'
-  ) {
-    throw new Error('expected position to be a string')
-  }
-  if (
-    'groupName' in maybeUnit === false ||
-    typeof maybeUnit.groupName === 'undefined'
-  ) {
-    throw new Error('expected groupName to be a string')
-  }
-  if (
-    'numberInGroup' in maybeUnit === false ||
-    typeof maybeUnit.numberInGroup === 'undefined'
-  ) {
-    throw new Error('expected numberInGroup to be a string')
+  if (!type) {
+    throw new Error('missing type on unit')
   }
 
   return {
-    id: maybeUnit.id,
-    name: maybeUnit.name,
-    position: positionLLFrom(maybeUnit.position),
-    callsign: maybeUnit.callsign,
-    coalition: maybeUnit.coalition,
-    type: maybeUnit.type,
-    playerName: maybeUnit.playerName,
-    groupName: maybeUnit.groupName,
-    numberInGroup: maybeUnit.numberInGroup,
+    country: countryFrom(coalition),
+    groupName,
+    name,
+    playerName,
+    position: positionLLFrom(position),
+    typeName: type,
   }
 }

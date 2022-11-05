@@ -24,9 +24,7 @@ export async function spawnerQueueDone(
 ): Promise<void> {
   const timestamp = new Date()
 
-  await knex('spawnerQueues')
-    .update({
-      doneAt: timestamp,
-    })
-    .where({ spawnerId, unitId })
+  await knex('spawnerQueues').where({ spawnerId, unitId }).update({
+    doneAt: timestamp,
+  })
 }

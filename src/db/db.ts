@@ -1,6 +1,9 @@
 import { Knex, knex as knexActual } from 'knex'
 import { Coalition } from '../../generated/dcs/common/v0/Coalition'
-import { SpawnerType } from '../autoRespawn/types'
+import { SpawnerType } from '../spawner'
+import { CargoType } from '../cargo'
+import { BaseType } from '../base'
+import { StaticObjectTypeName } from '../staticObject'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 export const knex = knexActual({
@@ -20,31 +23,84 @@ export async function prepare(): Promise<void> {
   console.log('database migrated')
 }
 
-export interface Unit {
-  unitId: number
-  name: string
-  country: number
-  typeName: string
+export interface Base {
+  baseId: number
   positionId: number
+  name: string
+  type: BaseType
+  coalition: number
   createdAt: Date
   updatedAt: Date
-  destroyedAt?: Date
   goneAt?: Date
 }
 
-export type UnitInsert = Pick<
-  Unit,
-  'positionId' | 'name' | 'country' | 'typeName' | 'createdAt' | 'updatedAt'
+export type BaseInsert = Pick<
+  Base,
+  'positionId' | 'name' | 'type' | 'coalition' | 'createdAt' | 'updatedAt'
 >
 
-export type UnitUpdate = Pick<Unit, 'updatedAt'> &
-  Partial<Omit<Unit, 'unitId' | 'positionId' | 'createdAt'>>
+export type BaseUpdate = Pick<Cargo, 'updatedAt'> &
+  Partial<Omit<Base, 'createdAt'>>
+
+export interface BaseStaticObject {
+  baseId: number
+  staticObjectId: number
+}
+
+export type BaseStaticObjectInsert = Pick<
+  BaseStaticObject,
+  'baseId' | 'staticObjectId'
+>
+
+export type BaseStaticObjectUpdate = Partial<
+  Omit<BaseStaticObject, 'createdAt'>
+>
+
+export interface BaseUnit {
+  baseId: number
+  unitId: number
+}
+
+export type BaseUnitInsert = Pick<BaseUnit, 'baseId' | 'unitId'>
+
+export type BaseUnitUpdate = Record<string, never>
+
+export interface Cargo {
+  cargoId: number
+  createdAt: Date
+  displayName: string
+  goneAt?: Date
+  internal: boolean
+  mass: number
+  positionId: number
+  type: CargoType
+  typeName: string
+  updatedAt: Date
+  uuid: Buffer
+}
+
+export type CargoInsert = Pick<
+  Cargo,
+  | 'createdAt'
+  | 'displayName'
+  | 'internal'
+  | 'mass'
+  | 'positionId'
+  | 'type'
+  | 'typeName'
+  | 'updatedAt'
+  | 'uuid'
+>
+
+export type CargoUpdate = Pick<Cargo, 'updatedAt'> &
+  Partial<Omit<Cargo, 'createdAt'>>
 
 export interface Position {
   positionId: number
   lat: number
   lon: number
   alt: number
+  /** heading in radians */
   heading: number
   createdAt: Date
   updatedAt: Date
@@ -80,9 +136,9 @@ export interface Spawner {
   type: SpawnerType
   createdAt: Date
   updatedAt: Date
-  capturedAt?: Date
-  destroyedAt?: Date
-  goneAt?: Date
+  capturedAt: Date | null
+  destroyedAt: Date | null
+  goneAt: Date | null
 }
 
 export type SpawnerInsert = Pick<
@@ -97,7 +153,7 @@ export interface SpawnerQueue {
   spawnerId: number
   unitId: number
   createdAt: Date
-  doneAt: Date
+  doneAt: Date | null
 }
 
 export type SpawnerQueueInsert = Pick<
@@ -107,11 +163,73 @@ export type SpawnerQueueInsert = Pick<
 
 export type SpawnerQueueUpdate = Partial<Omit<SpawnerQueue, 'createdAt'>>
 
+export interface StaticObject {
+  country: number
+  createdAt: Date
+  goneAt?: Date
+  positionId: number
+  staticObjectId: number
+  typeName: StaticObjectTypeName
+  updatedAt: Date
+  uuid: Buffer
+}
+
+export type StaticObjectInsert = Pick<
+  StaticObject,
+  'country' | 'createdAt' | 'positionId' | 'typeName' | 'updatedAt' | 'uuid'
+>
+
+export type StaticObjectUpdate = Pick<StaticObject, 'updatedAt'> &
+  Partial<Omit<StaticObject, 'createdAt'>>
+
+export interface Unit {
+  country: number
+  createdAt: Date
+  destroyedAt: Date | null
+  goneAt: Date | null
+  isPlayerSlot: number // sqlite stores booles as as an integer acting as a bit (0 or 1)
+  name: string
+  positionId: number
+  typeName: string
+  updatedAt: Date
+  unitId: number
+}
+
+export type UnitInsert = Pick<
+  Unit,
+  | 'country'
+  | 'createdAt'
+  | 'isPlayerSlot'
+  | 'name'
+  | 'positionId'
+  | 'typeName'
+  | 'updatedAt'
+>
+
+export type UnitUpdate = Pick<Unit, 'updatedAt'> &
+  Partial<Omit<Unit, 'createdAt'>>
+
+export interface UnitCargo {
+  unitId: number
+  cargoId: number
+}
+
+export type UnitCargoInsert = Pick<UnitCargo, 'unitId' | 'cargoId'>
+
+export type UnitCargoUpdate = Partial<UnitCargo>
+
 // Put table types here
 // see https://knexjs.org/guide/#typescript
 declare module 'knex/types/tables' {
   interface Tables {
-    units: Knex.CompositeTableType<Unit, UnitInsert, UnitUpdate>
+    bases: Knex.CompositeTableType<Base, BaseInsert, BaseUpdate>
+    baseStaticObjects: Knex.CompositeTableType<
+      BaseStaticObject,
+      BaseStaticObjectInsert,
+      BaseStaticObjectUpdate
+    >
+    baseUnits: Knex.CompositeTableType<BaseUnit, BaseUnitInsert, BaseUnitUpdate>
+    cargos: Knex.CompositeTableType<Cargo, CargoInsert, CargoUpdate>
     positions: Knex.CompositeTableType<Position, PositionInsert, PositionUpdate>
     spawnerQueues: Knex.CompositeTableType<
       SpawnerQueue,
@@ -124,5 +242,16 @@ declare module 'knex/types/tables' {
       SpawnGroupInsert,
       SpawnGroupUpdate
     >
+    staticObjects: Knex.CompositeTableType<
+      StaticObject,
+      StaticObjectInsert,
+      StaticObjectUpdate
+    >
+    unitCargos: Knex.CompositeTableType<
+      UnitCargo,
+      UnitCargoInsert,
+      UnitCargoUpdate
+    >
+    units: Knex.CompositeTableType<Unit, UnitInsert, UnitUpdate>
   }
 }

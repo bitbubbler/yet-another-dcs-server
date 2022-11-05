@@ -39,12 +39,12 @@ export async function insertOrUpdateSpawnGroup(
     }
   } else {
     await knex('spawnGroups')
+      .where({
+        name: groupName,
+      })
       .update({
         typeNamesJson: JSON.stringify(typeNames),
         updatedAt: timestamp,
-      })
-      .where({
-        name: groupName,
       })
   }
 }

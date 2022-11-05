@@ -1,8 +1,6 @@
 import { Subject } from 'rxjs'
 
 import { Coalition } from '../generated/dcs/common/v0/Coalition'
-import { GroupCategory } from '../generated/dcs/common/v0/GroupCategory'
-import { Unit } from '../generated/dcs/common/v0/Unit'
 import { StreamEventsResponse__Output } from '../generated/dcs/mission/v0/StreamEventsResponse'
 import { Struct } from '../generated/google/protobuf/Struct'
 import { Value } from '../generated/google/protobuf/Value'
@@ -12,6 +10,8 @@ import { services } from './services'
 import { Command } from './commands/types'
 import { parse, reader } from './commands'
 import { Restarts } from './signals'
+import { Group } from './group'
+import { GameUnit, unitFrom } from './unit'
 
 const { mission } = services
 
@@ -29,7 +29,7 @@ export interface EventShape {
 }
 
 export interface Initiator {
-  unit: Unit
+  unit: GameUnit
 }
 
 export interface MarkEvent {
@@ -57,18 +57,13 @@ export type DetailsValueShape = { [key: string]: DetailsValue }
 
 export interface GroupCommandEvent extends EventShape {
   type: EventType.GroupCommand
-  group: {
-    id: number
-    name: string
-    coalition: Coalition
-    category: GroupCategory
-  }
-  details: DetailsValueShape
+  group: Group
+  command: Command
 }
 
 export interface MissionCommandEvent extends EventShape {
   type: EventType.MissionCommand
-  details: DetailsValueShape
+  command: Command
 }
 
 export interface BirthEvent extends EventShape {
@@ -133,12 +128,18 @@ async function handleEvent(data: StreamEventsResponse__Output): Promise<void> {
 
     const { id, coalition, initiator, text } = markAdd
 
+    if (!initiator.unit) {
+      throw new Error('invalid markAdd event. missing initiator unit')
+    }
+
     if (text) {
       const event: MarkAddEvent = {
         type: EventType.MarkAdd,
         id,
         coalition,
-        initiator,
+        initiator: {
+          unit: unitFrom(initiator.unit),
+        },
         text,
       }
 
@@ -149,7 +150,9 @@ async function handleEvent(data: StreamEventsResponse__Output): Promise<void> {
       type: EventType.MarkAdd,
       id,
       coalition,
-      initiator,
+      initiator: {
+        unit: unitFrom(initiator.unit),
+      },
     }
 
     return Events.next(event)
@@ -170,6 +173,10 @@ async function handleEvent(data: StreamEventsResponse__Output): Promise<void> {
 
     const { id, coalition, initiator, text } = markChange
 
+    if (!initiator.unit) {
+      throw new Error('invalid markAdd event. missing initiator unit')
+    }
+
     if (text) {
       try {
         const command = parse(reader(text))
@@ -179,7 +186,9 @@ async function handleEvent(data: StreamEventsResponse__Output): Promise<void> {
             type: EventType.MarkChange,
             id,
             coalition,
-            initiator,
+            initiator: {
+              unit: unitFrom(initiator.unit),
+            },
             text,
             command,
           }
@@ -195,7 +204,9 @@ async function handleEvent(data: StreamEventsResponse__Output): Promise<void> {
         type: EventType.MarkChange,
         id,
         coalition,
-        initiator,
+        initiator: {
+          unit: unitFrom(initiator.unit),
+        },
         text,
       }
 
@@ -206,7 +217,9 @@ async function handleEvent(data: StreamEventsResponse__Output): Promise<void> {
       type: EventType.MarkChange,
       id,
       coalition,
-      initiator,
+      initiator: {
+        unit: unitFrom(initiator.unit),
+      },
     }
 
     return Events.next(event)
@@ -223,7 +236,7 @@ async function handleEvent(data: StreamEventsResponse__Output): Promise<void> {
 
     const event: MissionCommandEvent = {
       type: EventType.MissionCommand,
-      details: detailsFrom(details),
+      command: detailsFrom(details) as unknown as Command, // assume this is a command
     }
 
     return Events.next(event)
@@ -262,7 +275,7 @@ async function handleEvent(data: StreamEventsResponse__Output): Promise<void> {
         coalition: group.coalition,
         category: group.category,
       },
-      details: detailsFrom(details),
+      command: detailsFrom(details) as unknown as Command, // assume this is a command
     }
 
     return Events.next(event)
@@ -277,13 +290,15 @@ async function handleEvent(data: StreamEventsResponse__Output): Promise<void> {
     const { initiator, place } = birth
 
     if (!initiator.unit) {
-      throw new Error('invalid initiator. missing unit')
+      // TODO: static objects get birth'd and don't have a unit
+      // right now we just swallow those birth events by returning here
+      return
     }
 
     const event: BirthEvent = {
       type: EventType.Birth,
       initiator: {
-        unit: initiator.unit,
+        unit: unitFrom(initiator.unit),
       },
       place,
     }

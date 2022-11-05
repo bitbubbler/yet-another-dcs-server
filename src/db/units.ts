@@ -1,35 +1,90 @@
-import { knex } from './db'
+import { knex, Unit as DBUnit, Position as DBPosition } from './db'
 import { countryFrom } from '../country'
 import { getPositionVelocity, Unit } from '../unit'
-import { deg, metersToDegree, distanceFrom } from '../common'
+import { metersToDegree, distanceFrom, headingFrom } from '../common'
 import { equal } from 'assert'
-import { PositionLL } from '../types'
-import { coalitionFrom } from '../coalition'
+import { PositionLL } from '../common'
 import { Coalition } from '../../generated/dcs/common/v0/Coalition'
+import { LatLon } from '../geo'
 
-export async function insertOrUpdateUnit(unit: Unit): Promise<void> {
-  const { name, position: positionLL, type: typeName, coalition } = unit
+export async function insertUnit(
+  unit: Pick<
+    Unit,
+    'country' | 'heading' | 'isPlayerSlot' | 'name' | 'position' | 'typeName'
+  >
+): Promise<Unit> {
+  const { country, heading, name, position: positionLL, typeName } = unit
 
-  const country = countryFrom(coalition)
+  const { alt, lat, lon } = positionLL
+
+  const isPlayerSlot = unit.isPlayerSlot ? 1 : 0
+
+  const timestamp = new Date()
+
+  // insert the position
+  const newPositionResult = await knex('positions')
+    .insert({
+      alt,
+      createdAt: timestamp,
+      heading,
+      lat,
+      lon,
+      updatedAt: timestamp,
+    })
+    .returning(['positionId'])
+
+  if (newPositionResult.length < 1) {
+    throw new Error('missing position result')
+  }
+
+  const [{ positionId }] = newPositionResult
+
+  equal(typeof positionId, 'number')
+
+  // insert the unit
+  const newUnitResult = await knex('units')
+    .insert({
+      country,
+      createdAt: timestamp,
+      isPlayerSlot,
+      name,
+      positionId,
+      typeName,
+      updatedAt: timestamp,
+    })
+    .returning(['unitId'])
+
+  if (newUnitResult.length < 1) {
+    throw new Error('missing unit result')
+  }
+
+  const [{ unitId }] = newUnitResult
+
+  equal(typeof unitId, 'number')
+
+  return unitFrom({
+    alt,
+    country,
+    heading,
+    isPlayerSlot,
+    name,
+    lat,
+    lon,
+    typeName,
+    unitId,
+  })
+}
+
+export async function updateUnitPosition(
+  unit: Pick<Unit, 'name' | 'position'>
+): Promise<void> {
+  const { name, position: positionLL } = unit
 
   const { lat, lon, alt } = positionLL
 
-  if (typeof lat !== 'number') {
-    throw new Error('expected lat to be a number')
-  }
-  if (typeof lon !== 'number') {
-    throw new Error('expected lon to be a number')
-  }
-  if (typeof alt !== 'number') {
-    throw new Error('expected alt to be a number')
-  }
-
   const [position3] = await getPositionVelocity(name)
 
-  let heading = deg(Math.atan2(position3.x.z, position3.x.x))
-  if (heading < 0) {
-    heading = heading + 360
-  }
+  const heading = headingFrom(position3)
 
   const timestamp = new Date()
 
@@ -40,58 +95,28 @@ export async function insertOrUpdateUnit(unit: Unit): Promise<void> {
     })
     .where('units.name', name)
     .select('*')
-    .limit(1)
+    .first()
 
-  // unit not exists, insert
-  if (existingUnitResult.length < 1) {
-    // insert the position
-    const newPositionResult = await knex('positions')
-      .insert({
-        lat,
-        lon,
-        alt,
-        heading,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      })
-      .returning(['positionId'])
+  if (typeof existingUnitResult === 'undefined') {
+    throw new Error(`No known unit with name ${name} to update`)
+  }
+  // unit already exists, and should have a position
+  // find the positionId on the existing unit and upate it
+  const { positionId } = existingUnitResult
 
-    if (newPositionResult.length < 1) {
-      throw new Error('missing position result')
-    }
+  equal(typeof positionId, 'number')
 
-    const [{ positionId }] = newPositionResult
-
-    equal(typeof positionId, 'number')
-
-    // insert the unit
-    await knex('units').insert({
-      name,
-      country,
-      typeName,
+  await knex('positions')
+    .where({
       positionId,
-      createdAt: timestamp,
+    })
+    .update({
+      lat,
+      lon,
+      alt,
+      heading,
       updatedAt: timestamp,
     })
-  } else {
-    // unit already exists, and should have a position
-    // find the positionId on the existing unit and upate it
-    const [{ positionId }] = existingUnitResult
-
-    equal(typeof positionId, 'number')
-
-    await knex('positions')
-      .update({
-        lat,
-        lon,
-        alt,
-        heading,
-        updatedAt: timestamp,
-      })
-      .where({
-        positionId,
-      })
-  }
 }
 
 export async function unitGone(unit: Pick<Unit, 'name'>): Promise<void> {
@@ -99,12 +124,10 @@ export async function unitGone(unit: Pick<Unit, 'name'>): Promise<void> {
 
   const timestamp = new Date()
 
-  await knex('units')
-    .update({
-      updatedAt: timestamp,
-      goneAt: timestamp,
-    })
-    .where({ name })
+  await knex('units').where({ name }).update({
+    updatedAt: timestamp,
+    goneAt: timestamp,
+  })
 }
 
 export async function unitDestroyed(unit: Pick<Unit, 'name'>): Promise<void> {
@@ -112,42 +135,24 @@ export async function unitDestroyed(unit: Pick<Unit, 'name'>): Promise<void> {
 
   const timestamp = new Date()
 
-  await knex('units')
-    .update({
-      updatedAt: timestamp,
-      destroyedAt: timestamp,
-      goneAt: timestamp, // if we're setting destroyedAt, we must also set goneAT
-    })
-    .where({ name })
+  await knex('units').where({ name }).update({
+    updatedAt: timestamp,
+    destroyedAt: timestamp,
+    goneAt: timestamp, // if we're setting destroyedAt, we must also set goneAT
+  })
 }
 
 export async function findUnit(name: string): Promise<Unit | undefined> {
   const foundUnit = await knex('units')
     .select('*')
-    .leftJoin('positions', 'units.positionId', 'positions.positionId')
+    .innerJoin('positions', 'units.positionId', 'positions.positionId')
     .where({ name })
     .whereNull('destroyedAt')
     .whereNull('goneAt')
     .first()
 
   if (foundUnit) {
-    const { alt, country, lat, lon, name, typeName, unitId: id } = foundUnit
-    return {
-      id,
-      name,
-      coalition: coalitionFrom(country),
-      type: typeName,
-      position: {
-        lat,
-        lon,
-        alt,
-      },
-      // TODO: determine what to do with the below in the types
-      callsign: undefined,
-      playerName: undefined,
-      groupName: undefined,
-      numberInGroup: undefined,
-    }
+    return unitFrom(foundUnit)
   }
   return undefined
 }
@@ -170,9 +175,7 @@ export async function nearbyUnits({
   const { lat, lon } = position
 
   let query = knex('units')
-    .leftOuterJoin('positions', function () {
-      this.on('units.positionId', '=', 'positions.positionId')
-    })
+    .innerJoin('positions', 'bases.positionId', 'positions.positionId')
     .select(['unitId', 'name', 'country', 'lat', 'lon', 'alt'])
     .whereBetween('lat', [
       lat - metersToDegree(accuracy),
@@ -197,9 +200,48 @@ export async function nearbyUnits({
     .map(unit => {
       const { lat, lon, alt } = unit
       const unitPosition = { lat, lon, alt }
-      return { unit, distance: distanceFrom(position, unitPosition) }
+      return {
+        unit,
+        distance: new LatLon(position.lat, position.lon).distanceTo(
+          new LatLon(unitPosition.lat, unitPosition.lon)
+        ),
+      }
     })
     .filter(unit => unit.distance <= accuracy)
     .sort((a, b) => a.distance - b.distance)
     .map(unit => unit.unit)
+}
+
+export function unitFrom(
+  dbUnit: Pick<
+    DBUnit,
+    'name' | 'country' | 'isPlayerSlot' | 'typeName' | 'unitId'
+  > &
+    Pick<DBPosition, 'lat' | 'lon' | 'alt' | 'heading'>
+): Unit {
+  const {
+    alt,
+    country,
+    heading,
+    isPlayerSlot,
+    lat,
+    lon,
+    name,
+    typeName,
+    unitId,
+  } = dbUnit
+
+  return {
+    country,
+    heading,
+    isPlayerSlot: Boolean(isPlayerSlot),
+    name,
+    position: {
+      alt,
+      lat,
+      lon,
+    },
+    typeName,
+    unitId,
+  }
 }

@@ -11,13 +11,8 @@ import { markToAll, outText, removeMapMark } from '../trigger'
 
 import { getMarkById, getMarkPanels, MarkPanel } from '../custom'
 import { Command, CommandType, ToDestroy } from '../commands'
-import {
-  allSpawners,
-  insertSpawner,
-  nearbySpawners,
-  spawnerDestroyed,
-} from '../db/spawners'
-import { Spawner, SpawnerType } from './types'
+import { allSpawners, insertSpawner, spawnerDestroyed } from '../db/spawners'
+import { Spawner, SpawnerType } from '../spawner'
 import { randomBetween } from '../common'
 import {
   findUnit,
@@ -28,13 +23,15 @@ import {
   Spawner as DBSpawner,
   unitDestroyed,
 } from '../db'
-import { PositionLL } from '../types'
-import { spawnGroundUnitsInCircle } from '../unit'
+import { PositionLL } from '../common'
+import { isPlayerUnit, spawnGroundUnitsInCircle } from '../unit'
 import { insertSpawnerQueue, spawnerQueueDone } from '../db/spawnerQueues'
 import { UnitEvents, UnitEventType, UnitGoneEvent } from '../unitEvents'
 import { closestPointOnRoads, findPathOnRoads, RoadType } from '../land'
 import { driveGroundGroup } from '../group'
 import { distanceFrom } from '../common'
+import { nearbySpawners } from '../spawner'
+import { coalitionFrom } from '../coalition'
 
 const UNIT_MAXIMUM_DISPLACEMENT_TO_SPAWNER_METERS = 100000
 const SPAWNER_MINIMUM_DISPLACEMENT_METERS = 250
@@ -294,13 +291,19 @@ async function handleUnitGoneEvent(event: UnitGoneEvent) {
     throw new Error('gone unit not found in db, or already destroyed/gone')
   }
 
-  const { coalition, id: unitId, position, type } = unit
+  if (isPlayerUnit(unit)) {
+    // quietly no-op on player slots
+    // player slots shouldn't auto respawn
+    return
+  }
+
+  const { country, unitId, position, typeName } = unit
 
   // look for nearby spawners of matching coalition
   const foundNearbyCoalitionSpawners = await nearbySpawners({
     position,
     accuracy: UNIT_MAXIMUM_DISPLACEMENT_TO_SPAWNER_METERS,
-    coalition,
+    coalition: coalitionFrom(country),
   })
 
   const firstSpawner = foundNearbyCoalitionSpawners[0]
@@ -317,7 +320,9 @@ async function handleUnitGoneEvent(event: UnitGoneEvent) {
     insertSpawnerQueue(spawnerId, unitId),
   ])
 
-  console.log(`unit ${unitId} of type ${type} queued to spawner ${spawnerId}`)
+  console.log(
+    `unit ${unitId} of type ${typeName} queued to spawner ${spawnerId}`
+  )
 }
 
 async function handleMarkChangeEvent(event: MarkChangeEvent) {
@@ -426,9 +431,9 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
 }
 
 async function handleMissionCommand(event: MissionCommandEvent): Promise<void> {
-  const details = event.details as unknown as Command
+  const { command } = event
 
-  const { type } = details
+  const { type } = command
 
   if (CommandType.ShowSpawners === type) {
     spawnersVisible = true

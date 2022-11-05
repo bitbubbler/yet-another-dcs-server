@@ -1,9 +1,32 @@
 import { services } from './services'
-import { PositionLL } from './types'
+import { PositionLL } from './common'
 import { _dcs_trigger_v0_SmokeRequest_SmokeColor as SmokeColor } from '../generated/dcs/trigger/v0/SmokeRequest'
 import { _dcs_trigger_v0_SignalFlareRequest_FlareColor as FlareColor } from '../generated/dcs/trigger/v0/SignalFlareRequest'
+import { Coalition } from '../generated/dcs/common/v0/Coalition'
 
 const { trigger, net } = services
+
+export async function outCoalitionText(
+  coalition: Coalition,
+  message: string,
+  displayTime = 10
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    trigger.OutTextForCoalition(
+      {
+        coalition,
+        displayTime,
+        text: message,
+      },
+      error => {
+        if (error) {
+          return reject(error)
+        }
+        resolve()
+      }
+    )
+  })
+}
 
 export async function outUnitText(playerId: number, message: string) {
   return new Promise<void>((resolve, reject) =>
@@ -45,6 +68,7 @@ export async function outGroupText(
   )
 }
 
+/** Send text to everyone */
 export async function outText(text: string, displayTime = 10) {
   return new Promise<void>((resolve, reject) =>
     trigger.outText(

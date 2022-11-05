@@ -2,10 +2,12 @@ import { Subject } from 'rxjs'
 
 import { GroupCategory } from '../generated/dcs/common/v0/GroupCategory'
 import { StreamUnitsResponse__Output } from '../generated/dcs/mission/v0/StreamUnitsResponse'
+import { positionLLFrom } from './common'
+import { countryFrom } from './country'
 
 import { services } from './services'
 import { Restarts } from './signals'
-import { Unit, unitFrom } from './unit'
+import { GameUnit, unitFrom } from './unit'
 
 const { mission } = services
 
@@ -20,12 +22,12 @@ export interface UnitEventShape {
 
 export interface UnitUpdateEvent extends UnitEventShape {
   type: UnitEventType.Update
-  unit: Unit
+  unit: GameUnit
 }
 
 export interface UnitGoneEvent extends UnitEventShape {
   type: UnitEventType.Gone
-  unit: Pick<Unit, 'id' | 'name'>
+  unit: Pick<GameUnit, 'name'>
 }
 
 export type UnitEvent = UnitUpdateEvent | UnitGoneEvent
@@ -40,7 +42,7 @@ export function startUnitEvents(): void {
   })
 
   call.on('data', async (data: StreamUnitsResponse__Output) => {
-    // console.log('data', JSON.stringify(data, undefined, 2))
+    // console.log('unit data', JSON.stringify(data, undefined, 2))
     try {
       await handleUnitEvent(data)
     } catch (error) {
@@ -63,11 +65,9 @@ async function handleUnitEvent(
 ): Promise<void> {
   if ('unit' in event) {
     try {
-      const unit = unitFrom(event.unit)
-
       return UnitEvents.next({
         type: UnitEventType.Update,
-        unit,
+        unit: unitFrom(event.unit),
       })
     } catch (error) {
       console.log('failed to handle unit event', event)
@@ -86,7 +86,6 @@ async function handleUnitEvent(
     return UnitEvents.next({
       type: UnitEventType.Gone,
       unit: {
-        id: gone.id,
         name: gone.name,
       },
     })

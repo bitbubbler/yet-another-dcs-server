@@ -8,7 +8,7 @@ export const restartMissionMenu = missionMenu({
   async create() {
     await addMissionCommand({
       name: menuName,
-      details: {
+      command: {
         type: CommandType.RestartMission,
       },
     })

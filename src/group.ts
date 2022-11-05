@@ -1,9 +1,11 @@
-import { Group } from '../generated/dcs/common/v0/Group'
+import { Group__Output } from '../generated/dcs/common/v0/Group'
 import { services } from './services'
-import { PositionLL } from './types'
-import { Unit, unitFrom } from './unit'
+import { PositionLL } from './common'
+import { GameUnit, unitFrom } from './unit'
 
 const { coalition, custom, group } = services
+
+export type Group = Required<Group__Output>
 
 export async function groups(): Promise<Group[]> {
   return new Promise<Group[]>((resolve, reject) => {
@@ -22,13 +24,13 @@ export async function groups(): Promise<Group[]> {
         return resolve([])
       }
 
-      resolve(groups)
+      resolve(groups.map(groupFrom))
     })
   })
 }
 
-export async function getUnits(groupName: string): Promise<Unit[]> {
-  return new Promise<Unit[]>((resolve, reject) => {
+export async function getUnits(groupName: string): Promise<GameUnit[]> {
+  return new Promise<GameUnit[]>((resolve, reject) => {
     group.getUnits(
       {
         groupName,
@@ -155,4 +157,21 @@ export async function groupFromGroupName(groupName: string): Promise<Group> {
   }
 
   return group
+}
+
+export function groupFrom(group: Group__Output): Group {
+  if (!group.id) {
+    throw new Error('missing id from group')
+  }
+  if (!group.category) {
+    throw new Error('missing category from group')
+  }
+  if (!group.coalition) {
+    throw new Error('missing coalition from group')
+  }
+  if (!group.name) {
+    throw new Error('missing name from group')
+  }
+
+  return group as Group
 }

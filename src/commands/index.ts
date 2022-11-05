@@ -1,4 +1,5 @@
 export * from './lexer'
 export * from './parser'
 export * from './reader'
+export * from './serialize'
 export * from './types'

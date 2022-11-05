@@ -5,6 +5,8 @@ import {
   removeGroupCommandItem,
 } from '../mission'
 import { groupMenu } from '../menus'
+import { Command, CommandType, serialize } from '../commands'
+import { groupFromGroupName } from '../group'
 
 const rootMenuName = 'Spawn Units'
 
@@ -48,14 +50,18 @@ export const spawnUnitsMenu = groupMenu({
               throw new Error('desc missing on data')
             }
 
+            const group = await groupFromGroupName(groupName)
+
             const { typeName, displayName } = desc
 
             await addGroupCommand({
               groupName,
               name: displayName,
               path: setPath,
-              details: {
-                typeName,
+              command: {
+                type: CommandType.SpawnGroundUnit,
+                units: [{ fuzzyUnitName: typeName, count: 1 }],
+                coalition: group.coalition,
               },
             })
           })

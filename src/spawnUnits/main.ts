@@ -17,12 +17,17 @@ import { groupFromGroupName } from '../group'
 import { countryFrom } from '../country'
 import { searchUnits } from './searchUnits'
 import {
+  createUnit,
   destroy,
   spawnGroundUnit,
   spawnGroundUnitsInCircle,
   spawnGroundUnitsOnCircle,
 } from '../unit'
-import { CommandType as EventCommandType, ToDestroy } from '../commands/types'
+import {
+  CommandType,
+  CommandType as EventCommandType,
+  ToDestroy,
+} from '../commands/types'
 import { nearbyUnits, unitGone } from '../db'
 import { distanceFrom, positionLLFrom } from '../common'
 import {
@@ -100,7 +105,7 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
 
   // attempt to handle command(s) from markers
   if (command) {
-    if (EventCommandType.Spawn === command.type) {
+    if (EventCommandType.SpawnGroundUnit === command.type) {
       const addedMark = await getMarkById(id)
 
       if (!addedMark) {
@@ -143,12 +148,16 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
             unitsToSpawn
           )
         } else {
-          // single unit
-          await spawnGroundUnit({
+          const unit = await createUnit({
             country,
+            // TODO: choose a heading to spawn the unit at
+            heading: 0,
+            isPlayerSlot: false,
             position: addedMark.position,
             typeName: unitsToSpawn[0].typeName,
           })
+          // single unit
+          await spawnGroundUnit(unit)
         }
         // remove the map marker
         await removeMapMark(id)
@@ -258,11 +267,8 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
     return
   }
 
-  const { coalition, groupName } = unit
+  const { groupName } = unit
 
-  if (!coalition) {
-    throw new Error('expected coalition on marker initiator')
-  }
   if (!groupName) {
     throw new Error('expected groupName on marker initiator')
   }
@@ -325,10 +331,10 @@ async function handleMarkAddEvent(event: MarkAddEvent) {
     return
   }
 
-  const { coalition, groupName } = unit
+  const { country, groupName } = unit
 
-  if (!coalition) {
-    throw new Error('expected coalition on marker initiator')
+  if (!country) {
+    throw new Error('expected country on marker initiator')
   }
   if (!groupName) {
     throw new Error('expected groupName on marker initiator')
@@ -345,12 +351,17 @@ async function handleMarkAddEvent(event: MarkAddEvent) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const typeName = groupSpawnSelection.get(group.id)!.typeName
 
-    // use it to spawn a unit on the new marker
-    await spawnGroundUnit({
-      country: countryFrom(group.coalition as Coalition),
-      typeName,
+    const unit = await createUnit({
+      country,
+      // TODO: choose a heading to spawn the unit at
+      heading: 0,
+      isPlayerSlot: false,
       position,
+      typeName,
     })
+
+    // use it to spawn a unit on the new marker
+    await spawnGroundUnit(unit)
 
     // remove the selection
     groupSpawnSelection.delete(group.id)
@@ -383,41 +394,48 @@ async function handleBirth(event: BirthEvent) {
 }
 
 async function handleGroupCommand(event: GroupCommandEvent) {
-  const { group, details } = event
+  const { group, command } = event
 
-  const typeName = details?.typeName
+  if (CommandType.SpawnGroundUnit === command.type) {
+    const typeName = command.units[0].fuzzyUnitName
 
-  if (!typeName || typeof typeName !== 'string') {
-    throw new Error('expected typeName of type string on details')
-  }
+    if (!typeName || typeof typeName !== 'string') {
+      throw new Error('expected typeName of type string on details')
+    }
 
-  if (groupSpawnLocation.has(group.id)) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const { markerId, position } = groupSpawnLocation.get(group.id)!
-    // we have a location, spawn something here
-    await spawnGroundUnit({
-      country: countryFrom(group.coalition as Coalition),
+    if (groupSpawnLocation.has(group.id)) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const { markerId, position } = groupSpawnLocation.get(group.id)!
+
+      const unit = await createUnit({
+        country: countryFrom(group.coalition),
+        // TODO: choose a heading to spawn the unit at
+        heading: 0,
+        isPlayerSlot: false,
+        position: positionLLFrom(position),
+        typeName,
+      })
+      // we have a location, spawn something here
+      await spawnGroundUnit(unit)
+
+      // remove the map marker
+      await removeMapMark(markerId)
+
+      // remove the selection
+      groupSpawnLocation.delete(group.id)
+      return
+    }
+
+    // // otherise store this typeName for this player for when a map marker is added
+    groupSpawnSelection.set(group.id, {
       typeName,
-      position: positionLLFrom(position),
+      createdAt: new Date(),
     })
 
-    // remove the map marker
-    await removeMapMark(markerId)
-
-    // remove the selection
-    groupSpawnLocation.delete(group.id)
-    return
+    // // send a message
+    await outGroupText(
+      group.id,
+      `Place a marker on the F10 map to spawn the ${typeName}`
+    )
   }
-
-  // // otherise store this typeName for this player for when a map marker is added
-  groupSpawnSelection.set(group.id, {
-    typeName,
-    createdAt: new Date(),
-  })
-
-  // // send a message
-  await outGroupText(
-    group.id,
-    `Place a marker on the F10 map to spawn the ${typeName}`
-  )
 }

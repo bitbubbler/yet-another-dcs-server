@@ -1,13 +1,56 @@
 import { equal } from 'assert'
 import { Position } from '../generated/dcs/common/v0/Position'
-import { Position3, PositionLL, Vec2, Vec3 } from './types'
+import { Position__Output } from '../generated/dcs/common/v0/Position'
+import { LatLon } from './geo'
+
+export type TeardownFn = () => Promise<void>
+
+export type Distance = number
+
+export interface Vec2 {
+  x: Distance
+  y: Distance
+}
+
+export interface Vec3 {
+  x: Distance
+  y: Distance
+  z: Distance
+}
+
+export type PositionLL = Required<Position__Output>
+
+export interface Position3 {
+  p: Vec3
+  x: Vec3
+  y: Vec3
+  z: Vec3
+}
+
+export type Velocity = Vec3
+
+export const EARTH_RADIUS_KM = 6371
+
+export function mod(value: number, mod: number): number {
+  return value % mod
+}
 
 export function deg(radians: number): number {
-  return radians * (180 / Math.PI)
+  const degrees = radians * (180 / Math.PI)
+
+  return (degrees + 360) % 360
 }
 
 export function rad(degrees: number): number {
   return degrees * (Math.PI / 180)
+}
+
+export function distanceToRad(km: number): number {
+  return km / EARTH_RADIUS_KM
+}
+
+export function radToDistance(rad: number): number {
+  return EARTH_RADIUS_KM * rad // kilometers
 }
 
 export function vec2From(vec3: Vec3): Vec2 {
@@ -57,7 +100,7 @@ export function randomPositionOnCircle(
   radius: number
 ): Pick<PositionLL, 'lat' | 'lon'> {
   const degreesRadius = metersToDegree(radius)
-  const angle = randomAngleDeg()
+  const angle = rad(randomAngleDeg())
   const lat = focus.lat + degreesRadius * Math.cos(angle)
   const lon = focus.lon + degreesRadius * Math.sin(angle)
 
@@ -77,7 +120,7 @@ export function randomPositionInCircle(
   focus: Pick<PositionLL, 'lat' | 'lon'>,
   radius: number
 ): Pick<PositionLL, 'lat' | 'lon'> {
-  const angle = randomAngleDeg()
+  const angle = rad(randomAngleDeg())
   const lat =
     focus.lat + metersToDegree(randomBetween(-radius, radius)) * Math.cos(angle)
   const lon =
@@ -89,13 +132,45 @@ export function randomPositionInCircle(
   }
 }
 
+export function positionOnCirlce(
+  focus: Pick<PositionLL, 'lat' | 'lon'>,
+  radius: number, // radius in meters
+  angle: number
+) {
+  const course = rad(angle)
+
+  const lat = focus.lat + metersToDegree(radius) * Math.cos(course)
+  const lon = focus.lon + metersToDegree(radius) * Math.sin(course)
+
+  return {
+    lat: lat,
+    lon: lon,
+  }
+}
+
 /**
  * Returns a distance in meters given two PositionLL
  * @param positiona PositionLL
  * @param positionb PositionLL
  */
-export function distanceFrom(a: PositionLL, b: PositionLL): number {
+export function distanceFrom(
+  a: Pick<PositionLL, 'lat' | 'lon'>,
+  b: Pick<PositionLL, 'lat' | 'lon'>
+): number {
   return Math.sqrt(Math.pow(a.lat - b.lat, 2) + Math.pow(a.lon - b.lon, 2))
+}
+
+/**
+ * Returns a compass bearing given two PositionLL
+ * @param a starting position
+ * @param b ending position
+ * @returns the bearing from the starting position to the ending position
+ */
+export function bearingFrom(
+  a: Pick<PositionLL, 'lat' | 'lon'>,
+  b: Pick<PositionLL, 'lat' | 'lon'>
+): number {
+  return new LatLon(a.lat, a.lon).initialBearingTo(new LatLon(b.lat, b.lon))
 }
 
 export function vec3From(maybeVec3: Partial<Vec3>): Vec3 {
@@ -188,4 +263,11 @@ export function positionLLFrom(maybePositionLL: Position): PositionLL {
     lon: maybePositionLL.lon,
     alt: maybePositionLL.alt,
   }
+}
+
+/**
+ * Returns heading in radians from a given Position3
+ */
+export function headingFrom(position3: Position3): number {
+  return Math.atan2(position3.x.z, position3.x.x)
 }

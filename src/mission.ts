@@ -5,6 +5,7 @@ import { AddMissionCommandRequest } from '../generated/dcs/mission/v0/AddMission
 import { AddMissionCommandSubMenuRequest } from '../generated/dcs/mission/v0/AddMissionCommandSubMenuRequest'
 import { AddMissionCommandSubMenuResponse__Output } from '../generated/dcs/mission/v0/AddMissionCommandSubMenuResponse'
 import { RemoveMissionCommandItemRequest } from '../generated/dcs/mission/v0/RemoveMissionCommandItemRequest'
+import { Command, serialize } from './commands'
 import { DetailsValueShape, structFrom } from './events'
 import { services } from './services'
 
@@ -30,17 +31,17 @@ export async function removeMissionCommandItem({
 
 export async function addMissionCommand({
   name,
-  details,
+  command,
   path,
 }: {
   name: string
-  details: DetailsValueShape
+  command: Command
   path?: string[]
 }): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     const options: AddMissionCommandRequest = {
       name,
-      details: structFrom(details),
+      details: structFrom(serialize(command)),
     }
     if (path) {
       options.path = path
@@ -102,19 +103,19 @@ export async function removeGroupCommandItem({
 export async function addGroupCommand({
   groupName,
   name,
-  details,
+  command,
   path,
 }: {
   groupName: string
   name: string
-  details: DetailsValueShape
+  command: Command
   path?: string[]
 }): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     const options: AddGroupCommandRequest = {
       groupName,
       name,
-      details: structFrom(details),
+      details: structFrom(serialize(command)),
     }
     if (path) {
       options.path = path

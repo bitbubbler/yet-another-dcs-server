@@ -1,32 +1,52 @@
 import { Coalition } from '../../generated/dcs/common/v0/Coalition'
-import { SpawnerType } from '../autoRespawn/types'
+import { BaseType } from '../base'
+import { CargoDefinitionID } from '../logistics/definitions'
+import { SpawnerType } from '../spawner'
 
 export type Argument = string | number
 
 export enum CommandType {
-  Unknown,
-  Destroy,
-  Spawn,
-  DefineSpawnGroup,
-  SpawnGroup,
-  Smoke,
-  Flare,
-  Illumination,
+  // Keep these in alphabetical order, please
   CreateSpawner,
+  DefineSpawnGroup,
+  Destroy,
+  Flare,
+  HideSpawners,
+  Illumination,
+  LoadInternalCargo,
   RestartMission,
   RestartMissionCancel,
   ShowSpawners,
-  HideSpawners,
+  Smoke,
+  SpawnCargo,
+  SpawnBase,
+  SpawnGroundUnit,
+  SpawnGroup,
+  UnpackInternalCargo,
+  Unknown,
 }
 
 export enum ToDestroy {
   Unit,
   Spawner,
+  Cargo,
 }
 
 export interface CommandShape {
   type: CommandType
   args?: Argument[] // enforce the shape of generic args property on commands that choose to use it
+}
+
+/**
+ * Define command interfaces in
+ */
+
+/** */ // empty to allow a block above
+export interface CreateSpawnerCommand extends Omit<CommandShape, 'args'> {
+  type: CommandType.CreateSpawner
+  coalition: Coalition | undefined
+  spawnerType: SpawnerType | undefined
+  onRoad: boolean | undefined
 }
 
 export interface DefineSpawnGroupCommand extends Omit<CommandShape, 'args'> {
@@ -42,10 +62,40 @@ export interface DestroyCommand extends Omit<CommandShape, 'args'> {
   coalition: Coalition | undefined
 }
 
-export interface SpawnCommand extends Omit<CommandShape, 'args'> {
-  type: CommandType.Spawn
+export interface FlareCommand extends Omit<CommandShape, 'args'> {
+  type: CommandType.Flare
+  color?: string
+}
+
+export interface HideSpawnersCommand extends Omit<CommandShape, 'args'> {
+  type: CommandType.HideSpawners
+}
+
+export interface IlluminationCommand extends Omit<CommandShape, 'args'> {
+  type: CommandType.Illumination
+}
+
+export interface LoadInternalCargoCommand extends Omit<CommandShape, 'args'> {
+  type: CommandType.LoadInternalCargo
+  cargoDefinitionId: CargoDefinitionID
+}
+
+export interface SpawnBaseCommand extends Omit<CommandShape, 'args'> {
+  type: CommandType.SpawnBase
+  baseType: BaseType
+  coalition: Coalition | undefined
+  heading: number
+}
+
+export interface SpawnGroundUnitCommand extends Omit<CommandShape, 'args'> {
+  type: CommandType.SpawnGroundUnit
   units: { fuzzyUnitName: string; count?: number }[]
   coalition: Coalition | undefined
+}
+
+export interface SpawnCargoCommand extends Omit<CommandShape, 'args'> {
+  type: CommandType.SpawnCargo
+  cargoDefinitionId: CargoDefinitionID
 }
 
 export interface SpawnGroupCommand extends Omit<CommandShape, 'args'> {
@@ -57,22 +107,6 @@ export interface SpawnGroupCommand extends Omit<CommandShape, 'args'> {
 export interface SmokeCommand extends Omit<CommandShape, 'args'> {
   type: CommandType.Smoke
   color?: string
-}
-
-export interface FlareCommand extends Omit<CommandShape, 'args'> {
-  type: CommandType.Flare
-  color?: string
-}
-
-export interface IlluminationCommand extends Omit<CommandShape, 'args'> {
-  type: CommandType.Illumination
-}
-
-export interface CreateSpawner extends Omit<CommandShape, 'args'> {
-  type: CommandType.CreateSpawner
-  coalition: Coalition | undefined
-  spawnerType: SpawnerType | undefined
-  onRoad: boolean | undefined
 }
 
 export interface RestartMissionCommand extends Omit<CommandShape, 'args'> {
@@ -89,8 +123,8 @@ export interface ShowSpawnersCommand extends Omit<CommandShape, 'args'> {
   type: CommandType.ShowSpawners
 }
 
-export interface HideSpawnersCommand extends Omit<CommandShape, 'args'> {
-  type: CommandType.HideSpawners
+export interface UnpackInternalCargoCommand extends Omit<CommandShape, 'args'> {
+  type: CommandType.UnpackInternalCargo
 }
 
 export interface UnknownCommand extends Omit<CommandShape, 'args'> {
@@ -98,16 +132,20 @@ export interface UnknownCommand extends Omit<CommandShape, 'args'> {
 }
 
 export type Command =
-  | UnknownCommand
+  | CreateSpawnerCommand
   | DefineSpawnGroupCommand
   | DestroyCommand
-  | SpawnCommand
-  | SpawnGroupCommand
-  | SmokeCommand
   | FlareCommand
-  | IlluminationCommand
-  | CreateSpawner
-  | RestartMissionCommand
-  | RestartMissionCancelCommand
-  | ShowSpawnersCommand
   | HideSpawnersCommand
+  | IlluminationCommand
+  | LoadInternalCargoCommand
+  | RestartMissionCancelCommand
+  | RestartMissionCommand
+  | ShowSpawnersCommand
+  | SmokeCommand
+  | SpawnBaseCommand
+  | SpawnCargoCommand
+  | SpawnGroundUnitCommand
+  | SpawnGroupCommand
+  | UnpackInternalCargoCommand
+  | UnknownCommand
