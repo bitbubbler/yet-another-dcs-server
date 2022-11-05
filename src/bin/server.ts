@@ -1,7 +1,7 @@
 import { backOff } from 'exponential-backoff'
 
 // dependencies
-import { address, services } from '../services'
+import { services } from '../services'
 import { prepare as prepareDatabase } from '../db/db'
 import { Restarts } from '../signals'
 

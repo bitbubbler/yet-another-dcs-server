@@ -4,11 +4,7 @@ import { baseNames } from './baseNames'
 import { PositionLL, randomBetween } from './common'
 import { countryFrom } from './country'
 import { insertBase, knex } from './db'
-import {
-  createStaticObject,
-  spawnStaticObject,
-  StaticObject,
-} from './staticObject'
+import { createStaticObject, StaticObject } from './staticObject'
 import {
   baseLevel0,
   baseLevel1,
