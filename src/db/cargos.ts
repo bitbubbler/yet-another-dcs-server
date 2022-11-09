@@ -1,5 +1,14 @@
 import { equal } from 'assert'
-import { Cargo, CargoTypeName } from '../cargo'
+import {
+  BaseCargo,
+  Cargo,
+  CargoType,
+  CargoTypeName,
+  isBaseCargo,
+  isBaseCargoType,
+  isUnitCargoType,
+  UnitCargo,
+} from '../cargo'
 import { distanceFrom, metersToDegree, PositionLL } from '../common'
 import { knex, Cargo as DBCargo, Position as DBPosition } from './db'
 
@@ -9,7 +18,7 @@ import { knex, Cargo as DBCargo, Position as DBPosition } from './db'
  * @returns created cargoId
  */
 export async function insertCargo(
-  cargo: Omit<Cargo, 'cargoId'>
+  cargo: Omit<BaseCargo, 'cargoId'> | Omit<UnitCargo, 'cargoId'>
 ): Promise<Cargo> {
   const { displayName, internal, mass, position, type, typeName } = cargo
 
@@ -32,6 +41,40 @@ export async function insertCargo(
     .returning('positionId')
 
   const [{ positionId }] = insertPositionResult
+
+  if (CargoType.UnitCreate === cargo.type) {
+    const { unitTypeName } = cargo
+    const insertCargoResult = await knex('cargos')
+      .insert({
+        createdAt: timestamp,
+        displayName,
+        internal,
+        mass,
+        positionId,
+        type,
+        typeName,
+        unitTypeName,
+        uuid,
+        updatedAt: timestamp,
+      })
+      .returning('cargoId')
+
+    const [{ cargoId }] = insertCargoResult
+
+    return cargoFrom({
+      alt,
+      cargoId,
+      displayName,
+      internal,
+      lat,
+      lon,
+      mass,
+      type,
+      typeName,
+      unitTypeName,
+      uuid,
+    })
+  }
 
   const insertCargoResult = await knex('cargos')
     .insert({
@@ -120,6 +163,7 @@ export function cargoFrom(
     | 'mass'
     | 'type'
     | 'typeName'
+    | 'unitTypeName'
     | 'uuid'
   > &
     Pick<DBPosition, 'lat' | 'lon' | 'alt'>
@@ -132,31 +176,75 @@ export function cargoFrom(
     lat,
     lon,
     mass,
-    type,
     typeName,
+    unitTypeName,
     uuid,
   } = cargo
 
-  return {
-    cargoId,
-    displayName,
-    internal,
-    mass,
-    position: {
-      alt,
-      lat,
-      lon,
-    },
-    type,
-    typeName: typeName as CargoTypeName,
-    uuid: knex.fn.binToUuid(uuid),
+  if (isBaseCargoType(cargo.type)) {
+    const type = cargo.type as BaseCargo['type']
+    const baseCargo: BaseCargo = {
+      cargoId,
+      displayName,
+      internal,
+      mass,
+      position: {
+        alt,
+        lat,
+        lon,
+      },
+      type,
+      typeName,
+      uuid: knex.fn.binToUuid(uuid),
+    }
+
+    return baseCargo
   }
+
+  if (CargoType.UnitCreate === cargo.type) {
+    const type = cargo.type as UnitCargo['type']
+
+    if (typeof unitTypeName === 'undefined') {
+      throw new Error(
+        `Unexpected error while converting DbCargo to UnitCargo: missing unitTypeName for record ${cargoId}`
+      )
+    }
+
+    return {
+      cargoId,
+      displayName,
+      internal,
+      mass,
+      position: {
+        alt,
+        lat,
+        lon,
+      },
+      type,
+      typeName,
+      unitTypeName,
+      uuid: knex.fn.binToUuid(uuid),
+    }
+  }
+
+  throw new Error('unknown cargo type')
 }
 
 export async function allCargos(): Promise<Cargo[]> {
   const cargos = await knex('cargos')
     .innerJoin('positions', 'cargos.positionId', 'positions.positionId')
-    .select('cargoId', 'cargoDefinitionId', 'uuid', 'type', 'lat', 'lon', 'alt')
+    .select([
+      'alt',
+      'cargoId',
+      'displayName',
+      'internal',
+      'mass',
+      'lat',
+      'lon',
+      'type',
+      'typeName',
+      'uuid',
+    ])
     .whereNull('goneAt')
 
   return cargos.map(cargoFrom)

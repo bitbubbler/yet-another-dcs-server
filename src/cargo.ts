@@ -3,11 +3,15 @@ import { PositionLL } from './common'
 import { insertCargo } from './db'
 import { deleteUnitCargo, insertUnitCargo } from './db/unitCargos'
 import { spawnStaticObject } from './staticObject'
-import { setUnitInternalCargoMass, Unit } from './unit'
+import { setUnitInternalCargoMass, Unit, UnitTypeName } from './unit'
 
 export enum CargoType {
+  /** For creating bases */
   BaseCreate,
+  /** For upgrading bases */
   BaseUpgrade,
+  /** For creating units */
+  UnitCreate,
 }
 
 /**
@@ -17,12 +21,25 @@ export enum CargoTypeName {
   UH1HCargo = 'uh1h_cargo',
 }
 
-export type NewCargo = Pick<
-  Cargo,
+export type NewBaseCargo = Pick<
+  BaseCargo,
   'displayName' | 'internal' | 'mass' | 'position' | 'type' | 'typeName'
 >
 
-export interface Cargo {
+export type NewUnitCargo = Pick<
+  UnitCargo,
+  | 'displayName'
+  | 'internal'
+  | 'mass'
+  | 'position'
+  | 'type'
+  | 'typeName'
+  | 'unitTypeName'
+>
+
+export type NewCargo = NewBaseCargo | NewUnitCargo
+
+export interface CargoBase {
   displayName: string
   cargoId: number
   internal: boolean
@@ -32,6 +49,16 @@ export interface Cargo {
   typeName: CargoTypeName
   uuid: string
 }
+
+export interface BaseCargo extends CargoBase {
+  type: CargoType.BaseCreate | CargoType.BaseUpgrade
+}
+export interface UnitCargo extends CargoBase {
+  type: CargoType.UnitCreate
+  unitTypeName: UnitTypeName
+}
+
+export type Cargo = BaseCargo | UnitCargo
 
 export async function createCargo(newCargo: NewCargo): Promise<Cargo> {
   const uuid = uuidV4()
@@ -72,4 +99,26 @@ export async function unloadCargo(unit: Unit, cargo: Cargo): Promise<void> {
 
   // set unit weight in dcs
   await setUnitInternalCargoMass(unit, 0)
+}
+
+export function isBaseCargo(cargo: Cargo): cargo is BaseCargo {
+  return isBaseCargoType(cargo.type)
+}
+
+export function isBaseCargoType(
+  cargoType: Cargo['type']
+): cargoType is BaseCargo['type'] {
+  return (
+    CargoType.BaseCreate === cargoType || CargoType.BaseUpgrade === cargoType
+  )
+}
+
+export function isUnitCargo(cargo: Cargo): cargo is UnitCargo {
+  return isUnitCargoType(cargo.type)
+}
+
+export function isUnitCargoType(
+  cargoType: Cargo['type']
+): cargoType is UnitCargo['type'] {
+  return CargoType.UnitCreate === cargoType
 }

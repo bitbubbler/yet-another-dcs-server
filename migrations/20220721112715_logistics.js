@@ -38,6 +38,7 @@ exports.up = async function (knex) {
     table.integer('positionId').notNullable()
     table.integer('type').notNullable()
     table.string('typeName').notNullable()
+    table.string('unitTypeName').nullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
     table.uuid('uuid', { useBinaryUuid: true }) // NOTE: uuid is stored as binary to save space
 
