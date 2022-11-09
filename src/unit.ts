@@ -2,7 +2,6 @@ import { services } from './services'
 
 import {
   _dcs_coalition_v0_AddGroupRequest_GroundGroupTemplate as GroundGroupTemplate,
-  _dcs_coalition_v0_AddGroupRequest_GroundUnitTemplate as GroundUnitTemplate,
   _dcs_coalition_v0_AddGroupRequest_Skill as Skill,
 } from '../generated/dcs/coalition/v0/AddGroupRequest'
 import { Country } from '../generated/dcs/common/v0/Country'
@@ -11,18 +10,22 @@ import { StreamUnitsResponse__Output } from '../generated/dcs/mission/v0/StreamU
 import {
   position3From,
   positionLLFrom,
-  rad,
   randomPositionInCircle,
   randomPositionOnCircle,
   vec3From,
 } from './common'
 import { Position3, PositionLL, Velocity } from './common'
-import { knex, Unit as DBUnit, Position as DBPosition, insertUnit } from './db'
+import { knex, Unit as DBUnit, insertUnit } from './db'
 import { GetTransformResponse__Output } from '../generated/dcs/unit/v0/GetTransformResponse'
 import { countryFrom } from './country'
-import { Cargo } from './cargo'
 
 const { coalition, custom, unit } = services
+
+/** The values of this enum must exactly match dcs in-game unit typeName values */
+export enum UnitTypeName {
+  M1A2 = 'M-1 Abrams',
+  M2A2 = 'M-2 Bradley',
+}
 
 export interface Unit {
   country: Country

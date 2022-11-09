@@ -21,7 +21,8 @@ import { LatLon } from '../geo'
 import { getUnits } from '../group'
 import { despawnStaticObject, spawnStaticObject } from '../staticObject'
 import { outCoalitionText, outGroupText } from '../trigger'
-import { cargoDefinitionFrom } from './definitions'
+import { createUnit, spawnGroundUnit } from '../unit'
+import { allUnitsCargoDefinitions, cargoDefinitionFrom } from './definitions'
 
 const oneSecondMs = 1000
 /** The minimum range between two bases */
@@ -85,20 +86,27 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
       throw new Error('missing unit')
     }
 
+    const existingUnitCargo = await findUnitCargo(unit)
+
+    if (typeof existingUnitCargo !== 'undefined') {
+      await outGroupText(
+        group.id,
+        `You already have an internal cargo on board. Limit one!`
+      )
+      // go no further
+      return
+    }
+
     const { position } = unit
 
     const { cargoDefinitionId } = command
 
-    const { displayName, internal, mass, type, typeName } =
-      cargoDefinitionFrom(cargoDefinitionId)
+    const cargoDefinition = cargoDefinitionFrom(cargoDefinitionId)
+    const { displayName } = cargoDefinition
 
     const cargo = await createCargo({
-      displayName,
-      internal,
-      mass,
+      ...cargoDefinition,
       position,
-      type,
-      typeName,
     })
 
     await loadCargo(unit, cargo)
@@ -113,6 +121,7 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
       throw new Error('missing unit')
     }
 
+    const { country, heading } = unit
     const cargo = await findUnitCargo(unit)
 
     if (!cargo) {
@@ -132,10 +141,7 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
         const basePosition = new LatLon(
           unit.position.lat,
           unit.position.lon
-        ).destinationPoint(
-          CARGO_UNPACK_DISTANCE_FROM_UNIT_METERS,
-          deg(unit.heading)
-        )
+        ).destinationPoint(CARGO_UNPACK_DISTANCE_FROM_UNIT_METERS, deg(heading))
 
         if (CargoType.BaseCreate === cargo.type) {
           // determine if a new base can be created by checking how close other bases are
@@ -161,8 +167,8 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
 
           // create the new base
           const base = await createBase({
-            coalition: coalitionFrom(unit.country),
-            heading: unit.heading,
+            coalition: coalitionFrom(country),
+            heading,
             position: basePosition,
             type: BaseType.UnderConstruction,
           })
@@ -177,7 +183,7 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
 
           // TODO: get the gridsquare and print it here
           await outCoalitionText(
-            coalitionFrom(unit.country),
+            coalitionFrom(country),
             `${unit.name} has started constructing a new base in <gridsquare>`
           )
           // we're done unpacking base create kit
@@ -249,12 +255,49 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
 
           // TODO: get the gridsquare and print it here
           await outCoalitionText(
-            coalitionFrom(unit.country),
+            coalitionFrom(country),
             `${
               unit.name
             } has upgraded a base in <gridsquare> from ${baseTypeDisplayName(
               previousBaseType
             )} to ${baseTypeDisplayName(nextBaseType)}`
+          )
+          // we're done unpacking base upgrade kit
+          return
+        }
+        if (CargoType.UnitCreate === cargo.type) {
+          const { unitTypeName } = cargo
+
+          // determine a point in front of the unit to unpack cargo at
+          const { lat, lon } = new LatLon(
+            unit.position.lat,
+            unit.position.lon
+          ).destinationPoint(
+            CARGO_UNPACK_DISTANCE_FROM_UNIT_METERS,
+            deg(heading)
+          )
+
+          const position = { lat, lon, alt: 0 }
+
+          // unload the cargo from the unit
+          await unloadCargo(unit, cargo)
+
+          // create the new unit
+          const newUnit = await createUnit({
+            country,
+            heading,
+            isPlayerSlot: false,
+            position,
+            typeName: unitTypeName,
+          })
+
+          // spawn the unit in the game
+          await spawnGroundUnit(newUnit)
+
+          // TODO: get the gridsquare and print it here
+          await outCoalitionText(
+            coalitionFrom(country),
+            `${unit.name} has unpacked a ${cargo.displayName} in <gridsquare>`
           )
           // we're done unpacking base upgrade kit
           return

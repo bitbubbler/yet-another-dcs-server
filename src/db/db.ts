@@ -1,9 +1,10 @@
 import { Knex, knex as knexActual } from 'knex'
 import { Coalition } from '../../generated/dcs/common/v0/Coalition'
 import { SpawnerType } from '../spawner'
-import { CargoType } from '../cargo'
+import { CargoBase, CargoType, CargoTypeName } from '../cargo'
 import { BaseType } from '../base'
 import { StaticObjectTypeName } from '../staticObject'
+import { UnitTypeName } from '../unit'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 export const knex = knexActual({
@@ -74,12 +75,13 @@ export interface Cargo {
   mass: number
   positionId: number
   type: CargoType
-  typeName: string
+  typeName: CargoTypeName
+  unitTypeName?: UnitTypeName
   updatedAt: Date
   uuid: Buffer
 }
 
-export type CargoInsert = Pick<
+type CargoInsert = Pick<
   Cargo,
   | 'createdAt'
   | 'displayName'
@@ -90,7 +92,8 @@ export type CargoInsert = Pick<
   | 'typeName'
   | 'updatedAt'
   | 'uuid'
->
+> &
+  Partial<Pick<Cargo, 'unitTypeName'>>
 
 export type CargoUpdate = Pick<Cargo, 'updatedAt'> &
   Partial<Omit<Cargo, 'createdAt'>>

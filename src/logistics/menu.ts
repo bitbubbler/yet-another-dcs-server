@@ -4,14 +4,21 @@ import {
   removeGroupCommandItem,
 } from '../mission'
 import { groupMenu } from '../menus'
-import { allBasesCargoDefinitions } from './definitions'
+import {
+  allBasesCargoDefinitions,
+  allUnitsCargoDefinitions,
+  CargoDefinition,
+} from './definitions'
 import { CommandType } from '../commands'
 
 const rootMenuName = 'Internal Cargo'
 
-const internalBasesCargos = allBasesCargoDefinitions.filter(
-  definition => definition.internal === true
-)
+function internalOnly(definition: CargoDefinition) {
+  return definition.internal === true
+}
+
+const internalBaseCargos = allBasesCargoDefinitions.filter(internalOnly)
+const internalUnitCargos = allUnitsCargoDefinitions.filter(internalOnly)
 
 export const internalCargoMenu = groupMenu({
   async create({ groupName }) {
@@ -47,14 +54,41 @@ export const internalCargoMenu = groupMenu({
       throw new Error('missing basesPath')
     }
 
-    for (const basesCargoDefinition of internalBasesCargos) {
-      const name = basesCargoDefinition.displayName
-      const cargoDefinitionId = basesCargoDefinition.id
+    for (const baseCargoDefinition of internalBaseCargos) {
+      const name = baseCargoDefinition.displayName
+      const cargoDefinitionId = baseCargoDefinition.id
 
       await addGroupCommand({
         groupName,
         name,
         path: basesPath,
+        command: {
+          type: CommandType.LoadInternalCargo,
+          cargoDefinitionId,
+        },
+      })
+    }
+
+    const unitsMenu = await addGroupCommandSubMenu({
+      groupName,
+      name: 'Units',
+      path: rootPath,
+    })
+
+    const unitsPath = unitsMenu.path
+
+    if (!unitsPath) {
+      throw new Error('missing unitsPath')
+    }
+
+    for (const unitCargoDefinition of internalUnitCargos) {
+      const name = unitCargoDefinition.displayName
+      const cargoDefinitionId = unitCargoDefinition.id
+
+      await addGroupCommand({
+        groupName,
+        name,
+        path: unitsPath,
         command: {
           type: CommandType.LoadInternalCargo,
           cargoDefinitionId,

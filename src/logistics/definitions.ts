@@ -7,6 +7,7 @@
  */
 
 import { CargoType, CargoTypeName, NewCargo } from '../cargo'
+import { UnitTypeName } from '../unit'
 
 export interface CargoDefinitionBase extends Omit<NewCargo, 'position'> {
   id: string
@@ -20,7 +21,17 @@ export interface InternalCargoDefinition extends CargoDefinitionBase {
   internal: true
 }
 
-export type CargoDefinition = ExternalCargoDefinition | InternalCargoDefinition
+export interface UnitCargoDefinition extends InternalCargoDefinition {
+  type: CargoType.UnitCreate
+  unitTypeName: UnitTypeName
+}
+
+export interface BaseCargoDefinition extends CargoDefinitionBase {
+  internal: false | true
+  type: CargoType.BaseCreate | CargoType.BaseUpgrade
+}
+
+export type CargoDefinition = BaseCargoDefinition | UnitCargoDefinition
 
 /**
  * Define all cargo here, do not pass variables.
@@ -33,15 +44,16 @@ export type CargoDefinition = ExternalCargoDefinition | InternalCargoDefinition
  * We current assume that id is unique, and it's used for type inference elsewhere
  * If you add an id that is not unique, you'll have a bad time.
  *
- * We use the unique id from these cargo definitions in the database, so changing or removing them is not advised.
+ * We use the unique id from these cargo definitions at runtime.
+ *
+ * DO NOT reference these these cargo definitions post `create` of a cargo for a unit. The database is the source of truth.
+ * The definitions here are references for the runtime to pull from, mostly for creating menus.
  *
  * The mass defined here is used at cargo creation time only, changing mass here will not change mass of
  * cargos that already exists in the db. This is intentional.
  *
  * NOTE: The order of items here is not important, but that the order does not change is important..
  * IMPORTANT: be careful not to change the order of items (append only)
- * IMPORTANT: be careful not to change the id of an existing item, these are referneced by the db
- * IMPORTANT: be careful when removing definitions, these are referenced by the db
  */
 export const allCargoDefinitions = createCargoDefinitionsArray(
   {
@@ -67,6 +79,24 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     internal: false,
     type: CargoType.BaseUpgrade,
     typeName: CargoTypeName.UH1HCargo,
+  },
+  {
+    displayName: 'MBT M1A2 Abrams',
+    id: 'internal-unit-create-m1a2-abrams',
+    mass: 100, // TODO: find a reasonable value here
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.M1A2,
+  },
+  {
+    displayName: 'IFV M2A2 Bradley',
+    id: 'internal-unit-create-m2a2-bradley',
+    mass: 100, // TODO: find a reasonable value here
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.M2A2,
   }
 )
 
@@ -74,6 +104,11 @@ export const allBasesCargoDefinitions = [
   allCargoDefinitions[0],
   allCargoDefinitions[1],
   allCargoDefinitions[2],
+]
+
+export const allUnitsCargoDefinitions = [
+  allCargoDefinitions[3],
+  allCargoDefinitions[4],
 ]
 
 /**
