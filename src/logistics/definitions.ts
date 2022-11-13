@@ -81,6 +81,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     type: CargoType.BaseUpgrade,
     typeName: CargoTypeName.UH1HCargo,
   },
+  
   // F1 - Supplies and Utility
   {
     displayName: 'Truck M939 Heavy', // 2 crates E
