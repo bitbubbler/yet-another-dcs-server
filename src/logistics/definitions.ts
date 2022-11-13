@@ -6,6 +6,7 @@
  * types onto the system so we can build requirements and code completion
  */
 
+import { builtinModules } from 'module'
 import { CargoType, CargoTypeName, NewCargo } from '../cargo'
 import { UnitTypeName } from '../unit'
 
@@ -80,23 +81,351 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     type: CargoType.BaseUpgrade,
     typeName: CargoTypeName.UH1HCargo,
   },
+  // F1 - Supplies and Utility
   {
-    displayName: 'MBT M1A2 Abrams',
+    displayName: 'Truck M939 Heavy', // 2 crates E
+    id: 'internal-unit-create-m939-truck',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.M939,
+  },
+  {
+    displayName: 'EWR AN/FPS-117 Radar', // 3 crates E
+    id: 'internal-unit-create-fps117-ewr',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.FPS117,
+  },
+
+  // F2 Light
+  {
+    displayName: 'JTAC HMMWV', // 1 crate I/E
+    id: 'internal-unit-create-jtac-hmmwv',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.HmmwvJtac,
+  },
+  {
+    displayName: 'Scout HMMWV', // 1 crate I/E
+    id: 'internal-unit-create-scout-hmmwv',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.HmmwvMg,
+  },
+  {
+    displayName: 'ATGM HMMWV', // 1 crate I/E
+    id: 'internal-unit-create-atgm-hmmwv',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.HmmwvTow,
+  },
+  {
+    displayName: 'APC TPz Fuchs', // 1 crate E
+    id: 'internal-unit-create-tpz-fuchs',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.Fuchs,
+  },
+  {
+    displayName: 'IFV LAV-25', // 1 crate E
+    id: 'internal-unit-create-lav-25',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.LAV25,
+  },
+  {
+    displayName: 'SPG Stryker MGS', // 2 crates E
+    id: 'internal-unit-create-stryker-mgs',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.StrykerMgs,
+  },
+  {
+    displayName: 'ATGM Stryker', // 2 crates E
+    id: 'internal-unit-create-atgm-stryker',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.StrykerAtgm,
+  },
+  {
+    displayName: 'ATGM VAB Mephisto', // 2 crates E
+    id: 'internal-unit-create-atgm-mephisto',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.MephistoAtgm,
+  },
+
+  // F3 Heavy
+  {
+    displayName: 'IFV Marder', // 3 crates E
+    id: 'internal-unit-create-1a3-marder',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.Marder,
+  },
+  {
+    displayName: 'IFV Warrior', // 3 crates E
+    id: 'internal-unit-create-mcv80-warrior',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.MCV80,
+  },
+  {
+    displayName: 'IFV M2A2 Bradley', // 3 crates E
+    id: 'internal-unit-create-m2a2-bradley',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.M2A2,
+  },
+  {
+    displayName: 'MBT M1A2 Abrams', // 5 crates E
     id: 'internal-unit-create-m1a2-abrams',
-    mass: 100, // TODO: find a reasonable value here
+    mass: 1000, 
     internal: true,
     type: CargoType.UnitCreate,
     typeName: CargoTypeName.UH1HCargo,
     unitTypeName: UnitTypeName.M1A2,
   },
   {
-    displayName: 'IFV M2A2 Bradley',
-    id: 'internal-unit-create-m2a2-bradley',
-    mass: 100, // TODO: find a reasonable value here
+    displayName: 'MBT Challenger II', // 5 crates E
+    id: 'internal-unit-create-challenger-2',
+    mass: 1000, 
     internal: true,
     type: CargoType.UnitCreate,
     typeName: CargoTypeName.UH1HCargo,
-    unitTypeName: UnitTypeName.M2A2,
+    unitTypeName: UnitTypeName.Challenger2,
+  },
+  {
+    displayName: 'MBT Leopard-2A6M', // 5 crates E
+    id: 'internal-unit-create-leopard-2a6m',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.Leopard2,
+  },
+  {
+    displayName: 'MBT Leclerc', // 5 crates E
+    id: 'internal-unit-create-leclerc',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.Leclerc,
+  },
+ 
+  // F4 - Artillery
+  {
+    displayName: 'SPH Dana vz77 152mm', // 3 crates E
+    id: 'internal-unit-create-sph-dana',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.Dana,
+  },
+  {
+    displayName: 'SPH M109 Paladin 155mm', // 3 crates E
+    id: 'internal-unit-create-sph-paladin',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.M109,
+  },
+  {
+    displayName: 'SPH T155 Firtina 155mm', // 3 crates E
+    id: 'internal-unit-create-sph-firtina',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.Firtina,
+  },
+  {
+    displayName: 'MLRS M270 227mm', // 5 crates E
+    id: 'internal-unit-create-mlrs-m270',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.MlrsM270,
+  },
+  {
+    displayName: 'MLRS 9A52 Smerch HE 300mm', // 5 crates E
+    id: 'internal-unit-create-mlrs-9a52',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.Mlrs9A52,
+  },
+
+  // F5 - SHORAD
+  {
+    displayName: 'SPAAA Vulcan M163', // 2 crates E
+    id: 'internal-unit-create-m163-vulcan',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.Vulcan,
+  },
+  {
+    displayName: 'SPAAA Gepard', // 2 crates E
+    id: 'internal-unit-create-gepard',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.Gepard,
+  },
+  {
+    displayName: 'SAM Avenger (Stinger)', // 2 crates E
+    id: 'internal-unit-create-avenger-stinger',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.Avenger,
+  },
+  {
+    displayName: 'SAM Chaparral M48', // 2 crates E
+    id: 'internal-unit-create-m48-chaparral',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.Chaparral,
+  },
+  {
+    displayName: 'SAM Roland ADS', // 3 crates E
+    id: 'internal-unit-create-roland-ads',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.RolandAds,
+  },
+  {
+    displayName: 'SAM Linebacker - Bradley M6S', // 3 crates E
+    id: 'internal-unit-create-m65-linebacker',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.Linebacker,
+  },
+
+  // F6 - MRAD
+  // HAWK
+  {
+    displayName: 'SAM Hawk SR (AN/MPQ50)', // 1 crate I/E
+    id: 'internal-unit-create-hawk-sr',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.HawkSr,
+  },
+  {
+    displayName: 'SAM Hawk TR (AN/MPQ46)', // 1 crate I/E
+    id: 'internal-unit-create-hawk-tr',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.HawkTr,
+  },
+  {
+    displayName: 'SAM Hawk Platoon Command Post (PCP)', // 1 crate I/E
+    id: 'internal-unit-create-hawk-pcp',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.HawkPcp,
+  },
+  {
+    displayName: 'SAM Hawk CWAR (AN/MPQ55)', // 1 crate I/E
+    id: 'internal-unit-create-hawk-cwar',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.HawkCwar,
+  },
+  {
+    displayName: 'SAM Hawk LN M192', // 1 crate I/E
+    id: 'internal-unit-create-hawk-ln',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.HawkLn,
+  },
+  // NASAM
+  {
+    displayName: 'SAM NASAMS LN AIM-120B', // 1 crate I/E
+    id: 'internal-unit-create-nasam-120b',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.NasamLnB,
+  },
+  {
+    displayName: 'SAM NASAMS LN AIM-120C', // 1 crate I/E
+    id: 'internal-unit-create-nasam-120c',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.NasamLnC,
+  },
+  {
+    displayName: 'SAM NASAMS SR MPQ64F1', // 1 crate I/E
+    id: 'internal-unit-create-nasam-sr',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.NasamSr,
+  },
+  {
+    displayName: 'SAM NASAMS C2', // 1 crate I/E
+    id: 'internal-unit-create-nasam-c2',
+    mass: 1000, 
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.NasamC2,
   }
 )
 
