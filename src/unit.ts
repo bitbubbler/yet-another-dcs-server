@@ -21,7 +21,7 @@ import { countryFrom } from './country'
 
 const { coalition, custom, unit } = services
 
-/** The values of this enum must exactly match dcs in-ga*me unit typeName values */
+/** The values of this enum must exactly match dcs in-game unit typeName values */
 export enum UnitTypeName {
   // F1 Supplies and Utility
   M939 = 'M 818',// Truck M939 Heavy
