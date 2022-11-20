@@ -79,14 +79,25 @@ export const internalCargoMenu = groupMenu({
       })
     }
 
-    // Supplies and Utility
+    // Units menu
     const unitsMenu = await addGroupCommandSubMenu({
       groupName,
-      name: 'General Units',
+      name: 'Units',
       path: rootPath,
     })
 
-    const unitsPath = unitsMenu.path
+    if (!unitsMenu.path) {
+      throw new Error('missing path on unitsMenu') 
+    }
+
+    // Supplies and Utility
+    const suppliesMenu = await addGroupCommandSubMenu({
+      groupName,
+      name: 'Supplies & Utility',
+      path: unitsMenu.path,
+    })
+
+    const unitsPath = suppliesMenu.path
 
     if (!unitsPath) {
       throw new Error('missing unitsPath')
@@ -111,7 +122,7 @@ export const internalCargoMenu = groupMenu({
     const unitsLightMenu = await addGroupCommandSubMenu({
       groupName,
       name: 'Light Units',
-      path: rootPath,
+      path: unitsMenu.path,
     })
 
     const unitsLightPath = unitsLightMenu.path
@@ -139,7 +150,7 @@ export const internalCargoMenu = groupMenu({
     const unitsHeavyMenu = await addGroupCommandSubMenu({
       groupName,
       name: 'Heavy Units',
-      path: rootPath,
+      path: unitsMenu.path,
     })
 
     const unitsHeavyPath = unitsHeavyMenu.path
@@ -167,7 +178,7 @@ export const internalCargoMenu = groupMenu({
     const unitsArtilleryMenu = await addGroupCommandSubMenu({
       groupName,
       name: 'Artillery Units',
-      path: rootPath,
+      path: unitsMenu.path,
     })
 
     const unitsArtilleryPath = unitsArtilleryMenu.path
@@ -195,7 +206,7 @@ export const internalCargoMenu = groupMenu({
     const unitsShoradMenu = await addGroupCommandSubMenu({
       groupName,
       name: 'SHORAD Units',
-      path: rootPath,
+      path: unitsMenu.path,
     })
 
     const unitsShoradPath = unitsShoradMenu.path
@@ -223,7 +234,7 @@ export const internalCargoMenu = groupMenu({
     const unitsMoradMenu = await addGroupCommandSubMenu({
       groupName,
       name: 'MORAD Units',
-      path: rootPath,
+      path: unitsMenu.path,
     })
 
     const unitsMoradPath = unitsMoradMenu.path
