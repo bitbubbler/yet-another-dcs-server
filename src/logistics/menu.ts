@@ -26,8 +26,10 @@ const internalBaseCargos = allBasesCargoDefinitions.filter(internalOnly)
 const internalUnitCargos = allUnitsCargoDefinitions.filter(internalOnly)
 const internalLightUnitCargos = lightUnitsCargoDefinitions.filter(internalOnly)
 const internalHeavyUnitCargos = heavyUnitsCargoDefinitions.filter(internalOnly)
-const internalArtilleryUnitCargos = artilleryUnitsCargoDefinitions.filter(internalOnly)
-const internalShoradUnitCargos = shoradUnitsCargoDefinitions.filter(internalOnly)
+const internalArtilleryUnitCargos =
+  artilleryUnitsCargoDefinitions.filter(internalOnly)
+const internalShoradUnitCargos =
+  shoradUnitsCargoDefinitions.filter(internalOnly)
 const internalMoradUnitCargos = moradUnitsCargoDefinitions.filter(internalOnly)
 
 export const internalCargoMenu = groupMenu({
@@ -87,7 +89,7 @@ export const internalCargoMenu = groupMenu({
     })
 
     if (!unitsMenu.path) {
-      throw new Error('missing path on unitsMenu') 
+      throw new Error('missing path on unitsMenu')
     }
 
     // Supplies and Utility
@@ -258,7 +260,7 @@ export const internalCargoMenu = groupMenu({
       })
     }
 
-// End modification
+    // End modification
   },
   async remove({ groupName }) {
     await removeGroupCommandItem({ groupName, path: [rootMenuName] })
