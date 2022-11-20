@@ -97,10 +97,10 @@ export const internalCargoMenu = groupMenu({
       path: unitsMenu.path,
     })
 
-    const unitsPath = suppliesMenu.path
+    const unitsSuppliesPath = suppliesMenu.path
 
-    if (!unitsPath) {
-      throw new Error('missing unitsPath')
+    if (!unitsSuppliesPath) {
+      throw new Error('missing unitsSuppliesPath')
     }
 
     for (const unitCargoDefinition of internalUnitCargos) {
@@ -110,7 +110,7 @@ export const internalCargoMenu = groupMenu({
       await addGroupCommand({
         groupName,
         name,
-        path: unitsPath,
+        path: unitsSuppliesPath,
         command: {
           type: CommandType.LoadInternalCargo,
           cargoDefinitionId,
