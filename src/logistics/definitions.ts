@@ -57,7 +57,7 @@ export type CargoDefinition = BaseCargoDefinition | UnitCargoDefinition
  */
 export const allCargoDefinitions = createCargoDefinitionsArray(
   {
-    displayName: 'Base Creation Kit',
+    displayName: 'Base Creation Kit', // arg[0]
     id: 'internal-base-create',
     mass: 2000, // TODO: find a reasonable value here
     internal: true,
@@ -65,7 +65,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     typeName: CargoTypeName.UH1HCargo,
   },
   {
-    displayName: 'Base Upgrade Kit (small)',
+    displayName: 'Base Upgrade Kit (small)', // arg[1]
     id: 'internal-base-upgrade-small',
     mass: 100, // TODO: find a reasonable value here
     internal: true,
@@ -73,7 +73,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     typeName: CargoTypeName.UH1HCargo,
   },
   {
-    displayName: 'Base Upgrade Kit (large)',
+    displayName: 'Base Upgrade Kit (large)', // arg[2]
     id: 'internal-base-upgrade-large',
     mass: 100, // TODO: find a reasonable value here
     internal: false,
@@ -81,34 +81,408 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     typeName: CargoTypeName.UH1HCargo,
   },
   {
-    displayName: 'MBT M1A2 Abrams',
+    displayName: 'Truck M939 Heavy', // arg[3]
+    id: 'internal-unit-create-m939-truck',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.M939,
+  },
+  {
+    displayName: 'EWR AN/FPS-117 Radar', // arg[4]
+    id: 'internal-unit-create-fps117-ewr',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.FPS117,
+  },
+  {
+    displayName: 'JTAC HMMWV', // arg[5]
+    id: 'internal-unit-create-jtac-hmmwv',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.HmmwvJtac,
+  },
+  {
+    displayName: 'Scout HMMWV', // arg[6]
+    id: 'internal-unit-create-scout-hmmwv',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.HmmwvMg,
+  },
+  {
+    displayName: 'ATGM HMMWV', // arg[7]
+    id: 'internal-unit-create-atgm-hmmwv',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.HmmwvTow,
+  },
+  {
+    displayName: 'APC TPz Fuchs', // arg[8]
+    id: 'internal-unit-create-tpz-fuchs',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.Fuchs,
+  },
+  {
+    displayName: 'IFV LAV-25', // arg[9]
+    id: 'internal-unit-create-lav-25',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.LAV25,
+  },
+  {
+    displayName: 'SPG Stryker MGS', // arg[10]
+    id: 'internal-unit-create-stryker-mgs',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.StrykerMgs,
+  },
+  {
+    displayName: 'ATGM Stryker', // arg[11]
+    id: 'internal-unit-create-atgm-stryker',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.StrykerAtgm,
+  },
+  {
+    displayName: 'ATGM VAB Mephisto', // arg[12]
+    id: 'internal-unit-create-atgm-mephisto',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.MephistoAtgm,
+  },
+  {
+    displayName: 'IFV Marder', // arg[13]
+    id: 'internal-unit-create-1a3-marder',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.Marder,
+  },
+  {
+    displayName: 'IFV Warrior', // arg[14]
+    id: 'internal-unit-create-mcv80-warrior',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.MCV80,
+  },
+  {
+    displayName: 'IFV M2A2 Bradley', // arg[15]
+    id: 'internal-unit-create-m2a2-bradley',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.M2A2,
+  },
+  {
+    displayName: 'MBT M1A2 Abrams', // arg[16]
     id: 'internal-unit-create-m1a2-abrams',
-    mass: 100, // TODO: find a reasonable value here
+    mass: 1000,
     internal: true,
     type: CargoType.UnitCreate,
     typeName: CargoTypeName.UH1HCargo,
     unitTypeName: UnitTypeName.M1A2,
   },
   {
-    displayName: 'IFV M2A2 Bradley',
-    id: 'internal-unit-create-m2a2-bradley',
-    mass: 100, // TODO: find a reasonable value here
+    displayName: 'MBT Challenger II', // arg[17]
+    id: 'internal-unit-create-challenger-2',
+    mass: 1000,
     internal: true,
     type: CargoType.UnitCreate,
     typeName: CargoTypeName.UH1HCargo,
-    unitTypeName: UnitTypeName.M2A2,
+    unitTypeName: UnitTypeName.Challenger2,
+  },
+  {
+    displayName: 'MBT Leopard-2A6M', // arg[18]
+    id: 'internal-unit-create-leopard-2a6m',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.Leopard2,
+  },
+  {
+    displayName: 'MBT Leclerc', // arg[19]
+    id: 'internal-unit-create-leclerc',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.Leclerc,
+  },
+  {
+    displayName: 'SPH Dana vz77 152mm', // arg[20]
+    id: 'internal-unit-create-sph-dana',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.Dana,
+  },
+  {
+    displayName: 'SPH M109 Paladin 155mm', // arg[21]
+    id: 'internal-unit-create-sph-paladin',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.M109,
+  },
+  {
+    displayName: 'SPH T155 Firtina 155mm', // arg[22]
+    id: 'internal-unit-create-sph-firtina',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.Firtina,
+  },
+  {
+    displayName: 'MLRS M270 227mm', // arg[23]
+    id: 'internal-unit-create-mlrs-m270',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.MlrsM270,
+  },
+  {
+    displayName: 'MLRS 9A52 Smerch HE 300mm', // arg[24]
+    id: 'internal-unit-create-mlrs-9a52',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.Mlrs9A52,
+  },
+  {
+    displayName: 'SPAAA Vulcan M163', // arg[25]
+    id: 'internal-unit-create-m163-vulcan',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.Vulcan,
+  },
+  {
+    displayName: 'SPAAA Gepard', // arg[26]
+    id: 'internal-unit-create-gepard',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.Gepard,
+  },
+  {
+    displayName: 'SAM Avenger (Stinger)', // arg[27]
+    id: 'internal-unit-create-avenger-stinger',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.Avenger,
+  },
+  {
+    displayName: 'SAM Chaparral M48', // arg[28]
+    id: 'internal-unit-create-m48-chaparral',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.Chaparral,
+  },
+  {
+    displayName: 'SAM Roland ADS', // arg[29]
+    id: 'internal-unit-create-roland-ads',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.RolandAds,
+  },
+  {
+    displayName: 'SAM Linebacker - Bradley M6S', // arg[30]
+    id: 'internal-unit-create-m65-linebacker',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.Linebacker,
+  },
+  {
+    displayName: 'SAM Hawk SR (AN/MPQ50)', // arg[31]
+    id: 'internal-unit-create-hawk-sr',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.HawkSr,
+  },
+  {
+    displayName: 'SAM Hawk TR (AN/MPQ46)', // arg[32]
+    id: 'internal-unit-create-hawk-tr',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.HawkTr,
+  },
+  {
+    displayName: 'SAM Hawk Platoon Command Post (PCP)', // arg[33]
+    id: 'internal-unit-create-hawk-pcp',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.HawkPcp,
+  },
+  {
+    displayName: 'SAM Hawk CWAR (AN/MPQ55)', // arg[34]
+    id: 'internal-unit-create-hawk-cwar',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.HawkCwar,
+  },
+  {
+    displayName: 'SAM Hawk LN M192', // arg[35]
+    id: 'internal-unit-create-hawk-ln',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.HawkLn,
+  },
+  {
+    displayName: 'SAM NASAMS LN AIM-120B', // arg[36]
+    id: 'internal-unit-create-nasam-120b',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.NasamLnB,
+  },
+  {
+    displayName: 'SAM NASAMS LN AIM-120C', // arg[37]
+    id: 'internal-unit-create-nasam-120c',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.NasamLnC,
+  },
+  {
+    displayName: 'SAM NASAMS SR MPQ64F1', // arg[38]
+    id: 'internal-unit-create-nasam-sr',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.NasamSr,
+  },
+  {
+    displayName: 'SAM NASAMS C2', // arg[39]
+    id: 'internal-unit-create-nasam-c2',
+    mass: 1000,
+    internal: true,
+    type: CargoType.UnitCreate,
+    typeName: CargoTypeName.UH1HCargo,
+    unitTypeName: UnitTypeName.NasamC2,
   }
 )
 
+// Arg per menu, max 10
+
+// Bases
 export const allBasesCargoDefinitions = [
   allCargoDefinitions[0],
   allCargoDefinitions[1],
   allCargoDefinitions[2],
 ]
 
+// F1 - Supplies and Utility
 export const allUnitsCargoDefinitions = [
   allCargoDefinitions[3],
   allCargoDefinitions[4],
+]
+
+// F2 Light
+export const lightUnitsCargoDefinitions = [
+  allCargoDefinitions[5],
+  allCargoDefinitions[6],
+  allCargoDefinitions[7],
+  allCargoDefinitions[8],
+  allCargoDefinitions[9],
+  allCargoDefinitions[10],
+  allCargoDefinitions[11],
+  allCargoDefinitions[12],
+]
+
+// F3 Heavy
+export const heavyUnitsCargoDefinitions = [
+  allCargoDefinitions[13],
+  allCargoDefinitions[14],
+  allCargoDefinitions[15],
+  allCargoDefinitions[16],
+  allCargoDefinitions[17],
+  allCargoDefinitions[18],
+  allCargoDefinitions[19],
+]
+
+// F4 - Artillery
+export const artilleryUnitsCargoDefinitions = [
+  allCargoDefinitions[20],
+  allCargoDefinitions[21],
+  allCargoDefinitions[22],
+  allCargoDefinitions[23],
+  allCargoDefinitions[24],
+]
+
+// F5 - SHORAD
+export const shoradUnitsCargoDefinitions = [
+  allCargoDefinitions[25],
+  allCargoDefinitions[26],
+  allCargoDefinitions[27],
+  allCargoDefinitions[28],
+  allCargoDefinitions[29],
+  allCargoDefinitions[30],
+]
+
+// F6 - MRAD
+export const moradUnitsCargoDefinitions = [
+  allCargoDefinitions[31],
+  allCargoDefinitions[32],
+  allCargoDefinitions[33],
+  allCargoDefinitions[34],
+  allCargoDefinitions[35],
+  allCargoDefinitions[36],
+  allCargoDefinitions[37],
+  allCargoDefinitions[38],
+  allCargoDefinitions[39],
 ]
 
 /**
