@@ -58,7 +58,7 @@ export type CargoDefinition = BaseCargoDefinition | UnitCargoDefinition
  */
 export const allCargoDefinitions = createCargoDefinitionsArray(
   {
-    displayName: 'Base Creation Kit',
+    displayName: 'Base Creation Kit', // arg[0]
     id: 'internal-base-create',
     mass: 2000, // TODO: find a reasonable value here
     internal: true,
@@ -66,7 +66,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     typeName: CargoTypeName.UH1HCargo,
   },
   {
-    displayName: 'Base Upgrade Kit (small)',
+    displayName: 'Base Upgrade Kit (small)', // arg[1]
     id: 'internal-base-upgrade-small',
     mass: 100, // TODO: find a reasonable value here
     internal: true,
@@ -74,17 +74,15 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     typeName: CargoTypeName.UH1HCargo,
   },
   {
-    displayName: 'Base Upgrade Kit (large)',
+    displayName: 'Base Upgrade Kit (large)', // arg[2]
     id: 'internal-base-upgrade-large',
     mass: 100, // TODO: find a reasonable value here
     internal: false,
     type: CargoType.BaseUpgrade,
     typeName: CargoTypeName.UH1HCargo,
   },
-  
-  // F1 - Supplies and Utility
   {
-    displayName: 'Truck M939 Heavy', // 2 crates E
+    displayName: 'Truck M939 Heavy', // 2 crates E arg[3]
     id: 'internal-unit-create-m939-truck',
     mass: 1000, 
     internal: true,
@@ -93,7 +91,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.M939,
   },
   {
-    displayName: 'EWR AN/FPS-117 Radar', // 3 crates E
+    displayName: 'EWR AN/FPS-117 Radar', // 3 crates E arg[4]
     id: 'internal-unit-create-fps117-ewr',
     mass: 1000, 
     internal: true,
@@ -101,10 +99,8 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     typeName: CargoTypeName.UH1HCargo,
     unitTypeName: UnitTypeName.FPS117,
   },
-
-  // F2 Light
   {
-    displayName: 'JTAC HMMWV', // 1 crate I/E
+    displayName: 'JTAC HMMWV', // 1 crate I/E arg[5]
     id: 'internal-unit-create-jtac-hmmwv',
     mass: 1000, 
     internal: true,
@@ -113,7 +109,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.HmmwvJtac,
   },
   {
-    displayName: 'Scout HMMWV', // 1 crate I/E
+    displayName: 'Scout HMMWV', // 1 crate I/E arg[6]
     id: 'internal-unit-create-scout-hmmwv',
     mass: 1000, 
     internal: true,
@@ -122,7 +118,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.HmmwvMg,
   },
   {
-    displayName: 'ATGM HMMWV', // 1 crate I/E
+    displayName: 'ATGM HMMWV', // 1 crate I/E arg[7]
     id: 'internal-unit-create-atgm-hmmwv',
     mass: 1000, 
     internal: true,
@@ -131,7 +127,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.HmmwvTow,
   },
   {
-    displayName: 'APC TPz Fuchs', // 1 crate E
+    displayName: 'APC TPz Fuchs', // 1 crate E arg[8]
     id: 'internal-unit-create-tpz-fuchs',
     mass: 1000, 
     internal: true,
@@ -140,7 +136,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.Fuchs,
   },
   {
-    displayName: 'IFV LAV-25', // 1 crate E
+    displayName: 'IFV LAV-25', // 1 crate E arg[9]
     id: 'internal-unit-create-lav-25',
     mass: 1000, 
     internal: true,
@@ -149,7 +145,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.LAV25,
   },
   {
-    displayName: 'SPG Stryker MGS', // 2 crates E
+    displayName: 'SPG Stryker MGS', // 2 crates E arg[10]
     id: 'internal-unit-create-stryker-mgs',
     mass: 1000, 
     internal: true,
@@ -158,7 +154,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.StrykerMgs,
   },
   {
-    displayName: 'ATGM Stryker', // 2 crates E
+    displayName: 'ATGM Stryker', // 2 crates E arg[11]
     id: 'internal-unit-create-atgm-stryker',
     mass: 1000, 
     internal: true,
@@ -167,7 +163,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.StrykerAtgm,
   },
   {
-    displayName: 'ATGM VAB Mephisto', // 2 crates E
+    displayName: 'ATGM VAB Mephisto', // 2 crates E arg[12]
     id: 'internal-unit-create-atgm-mephisto',
     mass: 1000, 
     internal: true,
@@ -175,10 +171,8 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     typeName: CargoTypeName.UH1HCargo,
     unitTypeName: UnitTypeName.MephistoAtgm,
   },
-
-  // F3 Heavy
   {
-    displayName: 'IFV Marder', // 3 crates E
+    displayName: 'IFV Marder', // 3 crates E arg[13]
     id: 'internal-unit-create-1a3-marder',
     mass: 1000, 
     internal: true,
@@ -187,7 +181,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.Marder,
   },
   {
-    displayName: 'IFV Warrior', // 3 crates E
+    displayName: 'IFV Warrior', // 3 crates E arg[14]
     id: 'internal-unit-create-mcv80-warrior',
     mass: 1000, 
     internal: true,
@@ -196,7 +190,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.MCV80,
   },
   {
-    displayName: 'IFV M2A2 Bradley', // 3 crates E
+    displayName: 'IFV M2A2 Bradley', // 3 crates E arg[15]
     id: 'internal-unit-create-m2a2-bradley',
     mass: 1000, 
     internal: true,
@@ -205,7 +199,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.M2A2,
   },
   {
-    displayName: 'MBT M1A2 Abrams', // 5 crates E
+    displayName: 'MBT M1A2 Abrams', // 5 crates E arg[16]
     id: 'internal-unit-create-m1a2-abrams',
     mass: 1000, 
     internal: true,
@@ -214,7 +208,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.M1A2,
   },
   {
-    displayName: 'MBT Challenger II', // 5 crates E
+    displayName: 'MBT Challenger II', // 5 crates E arg[17]
     id: 'internal-unit-create-challenger-2',
     mass: 1000, 
     internal: true,
@@ -223,7 +217,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.Challenger2,
   },
   {
-    displayName: 'MBT Leopard-2A6M', // 5 crates E
+    displayName: 'MBT Leopard-2A6M', // 5 crates E arg[18]
     id: 'internal-unit-create-leopard-2a6m',
     mass: 1000, 
     internal: true,
@@ -232,7 +226,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.Leopard2,
   },
   {
-    displayName: 'MBT Leclerc', // 5 crates E
+    displayName: 'MBT Leclerc', // 5 crates E arg[19]
     id: 'internal-unit-create-leclerc',
     mass: 1000, 
     internal: true,
@@ -240,10 +234,8 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     typeName: CargoTypeName.UH1HCargo,
     unitTypeName: UnitTypeName.Leclerc,
   },
- 
-  // F4 - Artillery
   {
-    displayName: 'SPH Dana vz77 152mm', // 3 crates E
+    displayName: 'SPH Dana vz77 152mm', // 3 crates E arg[20]
     id: 'internal-unit-create-sph-dana',
     mass: 1000, 
     internal: true,
@@ -252,7 +244,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.Dana,
   },
   {
-    displayName: 'SPH M109 Paladin 155mm', // 3 crates E
+    displayName: 'SPH M109 Paladin 155mm', // 3 crates E arg[21]
     id: 'internal-unit-create-sph-paladin',
     mass: 1000, 
     internal: true,
@@ -261,7 +253,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.M109,
   },
   {
-    displayName: 'SPH T155 Firtina 155mm', // 3 crates E
+    displayName: 'SPH T155 Firtina 155mm', // 3 crates E arg[22]
     id: 'internal-unit-create-sph-firtina',
     mass: 1000, 
     internal: true,
@@ -270,7 +262,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.Firtina,
   },
   {
-    displayName: 'MLRS M270 227mm', // 5 crates E
+    displayName: 'MLRS M270 227mm', // 5 crates E arg[23]
     id: 'internal-unit-create-mlrs-m270',
     mass: 1000, 
     internal: true,
@@ -279,7 +271,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.MlrsM270,
   },
   {
-    displayName: 'MLRS 9A52 Smerch HE 300mm', // 5 crates E
+    displayName: 'MLRS 9A52 Smerch HE 300mm', // 5 crates E arg[24]
     id: 'internal-unit-create-mlrs-9a52',
     mass: 1000, 
     internal: true,
@@ -287,10 +279,8 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     typeName: CargoTypeName.UH1HCargo,
     unitTypeName: UnitTypeName.Mlrs9A52,
   },
-
-  // F5 - SHORAD
   {
-    displayName: 'SPAAA Vulcan M163', // 2 crates E
+    displayName: 'SPAAA Vulcan M163', // 2 crates E arg[25]
     id: 'internal-unit-create-m163-vulcan',
     mass: 1000, 
     internal: true,
@@ -299,7 +289,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.Vulcan,
   },
   {
-    displayName: 'SPAAA Gepard', // 2 crates E
+    displayName: 'SPAAA Gepard', // 2 crates E arg[26]
     id: 'internal-unit-create-gepard',
     mass: 1000, 
     internal: true,
@@ -308,7 +298,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.Gepard,
   },
   {
-    displayName: 'SAM Avenger (Stinger)', // 2 crates E
+    displayName: 'SAM Avenger (Stinger)', // 2 crates E arg[27]
     id: 'internal-unit-create-avenger-stinger',
     mass: 1000, 
     internal: true,
@@ -317,7 +307,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.Avenger,
   },
   {
-    displayName: 'SAM Chaparral M48', // 2 crates E
+    displayName: 'SAM Chaparral M48', // 2 crates E arg[28]
     id: 'internal-unit-create-m48-chaparral',
     mass: 1000, 
     internal: true,
@@ -326,7 +316,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.Chaparral,
   },
   {
-    displayName: 'SAM Roland ADS', // 3 crates E
+    displayName: 'SAM Roland ADS', // 3 crates E arg[29]
     id: 'internal-unit-create-roland-ads',
     mass: 1000, 
     internal: true,
@@ -335,7 +325,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.RolandAds,
   },
   {
-    displayName: 'SAM Linebacker - Bradley M6S', // 3 crates E
+    displayName: 'SAM Linebacker - Bradley M6S', // 3 crates E arg[30]
     id: 'internal-unit-create-m65-linebacker',
     mass: 1000, 
     internal: true,
@@ -343,11 +333,8 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     typeName: CargoTypeName.UH1HCargo,
     unitTypeName: UnitTypeName.Linebacker,
   },
-
-  // F6 - MRAD
-  // HAWK
   {
-    displayName: 'SAM Hawk SR (AN/MPQ50)', // 1 crate I/E
+    displayName: 'SAM Hawk SR (AN/MPQ50)', // 1 crate I/E arg[31]
     id: 'internal-unit-create-hawk-sr',
     mass: 1000, 
     internal: true,
@@ -356,7 +343,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.HawkSr,
   },
   {
-    displayName: 'SAM Hawk TR (AN/MPQ46)', // 1 crate I/E
+    displayName: 'SAM Hawk TR (AN/MPQ46)', // 1 crate I/E arg[32]
     id: 'internal-unit-create-hawk-tr',
     mass: 1000, 
     internal: true,
@@ -365,7 +352,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.HawkTr,
   },
   {
-    displayName: 'SAM Hawk Platoon Command Post (PCP)', // 1 crate I/E
+    displayName: 'SAM Hawk Platoon Command Post (PCP)', // 1 crate I/E arg[33]
     id: 'internal-unit-create-hawk-pcp',
     mass: 1000, 
     internal: true,
@@ -374,7 +361,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.HawkPcp,
   },
   {
-    displayName: 'SAM Hawk CWAR (AN/MPQ55)', // 1 crate I/E
+    displayName: 'SAM Hawk CWAR (AN/MPQ55)', // 1 crate I/E arg[34]
     id: 'internal-unit-create-hawk-cwar',
     mass: 1000, 
     internal: true,
@@ -383,7 +370,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.HawkCwar,
   },
   {
-    displayName: 'SAM Hawk LN M192', // 1 crate I/E
+    displayName: 'SAM Hawk LN M192', // 1 crate I/E arg[35]
     id: 'internal-unit-create-hawk-ln',
     mass: 1000, 
     internal: true,
@@ -391,9 +378,8 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     typeName: CargoTypeName.UH1HCargo,
     unitTypeName: UnitTypeName.HawkLn,
   },
-  // NASAM
   {
-    displayName: 'SAM NASAMS LN AIM-120B', // 1 crate I/E
+    displayName: 'SAM NASAMS LN AIM-120B', // 1 crate I/E arg[36]
     id: 'internal-unit-create-nasam-120b',
     mass: 1000, 
     internal: true,
@@ -402,7 +388,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.NasamLnB,
   },
   {
-    displayName: 'SAM NASAMS LN AIM-120C', // 1 crate I/E
+    displayName: 'SAM NASAMS LN AIM-120C', // 1 crate I/E arg[37]
     id: 'internal-unit-create-nasam-120c',
     mass: 1000, 
     internal: true,
@@ -411,7 +397,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.NasamLnC,
   },
   {
-    displayName: 'SAM NASAMS SR MPQ64F1', // 1 crate I/E
+    displayName: 'SAM NASAMS SR MPQ64F1', // 1 crate I/E arg[38]
     id: 'internal-unit-create-nasam-sr',
     mass: 1000, 
     internal: true,
@@ -420,7 +406,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.NasamSr,
   },
   {
-    displayName: 'SAM NASAMS C2', // 1 crate I/E
+    displayName: 'SAM NASAMS C2', // 1 crate I/E arg[39]
     id: 'internal-unit-create-nasam-c2',
     mass: 1000, 
     internal: true,
@@ -430,16 +416,76 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
   }
 )
 
+// Arg per menu, max 10
+
+// Bases
 export const allBasesCargoDefinitions = [
   allCargoDefinitions[0],
   allCargoDefinitions[1],
   allCargoDefinitions[2],
 ]
 
-export const allUnitsCargoDefinitions = [
+// F1 - Supplies and Utility
+export const allUnitsCargoDefinitions = [ 
   allCargoDefinitions[3],
   allCargoDefinitions[4],
 ]
+
+// F2 Light
+export const lightUnitsCargoDefinitions = [ 
+  allCargoDefinitions[5],
+  allCargoDefinitions[6],
+  allCargoDefinitions[7],
+  allCargoDefinitions[8],
+  allCargoDefinitions[9],
+  allCargoDefinitions[10],
+  allCargoDefinitions[11],
+  allCargoDefinitions[12],
+]
+
+// F3 Heavy
+export const heavyUnitsCargoDefinitions = [ 
+  allCargoDefinitions[13],
+  allCargoDefinitions[14],
+  allCargoDefinitions[15],
+  allCargoDefinitions[16],
+  allCargoDefinitions[17],
+  allCargoDefinitions[18],
+  allCargoDefinitions[19],
+]
+
+// F4 - Artillery
+export const artilleryUnitsCargoDefinitions = [ 
+  allCargoDefinitions[20],
+  allCargoDefinitions[21],
+  allCargoDefinitions[22],
+  allCargoDefinitions[23],
+  allCargoDefinitions[24],
+]
+
+// F5 - SHORAD
+export const shoradUnitsCargoDefinitions = [ 
+  allCargoDefinitions[25],
+  allCargoDefinitions[26],
+  allCargoDefinitions[27],
+  allCargoDefinitions[28],
+  allCargoDefinitions[29],
+  allCargoDefinitions[30],
+]
+
+// F6 - MRAD
+export const moradUnitsCargoDefinitions = [ 
+  allCargoDefinitions[31],
+  allCargoDefinitions[32],
+  allCargoDefinitions[33],
+  allCargoDefinitions[34],
+  allCargoDefinitions[35],
+  allCargoDefinitions[36],
+  allCargoDefinitions[37],
+  allCargoDefinitions[38],
+  allCargoDefinitions[39],
+]
+
 
 /**
  * This function exists to allow us to both constrain the value AND infer it's type
