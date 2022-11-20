@@ -6,7 +6,6 @@
  * types onto the system so we can build requirements and code completion
  */
 
-import { builtinModules } from 'module'
 import { CargoType, CargoTypeName, NewCargo } from '../cargo'
 import { UnitTypeName } from '../unit'
 
@@ -82,7 +81,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     typeName: CargoTypeName.UH1HCargo,
   },
   {
-    displayName: 'Truck M939 Heavy', // 2 crates E arg[3]
+    displayName: 'Truck M939 Heavy', // arg[3]
     id: 'internal-unit-create-m939-truck',
     mass: 1000, 
     internal: true,
@@ -91,7 +90,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.M939,
   },
   {
-    displayName: 'EWR AN/FPS-117 Radar', // 3 crates E arg[4]
+    displayName: 'EWR AN/FPS-117 Radar', // arg[4]
     id: 'internal-unit-create-fps117-ewr',
     mass: 1000, 
     internal: true,
@@ -100,7 +99,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.FPS117,
   },
   {
-    displayName: 'JTAC HMMWV', // 1 crate I/E arg[5]
+    displayName: 'JTAC HMMWV', // arg[5]
     id: 'internal-unit-create-jtac-hmmwv',
     mass: 1000, 
     internal: true,
@@ -109,7 +108,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.HmmwvJtac,
   },
   {
-    displayName: 'Scout HMMWV', // 1 crate I/E arg[6]
+    displayName: 'Scout HMMWV', // arg[6]
     id: 'internal-unit-create-scout-hmmwv',
     mass: 1000, 
     internal: true,
@@ -118,7 +117,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.HmmwvMg,
   },
   {
-    displayName: 'ATGM HMMWV', // 1 crate I/E arg[7]
+    displayName: 'ATGM HMMWV', // arg[7]
     id: 'internal-unit-create-atgm-hmmwv',
     mass: 1000, 
     internal: true,
@@ -127,7 +126,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.HmmwvTow,
   },
   {
-    displayName: 'APC TPz Fuchs', // 1 crate E arg[8]
+    displayName: 'APC TPz Fuchs', // arg[8]
     id: 'internal-unit-create-tpz-fuchs',
     mass: 1000, 
     internal: true,
@@ -136,7 +135,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.Fuchs,
   },
   {
-    displayName: 'IFV LAV-25', // 1 crate E arg[9]
+    displayName: 'IFV LAV-25', // arg[9]
     id: 'internal-unit-create-lav-25',
     mass: 1000, 
     internal: true,
@@ -145,7 +144,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.LAV25,
   },
   {
-    displayName: 'SPG Stryker MGS', // 2 crates E arg[10]
+    displayName: 'SPG Stryker MGS', // arg[10]
     id: 'internal-unit-create-stryker-mgs',
     mass: 1000, 
     internal: true,
@@ -154,7 +153,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.StrykerMgs,
   },
   {
-    displayName: 'ATGM Stryker', // 2 crates E arg[11]
+    displayName: 'ATGM Stryker', // arg[11]
     id: 'internal-unit-create-atgm-stryker',
     mass: 1000, 
     internal: true,
@@ -163,7 +162,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.StrykerAtgm,
   },
   {
-    displayName: 'ATGM VAB Mephisto', // 2 crates E arg[12]
+    displayName: 'ATGM VAB Mephisto', // arg[12]
     id: 'internal-unit-create-atgm-mephisto',
     mass: 1000, 
     internal: true,
@@ -172,7 +171,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.MephistoAtgm,
   },
   {
-    displayName: 'IFV Marder', // 3 crates E arg[13]
+    displayName: 'IFV Marder', // arg[13]
     id: 'internal-unit-create-1a3-marder',
     mass: 1000, 
     internal: true,
@@ -181,7 +180,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.Marder,
   },
   {
-    displayName: 'IFV Warrior', // 3 crates E arg[14]
+    displayName: 'IFV Warrior', // arg[14]
     id: 'internal-unit-create-mcv80-warrior',
     mass: 1000, 
     internal: true,
@@ -190,7 +189,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.MCV80,
   },
   {
-    displayName: 'IFV M2A2 Bradley', // 3 crates E arg[15]
+    displayName: 'IFV M2A2 Bradley', // arg[15]
     id: 'internal-unit-create-m2a2-bradley',
     mass: 1000, 
     internal: true,
@@ -199,7 +198,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.M2A2,
   },
   {
-    displayName: 'MBT M1A2 Abrams', // 5 crates E arg[16]
+    displayName: 'MBT M1A2 Abrams', // arg[16]
     id: 'internal-unit-create-m1a2-abrams',
     mass: 1000, 
     internal: true,
@@ -208,7 +207,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.M1A2,
   },
   {
-    displayName: 'MBT Challenger II', // 5 crates E arg[17]
+    displayName: 'MBT Challenger II', // arg[17]
     id: 'internal-unit-create-challenger-2',
     mass: 1000, 
     internal: true,
@@ -217,7 +216,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.Challenger2,
   },
   {
-    displayName: 'MBT Leopard-2A6M', // 5 crates E arg[18]
+    displayName: 'MBT Leopard-2A6M', // arg[18]
     id: 'internal-unit-create-leopard-2a6m',
     mass: 1000, 
     internal: true,
@@ -226,7 +225,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.Leopard2,
   },
   {
-    displayName: 'MBT Leclerc', // 5 crates E arg[19]
+    displayName: 'MBT Leclerc', // arg[19]
     id: 'internal-unit-create-leclerc',
     mass: 1000, 
     internal: true,
@@ -235,7 +234,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.Leclerc,
   },
   {
-    displayName: 'SPH Dana vz77 152mm', // 3 crates E arg[20]
+    displayName: 'SPH Dana vz77 152mm', // arg[20]
     id: 'internal-unit-create-sph-dana',
     mass: 1000, 
     internal: true,
@@ -244,7 +243,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.Dana,
   },
   {
-    displayName: 'SPH M109 Paladin 155mm', // 3 crates E arg[21]
+    displayName: 'SPH M109 Paladin 155mm', // arg[21]
     id: 'internal-unit-create-sph-paladin',
     mass: 1000, 
     internal: true,
@@ -253,7 +252,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.M109,
   },
   {
-    displayName: 'SPH T155 Firtina 155mm', // 3 crates E arg[22]
+    displayName: 'SPH T155 Firtina 155mm', // arg[22]
     id: 'internal-unit-create-sph-firtina',
     mass: 1000, 
     internal: true,
@@ -262,7 +261,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.Firtina,
   },
   {
-    displayName: 'MLRS M270 227mm', // 5 crates E arg[23]
+    displayName: 'MLRS M270 227mm', // arg[23]
     id: 'internal-unit-create-mlrs-m270',
     mass: 1000, 
     internal: true,
@@ -271,7 +270,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.MlrsM270,
   },
   {
-    displayName: 'MLRS 9A52 Smerch HE 300mm', // 5 crates E arg[24]
+    displayName: 'MLRS 9A52 Smerch HE 300mm', // arg[24]
     id: 'internal-unit-create-mlrs-9a52',
     mass: 1000, 
     internal: true,
@@ -280,7 +279,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.Mlrs9A52,
   },
   {
-    displayName: 'SPAAA Vulcan M163', // 2 crates E arg[25]
+    displayName: 'SPAAA Vulcan M163', // arg[25]
     id: 'internal-unit-create-m163-vulcan',
     mass: 1000, 
     internal: true,
@@ -289,7 +288,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.Vulcan,
   },
   {
-    displayName: 'SPAAA Gepard', // 2 crates E arg[26]
+    displayName: 'SPAAA Gepard', // arg[26]
     id: 'internal-unit-create-gepard',
     mass: 1000, 
     internal: true,
@@ -298,7 +297,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.Gepard,
   },
   {
-    displayName: 'SAM Avenger (Stinger)', // 2 crates E arg[27]
+    displayName: 'SAM Avenger (Stinger)', // arg[27]
     id: 'internal-unit-create-avenger-stinger',
     mass: 1000, 
     internal: true,
@@ -307,7 +306,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.Avenger,
   },
   {
-    displayName: 'SAM Chaparral M48', // 2 crates E arg[28]
+    displayName: 'SAM Chaparral M48', // arg[28]
     id: 'internal-unit-create-m48-chaparral',
     mass: 1000, 
     internal: true,
@@ -316,7 +315,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.Chaparral,
   },
   {
-    displayName: 'SAM Roland ADS', // 3 crates E arg[29]
+    displayName: 'SAM Roland ADS', // arg[29]
     id: 'internal-unit-create-roland-ads',
     mass: 1000, 
     internal: true,
@@ -325,7 +324,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.RolandAds,
   },
   {
-    displayName: 'SAM Linebacker - Bradley M6S', // 3 crates E arg[30]
+    displayName: 'SAM Linebacker - Bradley M6S', // arg[30]
     id: 'internal-unit-create-m65-linebacker',
     mass: 1000, 
     internal: true,
@@ -334,7 +333,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.Linebacker,
   },
   {
-    displayName: 'SAM Hawk SR (AN/MPQ50)', // 1 crate I/E arg[31]
+    displayName: 'SAM Hawk SR (AN/MPQ50)', // arg[31]
     id: 'internal-unit-create-hawk-sr',
     mass: 1000, 
     internal: true,
@@ -343,7 +342,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.HawkSr,
   },
   {
-    displayName: 'SAM Hawk TR (AN/MPQ46)', // 1 crate I/E arg[32]
+    displayName: 'SAM Hawk TR (AN/MPQ46)', // arg[32]
     id: 'internal-unit-create-hawk-tr',
     mass: 1000, 
     internal: true,
@@ -352,7 +351,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.HawkTr,
   },
   {
-    displayName: 'SAM Hawk Platoon Command Post (PCP)', // 1 crate I/E arg[33]
+    displayName: 'SAM Hawk Platoon Command Post (PCP)', // arg[33]
     id: 'internal-unit-create-hawk-pcp',
     mass: 1000, 
     internal: true,
@@ -361,7 +360,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.HawkPcp,
   },
   {
-    displayName: 'SAM Hawk CWAR (AN/MPQ55)', // 1 crate I/E arg[34]
+    displayName: 'SAM Hawk CWAR (AN/MPQ55)', // arg[34]
     id: 'internal-unit-create-hawk-cwar',
     mass: 1000, 
     internal: true,
@@ -370,7 +369,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.HawkCwar,
   },
   {
-    displayName: 'SAM Hawk LN M192', // 1 crate I/E arg[35]
+    displayName: 'SAM Hawk LN M192', // arg[35]
     id: 'internal-unit-create-hawk-ln',
     mass: 1000, 
     internal: true,
@@ -379,7 +378,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.HawkLn,
   },
   {
-    displayName: 'SAM NASAMS LN AIM-120B', // 1 crate I/E arg[36]
+    displayName: 'SAM NASAMS LN AIM-120B', // arg[36]
     id: 'internal-unit-create-nasam-120b',
     mass: 1000, 
     internal: true,
@@ -388,7 +387,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.NasamLnB,
   },
   {
-    displayName: 'SAM NASAMS LN AIM-120C', // 1 crate I/E arg[37]
+    displayName: 'SAM NASAMS LN AIM-120C', // arg[37]
     id: 'internal-unit-create-nasam-120c',
     mass: 1000, 
     internal: true,
@@ -397,7 +396,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.NasamLnC,
   },
   {
-    displayName: 'SAM NASAMS SR MPQ64F1', // 1 crate I/E arg[38]
+    displayName: 'SAM NASAMS SR MPQ64F1', // arg[38]
     id: 'internal-unit-create-nasam-sr',
     mass: 1000, 
     internal: true,
@@ -406,7 +405,7 @@ export const allCargoDefinitions = createCargoDefinitionsArray(
     unitTypeName: UnitTypeName.NasamSr,
   },
   {
-    displayName: 'SAM NASAMS C2', // 1 crate I/E arg[39]
+    displayName: 'SAM NASAMS C2', // arg[39]
     id: 'internal-unit-create-nasam-c2',
     mass: 1000, 
     internal: true,
