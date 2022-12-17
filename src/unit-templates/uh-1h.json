@@ -1,0 +1,65 @@
+{
+  "alt": 500,
+  "hardpoint_racks": true,
+  "alt_type": "BARO",
+  "livery_id": "italy 15b stormo s.a.r -soccorso",
+  "skill": "Client",
+  "ropeLength": 15,
+  "speed": 44.444444444444,
+  "AddPropAircraft": {
+    "SoloFlight": false,
+    "ExhaustScreen": true,
+    "GunnersAISkill": 90,
+    "NetCrewControlPriority": 0,
+    "EngineResource": 90
+  },
+  "type": "UH-1H",
+  "Radio": {
+    "1": {
+      "modulations": {},
+      "channels": {
+        "1": 251,
+        "2": 264,
+        "4": 256,
+        "8": 257,
+        "16": 261,
+        "17": 267,
+        "9": 255,
+        "18": 251,
+        "5": 254,
+        "10": 262,
+        "20": 266,
+        "11": 259,
+        "3": 265,
+        "6": 250,
+        "12": 268,
+        "13": 269,
+        "7": 270,
+        "14": 260,
+        "19": 253,
+        "15": 263
+      }
+    }
+  },
+  "unitId": 13,
+  "psi": -5.1487212933833,
+  "y": 631144.75161101,
+  "x": -327211.67610687,
+  "name": "Rotary-5-1",
+  "payload": {
+    "pylons": {},
+    "fuel": "631",
+    "flare": 60,
+    "chaff": 0,
+    "gun": 100,
+    "restricted": {}
+  },
+  "heading": 5.1487212933833,
+  "callsign": {
+    "1": 5,
+    "2": 1,
+    "3": 1,
+    "name": "Dodge11"
+  },
+  "onboard_num": "014"
+}

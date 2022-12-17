@@ -4,11 +4,13 @@ import {
   createBase,
   nextBaseTypeFrom,
   createBaseStaticObjects,
+  validateBase,
 } from '../base'
 import { CargoType, createCargo, loadCargo, unloadCargo } from '../cargo'
 import { coalitionFrom } from '../coalition'
 import { CommandType } from '../commands'
 import { deg, randomBetween } from '../common'
+import { getMarkById } from '../custom'
 import { findUnit, nearbyBases, updateBaseType } from '../db'
 import {
   allBaseStaticObjects,
@@ -16,17 +18,20 @@ import {
 } from '../db/baseStaticObjects'
 import { allStaticObjects, destroyStaticObject } from '../db/staticObjects'
 import { findUnitCargo } from '../db/unitCargos'
-import { Events, EventType, GroupCommandEvent } from '../events'
+import {
+  Events,
+  EventType,
+  GroupCommandEvent,
+  MarkChangeEvent,
+} from '../events'
 import { LatLon } from '../geo'
 import { getUnits } from '../group'
 import { despawnStaticObject, spawnStaticObject } from '../staticObject'
 import { outCoalitionText, outGroupText } from '../trigger'
 import { createUnit, spawnGroundUnit } from '../unit'
-import { allUnitsCargoDefinitions, cargoDefinitionFrom } from './definitions'
+import { cargoDefinitionFrom } from './definitions'
 
 const oneSecondMs = 1000
-/** The minimum range between two bases */
-const MIN_BASE_RANGE_METERS = 1000
 /** How close a unit has to be to a base to upgrade it */
 const BASE_UPGRADE_RANGE_METERS = 100
 /** How far away from the unit we should unpack cargo */
@@ -46,6 +51,9 @@ export async function logisticsMain(): Promise<() => Promise<void>> {
     if (EventType.GroupCommand === event.type) {
       return handleGroupCommand(event as GroupCommandEvent)
     }
+    if (EventType.MarkChange === event.type) {
+      return handleMarkChangeEvent(event as MarkChangeEvent)
+    }
   })
 
   return async () => {
@@ -58,26 +66,6 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
 
   const { type } = command
 
-  if (CommandType.SpawnBase === type) {
-    const units = await getUnits(group.name)
-    const unit = units[0] // do everything around cargo spawning using the first unit
-    const { position } = unit
-
-    const { baseType, heading } = command
-
-    const base = await createBase({
-      heading,
-      coalition: group.coalition,
-      type: baseType,
-      position,
-    })
-
-    const baseStaticObjects = await createBaseStaticObjects(base)
-
-    for (const staticObject of baseStaticObjects) {
-      await spawnStaticObject(staticObject)
-    }
-  }
   if (CommandType.LoadInternalCargo === type) {
     const units = await getUnits(group.name)
     const unit = await findUnit(units[0].name) // assume cargo is carried by first unit in group.
@@ -144,17 +132,17 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
         ).destinationPoint(CARGO_UNPACK_DISTANCE_FROM_UNIT_METERS, deg(heading))
 
         if (CargoType.BaseCreate === cargo.type) {
-          // determine if a new base can be created by checking how close other bases are
-          const basesNearby = await nearbyBases({
-            position: unit.position,
-            accuracy: MIN_BASE_RANGE_METERS,
+          // make sure a new base here would be valid
+          const baseIsValid = await validateBase({
+            position: basePosition,
+            type: BaseType.UnderConstruction,
           })
 
-          // if other bases are too close
-          if (basesNearby.length > 0) {
+          // If this base would be invalid after we upgrade it's type
+          if (baseIsValid.valid === false) {
             await outGroupText(
               group.id,
-              `You are too close to an existing base to start a new one.`
+              `A new base can't be created here: ${baseIsValid.reason}`
             )
             // go no further
             return
@@ -196,7 +184,7 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
             accuracy: BASE_UPGRADE_RANGE_METERS,
           })
 
-          // if other bases are too close
+          // if we don't find any base to upgrade
           if (basesNearby.length < 1) {
             await outGroupText(group.id, `No base found nearby to upgrade.`)
             // go no further
@@ -212,6 +200,22 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
           // if there are no further upgrades for this base
           if (typeof nextBaseType === 'undefined') {
             await outGroupText(group.id, `This base can't be upgraded anymore.`)
+            // go no further
+            return
+          }
+
+          // make sure the upgraded base (with it's new type) is still valid
+          const baseIsValid = await validateBase({
+            ...base,
+            type: nextBaseType,
+          })
+
+          // If this base would be invalid after we upgrade it's type
+          if (baseIsValid.valid === false) {
+            await outGroupText(
+              group.id,
+              `This base can't be upgraded: ${baseIsValid.reason}`
+            )
             // go no further
             return
           }
@@ -310,5 +314,48 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
         )
       }
     }, randomBetween(CARGO_UNPACK_DELAY_MS_MIN, CARGO_UNPACK_DELAY_MS_MAX))
+  }
+}
+
+async function handleMarkChangeEvent(event: MarkChangeEvent) {
+  const { id, command } = event
+
+  // attempt to handle command(s) from markers
+  if (command) {
+    if (CommandType.SpawnBase === command.type) {
+      const {
+        coalition = command.coalition || event.coalition, // coalition should prioritize command input
+        baseType = BaseType.UnderConstruction,
+      } = command
+      const addedMark = await getMarkById(id)
+
+      if (!addedMark) {
+        throw new Error('expected addedMark')
+      }
+
+      const { position } = addedMark
+
+      // create the new base
+      const base = await createBase({
+        coalition,
+        heading: 0,
+        position,
+        type: baseType,
+      })
+
+      // create the new static objects for the base
+      const baseStaticObjects = await createBaseStaticObjects(base)
+
+      // spawn the bases static objects in the game
+      for (const staticObject of baseStaticObjects) {
+        await spawnStaticObject(staticObject)
+      }
+
+      // TODO: get the gridsquare and print it here
+      await outCoalitionText(
+        coalition,
+        `A new base has begun construction in <gridsquare>`
+      )
+    }
   }
 }

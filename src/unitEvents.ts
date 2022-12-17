@@ -2,8 +2,6 @@ import { Subject } from 'rxjs'
 
 import { GroupCategory } from '../generated/dcs/common/v0/GroupCategory'
 import { StreamUnitsResponse__Output } from '../generated/dcs/mission/v0/StreamUnitsResponse'
-import { positionLLFrom } from './common'
-import { countryFrom } from './country'
 
 import { services } from './services'
 import { Restarts } from './signals'

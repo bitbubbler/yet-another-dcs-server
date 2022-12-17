@@ -3,10 +3,7 @@ import {
   BaseCargo,
   Cargo,
   CargoType,
-  CargoTypeName,
-  isBaseCargo,
   isBaseCargoType,
-  isUnitCargoType,
   UnitCargo,
 } from '../cargo'
 import { distanceFrom, metersToDegree, PositionLL } from '../common'

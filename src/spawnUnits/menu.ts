@@ -5,7 +5,7 @@ import {
   removeGroupCommandItem,
 } from '../mission'
 import { groupMenu } from '../menus'
-import { Command, CommandType, serialize } from '../commands'
+import { CommandType } from '../commands'
 import { groupFromGroupName } from '../group'
 
 const rootMenuName = 'Spawn Units'

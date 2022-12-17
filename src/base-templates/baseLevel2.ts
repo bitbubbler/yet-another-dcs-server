@@ -17,6 +17,7 @@ export const baseLevel2: Template = {
       heading: 1.57079631487,
     },
   ],
+  slots: [],
   units: [
     {
       typeName: 'M 818',

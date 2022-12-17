@@ -1,13 +1,15 @@
 import assert from 'assert'
-import { deg, PositionLL } from '../common'
-import { typeNamesFrom } from '../db'
+import { PositionLL } from '../common'
+
 import { LatLon } from '../geo'
+import { Mission } from '../restartMission/types'
 import { services } from '../services'
 import { StaticObjectTypeName } from '../staticObject'
-import { Template } from '../templates/types'
-import { Unit } from '../unit'
+import { Template } from '../base-templates/types'
+import { Unit, UnitTypeName } from '../unit'
+import { positionLatLonFrom } from '../coord'
 
-const { custom } = services
+const { custom, hook } = services
 
 async function main(): Promise<void> {
   await services.ready()
@@ -16,7 +18,10 @@ async function main(): Promise<void> {
 
   const units = await getUnits()
 
-  const template = templateFrom(staticObjects, units)
+  // get slots here from the mission template
+  const slots = await getSlots()
+
+  const template = templateFrom(staticObjects, units, slots)
 
   console.log(template)
 }
@@ -34,7 +39,8 @@ interface StaticObject {
 
 function templateFrom(
   staticObjects: StaticObject[],
-  units: UnitPartial[]
+  units: UnitPartial[],
+  slots: UnitPartial[]
 ): Template {
   const origin = LatLon.meanOf(
     staticObjects.map(
@@ -82,6 +88,18 @@ function templateFrom(
         heading,
       }
     }),
+    slots: slots.map(({ typeName, position, heading }) => {
+      const latlon = new LatLon(position.lat, position.lon)
+      const bearing = origin.initialBearingTo(latlon)
+      const distance = origin.distanceTo(latlon)
+
+      return {
+        typeName: typeName as UnitTypeName,
+        bearing,
+        distance,
+        heading,
+      }
+    }),
     units: units.map(({ typeName, position, heading }) => {
       const latlon = new LatLon(position.lat, position.lon)
       const bearing = origin.initialBearingTo(latlon)
@@ -108,6 +126,56 @@ function typeNameFrom(maybeTypeName: string): StaticObjectTypeName {
   }
 
   throw new Error('unknown typeName')
+}
+
+async function getSlots(): Promise<UnitPartial[]> {
+  const slots: UnitPartial[] = []
+  const mission = await getCurrentMission()
+
+  for (const country of mission.mission.coalition.blue.country) {
+    // helicopters
+    for (const group of country.helicopter.group) {
+      for (const unit of group.units) {
+        if (unit.skill.toLowerCase() === 'client') {
+          const position = await positionLatLonFrom({ x: unit.x, y: unit.y })
+          // this is a slot
+          slots.push({
+            heading: unit.heading,
+            position,
+            typeName: unit.type,
+          })
+        }
+      }
+    }
+  }
+
+  return slots
+}
+
+async function getCurrentMission(): Promise<Mission> {
+  const lua = `
+  return DCS.getCurrentMission()
+`
+
+  return new Promise((resolve, reject) => {
+    hook.eval({ lua }, (error, result) => {
+      if (error) {
+        return reject(error)
+      }
+
+      if (typeof result === 'undefined' || typeof result.json === 'undefined') {
+        return reject(new Error('missing result or result json'))
+      }
+
+      const json = JSON.parse(result.json)
+
+      // type cast to a mission type
+      const mission: Mission = json
+
+      // resolve with the mission type
+      resolve(mission)
+    })
+  })
 }
 
 async function getUnits(): Promise<UnitPartial[]> {
@@ -210,7 +278,7 @@ function countDecimals(value: number): number {
   const text = value.toString()
   // verify if number 0.000005 is represented as "5e-6"
   if (text.indexOf('e-') > -1) {
-    const [_, trail] = text.split('e-')
+    const [, trail] = text.split('e-')
     const deg = parseInt(trail, 10)
     return deg
   }

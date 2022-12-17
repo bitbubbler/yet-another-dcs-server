@@ -6,7 +6,7 @@ import { AddMissionCommandSubMenuRequest } from '../generated/dcs/mission/v0/Add
 import { AddMissionCommandSubMenuResponse__Output } from '../generated/dcs/mission/v0/AddMissionCommandSubMenuResponse'
 import { RemoveMissionCommandItemRequest } from '../generated/dcs/mission/v0/RemoveMissionCommandItemRequest'
 import { Command, serialize } from './commands'
-import { DetailsValueShape, structFrom } from './events'
+import { structFrom } from './events'
 import { services } from './services'
 
 const { mission } = services

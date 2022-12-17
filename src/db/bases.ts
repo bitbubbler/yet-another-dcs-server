@@ -104,6 +104,15 @@ export function baseFrom(
   }
 }
 
+export async function allBases(): Promise<Base[]> {
+  const bases = await knex('bases')
+    .innerJoin('positions', 'bases.positionId', 'positions.positionId')
+    .select(['baseId', 'coalition', 'heading', 'lat', 'lon', 'name', 'type'])
+    .whereNull('goneAt')
+
+  return bases.map(base => baseFrom(base))
+}
+
 /**
  * Search for bases nearby a given PositionLL within a given accuracy.
  * Search uses a very simple box model algorithm to reduce the initial search set
