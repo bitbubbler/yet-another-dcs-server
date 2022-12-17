@@ -5,7 +5,7 @@ import { LatLon } from '../geo'
 import { Mission } from '../restartMission/types'
 import { services } from '../services'
 import { StaticObjectTypeName } from '../staticObject'
-import { Template } from '../templates/types'
+import { Template } from '../base-templates/types'
 import { Unit } from '../unit'
 import { positionLatLonFrom } from '../coord'
 
