@@ -6,7 +6,7 @@ import { Mission } from '../restartMission/types'
 import { services } from '../services'
 import { StaticObjectTypeName } from '../staticObject'
 import { Template } from '../base-templates/types'
-import { Unit } from '../unit'
+import { Unit, UnitTypeName } from '../unit'
 import { positionLatLonFrom } from '../coord'
 
 const { custom, hook } = services
@@ -94,7 +94,7 @@ function templateFrom(
       const distance = origin.distanceTo(latlon)
 
       return {
-        typeName,
+        typeName: typeName as UnitTypeName,
         bearing,
         distance,
         heading,
