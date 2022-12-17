@@ -3,7 +3,7 @@ import { Coalition } from '../generated/dcs/common/v0/Coalition'
 import { baseNames } from './baseNames'
 import { PositionLL, randomBetween } from './common'
 import { countryFrom } from './country'
-import { insertBase, knex } from './db'
+import { insertBase, knex, nearbyBases } from './db'
 import { createStaticObject, StaticObject } from './staticObject'
 import {
   baseLevel0,
@@ -11,8 +11,24 @@ import {
   baseLevel2,
   baseLevel3,
   Template,
-} from './templates'
+} from './base-templates'
 import { insertBaseStaticObject } from './db/baseStaticObjects'
+import assert from 'assert'
+
+/** Min range between COP bases in meters */
+const BASE_COP_MIN_RANGE = 10000
+/** Min range between FARP bases in meters */
+const BASE_FARP_MIN_RANGE = 15000
+/** Min range between FOB bases in meters */
+const BASE_FOB_MIN_RANGE = 20000
+
+// assert an assumption that below code makes to simplify the solution of validating base distances.
+// we can remove this requirement in the future, so long as we also remove the assumption in below code.
+assert(
+  BASE_COP_MIN_RANGE < BASE_FARP_MIN_RANGE &&
+    BASE_FARP_MIN_RANGE < BASE_FOB_MIN_RANGE,
+  'BASE MIN VALUES SHOULD INCREASE IN DISTANCE AS BASE SIZE INCREASES'
+)
 
 export enum BaseType {
   /**
@@ -23,30 +39,29 @@ export enum BaseType {
   UnderConstruction,
   /**
    * Main operating base (MOB)
-   * - unlimited cargo
-   * - unlimited lives
+   * - more spawn points
    */
   MOB,
   /**
    * Forward operating base (FOB)
-   * - limited cargo
-   * - limited lives
+   * - spawn points
    */
   FOB,
   /**
    * Forward arming and refueling point (FARP)
    * NOTE: only for arming and refueling
-   * - no cargo
-   * - no lives (no spawning here)
+   * - no spawning here
    */
   FARP,
   /**
    * Combat outpost (COP)
-   * - limited cargo (troops only)
-   * - no lives (no spawning here)
+   * - troops only (no cargo pickups here')
+   * - no spawning here
    */
   COP,
 }
+
+export type NewBase = Pick<Base, 'coalition' | 'heading' | 'position' | 'type'>
 
 export interface Base {
   baseId: number
@@ -58,9 +73,7 @@ export interface Base {
   type: BaseType
 }
 
-export async function createBase(
-  newBase: Pick<Base, 'coalition' | 'heading' | 'position' | 'type'>
-): Promise<Base> {
+export async function createBase(newBase: NewBase): Promise<Base> {
   const name = await uniqueBaseName()
 
   const base = insertBase({
@@ -69,12 +82,6 @@ export async function createBase(
   })
 
   return base
-}
-
-export async function upgradeBase(base: Base): Promise<void> {
-  // find existing staticObjects and units that belong to this base
-  // despawn existing static objects and units
-  // destroy existing static objects and units
 }
 
 export async function createBaseStaticObjects(
@@ -114,7 +121,7 @@ export async function createBaseStaticObjects(
   return staticObjects
 }
 
-function baseTemplateFrom(base: Base): Template {
+export function baseTemplateFrom(base: Base): Template {
   if (BaseType.UnderConstruction === base.type) {
     return baseLevel0
   }
@@ -150,6 +157,119 @@ export async function uniqueBaseName(): Promise<string> {
 
   // otherwise return this name
   return name
+}
+
+/**
+ * A function to compare existing base positions to determine if a base of given type can exist at given position
+ * This function, therefore, exists to answer the question "is this a valid base".
+ * */
+export async function validateBase(
+  base: Pick<Base, 'position' | 'type'>
+): Promise<{ valid: true } | { valid: false; reason: string }> {
+  // TODO: exclude the given baseId from the lookups of nearby bases
+  if (BaseType.UnderConstruction === base.type) {
+    const existingNearbyBases = await nearbyBases({
+      position: base.position,
+      accuracy: BASE_COP_MIN_RANGE,
+    })
+
+    if (existingNearbyBases.length > 0) {
+      return {
+        valid: false,
+        reason: `Newly Constructed bases may only be created ${BASE_COP_MIN_RANGE} from any other base type`,
+      }
+    }
+
+    return { valid: true }
+  }
+  if (BaseType.COP === base.type) {
+    const existingNearbyBases = await nearbyBases({
+      position: base.position,
+      accuracy: BASE_COP_MIN_RANGE,
+    })
+
+    if (existingNearbyBases.length > 0) {
+      return {
+        valid: false,
+        reason: `COP base may only be created ${BASE_COP_MIN_RANGE} from any other base type`,
+      }
+    }
+
+    return { valid: true }
+  }
+  if (BaseType.FARP === base.type) {
+    const existingNearbyFARPRangeBases = await nearbyBases({
+      position: base.position,
+      accuracy: BASE_FARP_MIN_RANGE,
+    })
+    const existingNearbyCOPRangeBases = await nearbyBases({
+      position: base.position,
+      accuracy: BASE_COP_MIN_RANGE,
+    })
+
+    const existingNearbyEqualOrGreaterBases =
+      existingNearbyFARPRangeBases.filter(base =>
+        [BaseType.FARP, BaseType.FOB, BaseType.MOB].includes(base.type)
+      )
+
+    const existingNearbyLesserBases = existingNearbyCOPRangeBases.filter(base =>
+      [BaseType.COP].includes(base.type)
+    )
+
+    if (existingNearbyEqualOrGreaterBases.length > 0) {
+      return {
+        valid: false,
+        reason: `FARP base may only be created ${BASE_FARP_MIN_RANGE} from any other FARP or larger base`,
+      }
+    }
+
+    if (existingNearbyLesserBases.length > 0) {
+      return {
+        valid: false,
+        reason: `FARP base may only be created ${BASE_COP_MIN_RANGE} from any other COP base`,
+      }
+    }
+
+    return { valid: true }
+  }
+  if (BaseType.FOB === base.type) {
+    const existingNearbyFOBRangeBases = await nearbyBases({
+      position: base.position,
+      accuracy: BASE_FOB_MIN_RANGE,
+    })
+    const existingNearbyFARPRangeBases = await nearbyBases({
+      position: base.position,
+      accuracy: BASE_FARP_MIN_RANGE,
+    })
+
+    const existingNearbyEqualOrGreaterBases =
+      existingNearbyFOBRangeBases.filter(base =>
+        [BaseType.FOB, BaseType.MOB].includes(base.type)
+      )
+
+    const existingNearbyLesserBases = existingNearbyFARPRangeBases.filter(
+      base => [BaseType.FARP, BaseType.COP].includes(base.type)
+    )
+
+    if (existingNearbyEqualOrGreaterBases.length > 0) {
+      return {
+        valid: false,
+        reason: `FOB base may only be created ${BASE_FOB_MIN_RANGE} from any other FOB or larger base`,
+      }
+    }
+
+    if (existingNearbyLesserBases.length > 0) {
+      return {
+        valid: false,
+        reason: `FOB base may only be created ${BASE_FARP_MIN_RANGE} from any other FARM or smaller base`,
+      }
+    }
+
+    return { valid: true }
+  }
+  // TODO: handle MOB
+
+  throw new Error(`Unknown BaseType ${base.type} attemting to validateBase`)
 }
 
 /** A funtion to return the next base type if upgraded */

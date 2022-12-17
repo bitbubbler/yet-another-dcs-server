@@ -1,4 +1,5 @@
 import { StaticObjectTypeName } from '../staticObject'
+import { UnitTypeName } from '../unit'
 import { Template } from './types'
 
 export const baseLevel3: Template = {
@@ -21,6 +22,32 @@ export const baseLevel3: Template = {
       bearing: 275.27889359394624,
       distance: 7.43522129819449,
       heading: 0,
+    },
+  ],
+  slots: [
+    {
+      typeName: UnitTypeName.AH64D,
+      bearing: 344.4356408061597,
+      distance: 51.70098773690975,
+      heading: 3.0368728984701,
+    },
+    {
+      typeName: UnitTypeName.AH64D,
+      bearing: 25.118008684096583,
+      distance: 50.943059147000824,
+      heading: 3.5081117965086,
+    },
+    {
+      typeName: UnitTypeName.UH1H,
+      bearing: 125.21858807930074,
+      distance: 60.84167350928644,
+      heading: 5.1487212933833,
+    },
+    {
+      typeName: UnitTypeName.UH1H,
+      bearing: 146.43356234173967,
+      distance: 62.710009332501805,
+      heading: 5.3232542185827,
     },
   ],
   units: [

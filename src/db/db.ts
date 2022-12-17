@@ -1,7 +1,7 @@
 import { Knex, knex as knexActual } from 'knex'
 import { Coalition } from '../../generated/dcs/common/v0/Coalition'
 import { SpawnerType } from '../spawner'
-import { CargoBase, CargoType, CargoTypeName } from '../cargo'
+import { CargoType, CargoTypeName } from '../cargo'
 import { BaseType } from '../base'
 import { StaticObjectTypeName } from '../staticObject'
 import { UnitTypeName } from '../unit'

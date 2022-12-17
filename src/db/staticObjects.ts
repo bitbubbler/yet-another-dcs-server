@@ -1,4 +1,3 @@
-import { equal } from 'assert'
 import { StaticObject, StaticObjectTypeName } from '../staticObject'
 import { distanceFrom, metersToDegree, PositionLL } from '../common'
 import {

@@ -2,7 +2,7 @@ import { v4 as uuidV4 } from 'uuid'
 import { PositionLL } from './common'
 import { insertCargo } from './db'
 import { deleteUnitCargo, insertUnitCargo } from './db/unitCargos'
-import { spawnStaticObject } from './staticObject'
+
 import { setUnitInternalCargoMass, Unit, UnitTypeName } from './unit'
 
 export enum CargoType {

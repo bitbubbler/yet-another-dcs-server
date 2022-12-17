@@ -1,7 +1,7 @@
 import { knex, Unit as DBUnit, Position as DBPosition } from './db'
 import { countryFrom } from '../country'
 import { getPositionVelocity, Unit } from '../unit'
-import { metersToDegree, distanceFrom, headingFrom } from '../common'
+import { metersToDegree, headingFrom } from '../common'
 import { equal } from 'assert'
 import { PositionLL } from '../common'
 import { Coalition } from '../../generated/dcs/common/v0/Coalition'

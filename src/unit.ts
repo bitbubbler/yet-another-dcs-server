@@ -66,6 +66,9 @@ export enum UnitTypeName {
   NasamLnC = 'NASAMS_LN_C', // SAM NASAMS LN AIM-120C
   NasamSr = 'NASAMS_Radar_MPQ64F1', // SAM NASAMS SR MPQ64F1
   NasamC2 = 'NASAMS_Command_Post', // SAM NASAMS C2
+  // helicopters
+  UH1H = 'UH-1H',
+  AH64D = 'AH-64D_BLK_II',
 }
 
 export interface Unit {
@@ -189,7 +192,7 @@ export async function setUnitInternalCargoMass(
   const lua = `return trigger.action.setUnitInternalCargo("${unit.name}", ${mass})`
 
   return new Promise((resolve, reject) => {
-    custom.eval({ lua }, (error, result) => {
+    custom.eval({ lua }, error => {
       if (error) {
         return reject(error)
       }

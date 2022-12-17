@@ -1,5 +1,4 @@
 import { Position } from '../../generated/dcs/common/v0/Position'
-import { Coalition } from '../../generated/dcs/common/v0/Coalition'
 import {
   BirthEvent,
   Events,

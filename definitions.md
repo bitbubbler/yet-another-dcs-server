@@ -9,3 +9,7 @@ These defintions exist to provide alignment on the usage and definition of terms
 **spawn**: spawn something in the dcs game (typically based on state in yads) (not to be confused with creating state in yads)
 
 **despawn**: de-spawning something in the dcs game (typically based on state in yads) (not to be confused with creating state in yads)
+
+**unit**: an in-game dcs unit
+
+**slot**: the player slot that allows a player to spawn in as a unit in game

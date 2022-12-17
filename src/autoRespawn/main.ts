@@ -1,6 +1,5 @@
 import { equal } from 'assert'
 
-import { Coalition } from '../../generated/dcs/common/v0/Coalition'
 import {
   Events,
   EventType,
@@ -10,7 +9,7 @@ import {
 import { markToAll, outText, removeMapMark } from '../trigger'
 
 import { getMarkById, getMarkPanels, MarkPanel } from '../custom'
-import { Command, CommandType, ToDestroy } from '../commands'
+import {  CommandType, ToDestroy } from '../commands'
 import { allSpawners, insertSpawner, spawnerDestroyed } from '../db/spawners'
 import { Spawner, SpawnerType } from '../spawner'
 import { randomBetween } from '../common'

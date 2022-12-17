@@ -83,7 +83,7 @@ export async function spawnStaticObject(
   return coalition.addStaticObject(${country}, staticObj)
 `
   return new Promise<void>(async (resolve, reject) => {
-    custom.eval({ lua }, (error, result) => {
+    custom.eval({ lua }, error => {
       if (error) {
         return reject(error)
       }
