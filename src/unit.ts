@@ -19,6 +19,8 @@ import { knex, Unit as DBUnit, insertUnit } from './db'
 import { GetTransformResponse__Output } from '../generated/dcs/unit/v0/GetTransformResponse'
 import { countryFrom } from './country'
 
+import { v4 as uuidV4 } from 'uuid'
+
 const { coalition, custom, unit } = services
 
 /** The values of this enum must exactly match dcs in-game unit typeName values */
@@ -71,6 +73,11 @@ export enum UnitTypeName {
   AH64D = 'AH-64D_BLK_II',
 }
 
+export type NewUnit = Pick<
+  Unit,
+  'country' | 'heading' | 'isPlayerSlot' | 'position' | 'typeName'
+>
+
 export interface Unit {
   country: Country
   /** heading in radians */
@@ -80,7 +87,8 @@ export interface Unit {
   name: string
   position: PositionLL
   typeName: string
-  unitId: number
+  unitId: number // related to DCS
+  uuid: string
 }
 
 /**
@@ -168,18 +176,12 @@ export async function spawnGroundUnitInCircle(
   return spawnGroundUnit(unit)
 }
 
-export async function createUnit(
-  newUnit: Pick<
-    Unit,
-    'country' | 'heading' | 'isPlayerSlot' | 'position' | 'typeName'
-  > &
-    Partial<Pick<Unit, 'name'>>
-): Promise<Unit> {
-  const name = newUnit.name || (await uniqueUnitName())
+export async function createUnit(newUnit: NewUnit): Promise<Unit> {
+  const uuid = uuidV4()
 
   const unit = await insertUnit({
+    uuid,
     ...newUnit,
-    name,
   })
 
   return unit
@@ -189,7 +191,7 @@ export async function setUnitInternalCargoMass(
   unit: Unit,
   mass: number
 ): Promise<void> {
-  const lua = `return trigger.action.setUnitInternalCargo("${unit.name}", ${mass})`
+  const lua = `return trigger.action.setUnitInternalCargo("${unit.uuid}", ${mass})` // use of uuid instead of unit.name
 
   return new Promise((resolve, reject) => {
     custom.eval({ lua }, error => {
@@ -292,27 +294,6 @@ export async function getTransform(
   )
 }
 
-export async function uniqueUnitName(): Promise<string> {
-  const id = Math.floor(1000 + Math.random() * 9000)
-
-  const name = `spawned unit ${id}`
-
-  // check that the name is not already in use
-  const existingUnit = await knex('units')
-    .select('unitId')
-    .where({ name })
-    .first()
-
-  // if the name is alredy in use
-  if (existingUnit) {
-    // try again
-    return uniqueUnitName()
-  }
-
-  // otherwise return this name
-  return name
-}
-
 export async function destroy(unitName: string): Promise<void> {
   const lua = `Unit.getByName("${unitName}"):destroy()`
   return new Promise<void>((resolve, reject) =>
@@ -357,42 +338,6 @@ export async function getPositionVelocity(
   )
 }
 
-export function unitFrom(
-  maybeUnit: Partial<
-    Pick<
-      Required<StreamUnitsResponse__Output>['unit'],
-      'coalition' | 'groupName' | 'name' | 'position' | 'type'
-    >
-  > &
-    Pick<Required<StreamUnitsResponse__Output>['unit'], 'playerName'>
-): GameUnit {
-  if (!maybeUnit) {
-    throw new Error('missing unit')
-  }
-  const { coalition, groupName, name, playerName, position, type } = maybeUnit
-
-  if (!coalition) {
-    throw new Error('missing coalition on unit')
-  }
-  if (!groupName) {
-    throw new Error('missing groupName on unit')
-  }
-  if (!name) {
-    throw new Error('missing name on unit')
-  }
-  if (!position) {
-    throw new Error('missing position on unit')
-  }
-  if (!type) {
-    throw new Error('missing type on unit')
-  }
-
-  return {
-    country: countryFrom(coalition),
-    groupName,
-    name,
-    playerName,
-    position: positionLLFrom(position),
-    typeName: type,
-  }
+export function unitFrom(unit: Unit): string {
+  return `unit:${unit.uuid}`
 }
