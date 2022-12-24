@@ -16,5 +16,5 @@ export interface Template {
   /* Static objects (tents, barriers, decorative vehicles, etc) */
   staticObjects: TemplateObject<StaticObjectTypeName>[]
   /* Static actual units (functional units, for things like rearming and refueling) */
-  units: TemplateObject<string>[]
+  units: TemplateObject<UnitTypeName>[]
 }

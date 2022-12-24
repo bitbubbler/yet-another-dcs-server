@@ -1,4 +1,5 @@
 import { v4 as uuidV4 } from 'uuid'
+import { Base } from './base'
 import { PositionLL } from './common'
 import { insertCargo } from './db'
 import { deleteUnitCargo, insertUnitCargo } from './db/unitCargos'
@@ -52,6 +53,8 @@ export interface CargoBase {
 
 export interface BaseCargo extends CargoBase {
   type: CargoType.BaseCreate | CargoType.BaseUpgrade
+  // TODO: add something like this to solve bases being upgraded with their own crate
+  // takenFrom: Base['baseId']
 }
 export interface UnitCargo extends CargoBase {
   type: CargoType.UnitCreate

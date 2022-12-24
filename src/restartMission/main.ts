@@ -134,7 +134,7 @@ function fileTimestamp(): string {
   const now = new Date()
 
   const day = now.getUTCDate().toString().padStart(2, '0')
-  const month = now.getUTCMonth().toString().padStart(2, '0')
+  const month = (now.getUTCMonth() + 1).toString().padStart(2, '0') // add one, zero based
   const year = now.getUTCFullYear().toString().padStart(2, '0')
   const hour = now.getUTCHours().toString().padStart(2, '0')
   const minute = now.getUTCMinutes().toString().padStart(2, '0')

@@ -17,7 +17,7 @@ import { countryFrom } from '../country'
 import { searchUnits } from './searchUnits'
 import {
   createUnit,
-  destroy,
+  destroyUnit,
   spawnGroundUnit,
   spawnGroundUnitsInCircle,
   spawnGroundUnitsOnCircle,
@@ -199,15 +199,13 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
       }
 
       await Promise.all(
-        foundUnits.map(async element => {
-          const { lat, lon, alt } = element
-          const unitPosition = { lat, lon, alt }
+        foundUnits.map(async unit => {
+          const { name, position } = unit
           if (
-            distanceFrom(markPosition, unitPosition) <=
+            distanceFrom(markPosition, position) <=
             (command.radius || DESTROY_SINGLE_UNIT_SEARCH_RANGE)
           ) {
-            const { name } = element
-            await destroy(name)
+            await destroyUnit(unit)
             await unitGone({ name })
           }
         })

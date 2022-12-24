@@ -30,6 +30,7 @@ export enum ToDestroy {
   Unit,
   Spawner,
   Cargo,
+  Base,
 }
 
 export interface CommandShape {

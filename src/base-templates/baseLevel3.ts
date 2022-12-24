@@ -38,6 +38,18 @@ export const baseLevel3: Template = {
       heading: 3.5081117965086,
     },
     {
+      typeName: UnitTypeName.MI24,
+      bearing: 64.61322128416482,
+      distance: 55.01227981956325,
+      heading: 4.0840704496667,
+    },
+    {
+      typeName: UnitTypeName.MI24,
+      bearing: 97.08424629281824,
+      distance: 59.057999678554694,
+      heading: 4.6774823953448,
+    },
+    {
       typeName: UnitTypeName.UH1H,
       bearing: 125.21858807930074,
       distance: 60.84167350928644,
@@ -49,16 +61,28 @@ export const baseLevel3: Template = {
       distance: 62.710009332501805,
       heading: 5.3232542185827,
     },
+    {
+      typeName: UnitTypeName.MI8,
+      bearing: 220.76887848191976,
+      distance: 62.27404860142305,
+      heading: 0.45378560551853,
+    },
+    {
+      typeName: UnitTypeName.MI8,
+      bearing: 248.06762275029905,
+      distance: 65.00184943348152,
+      heading: 0.85521133347722,
+    },
   ],
   units: [
     {
-      typeName: 'M 818',
+      typeName: UnitTypeName.M818,
       bearing: 336.0123373306782,
       distance: 12.81669423315318,
       heading: -2.0943949891026,
     },
     {
-      typeName: 'M978 HEMTT Tanker',
+      typeName: UnitTypeName.M978,
       bearing: 214.47236292039022,
       distance: 12.943673400904684,
       heading: -1.0471976162875,

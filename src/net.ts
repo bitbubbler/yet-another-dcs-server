@@ -34,7 +34,6 @@ export async function loadMissionFile(filename: string): Promise<void> {
 `
 
   return new Promise((resolve, reject) => {
-    return resolve()
     hook.eval({ lua }, (error, result) => {
       if (error) {
         return reject(error)

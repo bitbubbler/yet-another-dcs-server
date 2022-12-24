@@ -39,7 +39,7 @@ export async function allBaseStaticObjects(
   return staticObjects.map(staticObjectFrom)
 }
 
-export async function destroyBaseStaticObject(
+export async function deleteBaseStaticObject(
   baseId: Base['baseId'],
   staticObjectId: StaticObject['staticObjectId']
 ): Promise<void> {
