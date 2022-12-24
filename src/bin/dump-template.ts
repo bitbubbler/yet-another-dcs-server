@@ -106,7 +106,7 @@ function templateFrom(
       const distance = origin.distanceTo(latlon)
 
       return {
-        typeName,
+        typeName: typeName as UnitTypeName,
         bearing,
         distance,
         heading,

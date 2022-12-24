@@ -2,7 +2,8 @@ import { v4 as uuidV4 } from 'uuid'
 import { PositionLL } from './common'
 import { services } from './services'
 import { Country } from '../generated/dcs/common/v0/Country'
-import { insertStaticObject } from './db/staticObjects'
+import { deleteStaticObject, insertStaticObject } from './db/staticObjects'
+import { deleteBaseStaticObject } from './db'
 
 const { custom } = services
 
@@ -55,6 +56,12 @@ export async function despawnStaticObject(
   )
 }
 
+export async function destroyStaticObject({
+  staticObjectId,
+}: StaticObject): Promise<void> {
+  return deleteStaticObject(staticObjectId)
+}
+
 /**
  * NOTE: sometimes this function (in game) does nothing and you have to trial and error.
  * typeName being wrong is a common reason for failure
@@ -80,7 +87,7 @@ export async function spawnStaticObject(
     ["dead"] = false,
   }
 
-  return coalition.addStaticObject(${country}, staticObj)
+  return coalition.addStaticObject(${country - 1}, staticObj)
 `
   return new Promise<void>(async (resolve, reject) => {
     custom.eval({ lua }, error => {

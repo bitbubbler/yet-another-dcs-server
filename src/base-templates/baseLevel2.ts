@@ -1,4 +1,5 @@
 import { StaticObjectTypeName } from '../staticObject'
+import { UnitTypeName } from '../unit'
 import { Template } from './types'
 
 export const baseLevel2: Template = {
@@ -20,13 +21,13 @@ export const baseLevel2: Template = {
   slots: [],
   units: [
     {
-      typeName: 'M 818',
+      typeName: UnitTypeName.M818,
       bearing: 276.6411215366577,
       distance: 9.85201965394252,
       heading: -1.1368725785156e-13,
     },
     {
-      typeName: 'M978 HEMTT Tanker',
+      typeName: UnitTypeName.M978,
       bearing: 97.51475438347217,
       distance: 10.041121490150207,
       heading: -1.1368724429898e-13,

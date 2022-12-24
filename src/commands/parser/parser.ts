@@ -9,6 +9,7 @@ import { lexer as Lexer, TokenKind } from '../lexer'
 import { ParserUnexpectedTokenError, ParserUnknownTokenError } from './errors'
 import { Coalition } from '../../../generated/dcs/common/v0/Coalition'
 import { SpawnerType } from '../../spawner'
+import { BaseType } from '../../base'
 
 export type Value = string | number | (string | number)[] | Command
 
@@ -145,6 +146,10 @@ function processCommand(lexer: Lexer): Command {
           typeToDestroy = ToDestroy.Spawner
           return parseParts()
         }
+        if (/^base/.test(lowerValue) === true) {
+          typeToDestroy = ToDestroy.Base
+          return parseParts()
+        }
 
         // check for coalition
         if (lowerValue === 'red') {
@@ -279,6 +284,58 @@ function processCommand(lexer: Lexer): Command {
 
     throw new Error('unexpected token parsing spawnGroup')
   }
+  if (CommandType.SpawnBase === type) {
+    let baseType: BaseType = BaseType.UnderConstruction
+    let coalition: Coalition | undefined
+
+    const parseParts = () => {
+      const nextToken = lexer.nextToken()
+
+      if (TokenKind.EOF === nextToken.kind) {
+        return
+      }
+
+      if (
+        TokenKind.Word === nextToken.kind ||
+        TokenKind.String === nextToken.kind
+      ) {
+        const lowerValue = nextToken.value.toLowerCase()
+
+        // coalition
+        if ('red' === lowerValue) {
+          coalition = Coalition.COALITION_RED
+        }
+        if ('blue' === lowerValue) {
+          coalition = Coalition.COALITION_BLUE
+        }
+
+        // baseType
+        if ('cop' === lowerValue) {
+          baseType = BaseType.COP
+        }
+        if ('farp' === lowerValue) {
+          baseType = BaseType.FARP
+        }
+        if ('fob' === lowerValue) {
+          baseType = BaseType.FOB
+        }
+        if ('mob' === lowerValue) {
+          baseType = BaseType.MOB
+        }
+      }
+
+      parseParts()
+    }
+
+    parseParts()
+
+    return {
+      type: CommandType.SpawnBase,
+      baseType,
+      coalition,
+      heading: 0, // TODO handle this in the command
+    }
+  }
 
   if (CommandType.Smoke === type) {
     const nextToken = lexer.nextToken()
@@ -381,6 +438,9 @@ function matchCommand(input: string): CommandType {
   if ('spawn' === lowerInput) {
     return CommandType.SpawnGroundUnit
   }
+  if ('delete' === lowerInput) {
+    return CommandType.Destroy
+  }
   if ('destroy' === lowerInput) {
     return CommandType.Destroy
   }
@@ -389,6 +449,9 @@ function matchCommand(input: string): CommandType {
   }
   if ('spawngroup' === lowerInput) {
     return CommandType.SpawnGroup
+  }
+  if ('spawnbase' === lowerInput) {
+    return CommandType.SpawnBase
   }
   if ('smoke' === lowerInput) {
     return CommandType.Smoke

@@ -15,7 +15,7 @@ import {
   vec3From,
 } from './common'
 import { Position3, PositionLL, Velocity } from './common'
-import { knex, Unit as DBUnit, insertUnit } from './db'
+import { knex, Unit as DBUnit, insertUnit, deleteUnit } from './db'
 import { GetTransformResponse__Output } from '../generated/dcs/unit/v0/GetTransformResponse'
 import { countryFrom } from './country'
 
@@ -69,6 +69,11 @@ export enum UnitTypeName {
   // helicopters
   UH1H = 'UH-1H',
   AH64D = 'AH-64D_BLK_II',
+  MI24 = 'Mi-24P',
+  MI8 = 'Mi-8MT',
+  // utility
+  M818 = 'M 818',
+  M978 = 'M978 HEMTT Tanker',
 }
 
 export interface Unit {
@@ -313,8 +318,8 @@ export async function uniqueUnitName(): Promise<string> {
   return name
 }
 
-export async function destroy(unitName: string): Promise<void> {
-  const lua = `Unit.getByName("${unitName}"):destroy()`
+export async function despawnUnit({ name }: Pick<Unit, 'name'>): Promise<void> {
+  const lua = `Unit.getByName("${name}"):destroy()`
   return new Promise<void>((resolve, reject) =>
     services.custom.eval({ lua }, error => {
       if (error) {
@@ -395,4 +400,8 @@ export function unitFrom(
     position: positionLLFrom(position),
     typeName: type,
   }
+}
+
+export async function destroyUnit(unit: Unit): Promise<void> {
+  await deleteUnit(unit.unitId)
 }

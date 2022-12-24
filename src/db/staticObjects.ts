@@ -59,7 +59,7 @@ export async function insertStaticObject(
   })
 }
 
-export async function destroyStaticObject(
+export async function deleteStaticObject(
   staticObjectId: number
 ): Promise<void> {
   await knex('staticObjects').where({ staticObjectId }).delete()

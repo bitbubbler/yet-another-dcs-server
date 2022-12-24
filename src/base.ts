@@ -4,7 +4,13 @@ import { baseNames } from './baseNames'
 import { PositionLL, randomBetween } from './common'
 import { countryFrom } from './country'
 import { insertBase, knex, nearbyBases } from './db'
-import { createStaticObject, StaticObject } from './staticObject'
+import {
+  createStaticObject,
+  despawnStaticObject,
+  destroyStaticObject,
+  spawnStaticObject,
+  StaticObject,
+} from './staticObject'
 import {
   baseLevel0,
   baseLevel1,
@@ -12,21 +18,34 @@ import {
   baseLevel3,
   Template,
 } from './base-templates'
-import { insertBaseStaticObject } from './db/baseStaticObjects'
+import {
+  allBaseStaticObjects,
+  deleteBaseStaticObject,
+  insertBaseStaticObject,
+} from './db/baseStaticObjects'
+import { allBaseUnits, deleteBaseUnit, insertBaseUnit } from './db/baseUnit'
 import assert from 'assert'
+import {
+  createUnit,
+  despawnUnit,
+  destroyUnit,
+  spawnGroundUnit,
+  Unit,
+} from './unit'
+import { despawnFarp, spawnFarp } from './farp'
 
 /** Min range between COP bases in meters */
-const BASE_COP_MIN_RANGE = 10000
+const BASE_COP_MIN_RANGE_METERS = 3500
 /** Min range between FARP bases in meters */
-const BASE_FARP_MIN_RANGE = 15000
+const BASE_FARP_MIN_RANGE_METERS = 7000
 /** Min range between FOB bases in meters */
-const BASE_FOB_MIN_RANGE = 20000
+const BASE_FOB_MIN_RANGE_METERS = 10000
 
 // assert an assumption that below code makes to simplify the solution of validating base distances.
 // we can remove this requirement in the future, so long as we also remove the assumption in below code.
 assert(
-  BASE_COP_MIN_RANGE < BASE_FARP_MIN_RANGE &&
-    BASE_FARP_MIN_RANGE < BASE_FOB_MIN_RANGE,
+  BASE_COP_MIN_RANGE_METERS < BASE_FARP_MIN_RANGE_METERS &&
+    BASE_FARP_MIN_RANGE_METERS < BASE_FOB_MIN_RANGE_METERS,
   'BASE MIN VALUES SHOULD INCREASE IN DISTANCE AS BASE SIZE INCREASES'
 )
 
@@ -84,9 +103,7 @@ export async function createBase(newBase: NewBase): Promise<Base> {
   return base
 }
 
-export async function createBaseStaticObjects(
-  base: Base
-): Promise<StaticObject[]> {
+async function createBaseObjects(base: Base): Promise<StaticObject[]> {
   // use base level to determine template
   const template = baseTemplateFrom(base)
 
@@ -164,47 +181,52 @@ export async function uniqueBaseName(): Promise<string> {
  * This function, therefore, exists to answer the question "is this a valid base".
  * */
 export async function validateBase(
-  base: Pick<Base, 'position' | 'type'>
+  base: Pick<Base, 'coalition' | 'position' | 'type'>
 ): Promise<{ valid: true } | { valid: false; reason: string }> {
+  const { coalition, position, type } = base
   // TODO: exclude the given baseId from the lookups of nearby bases
-  if (BaseType.UnderConstruction === base.type) {
+  if (BaseType.UnderConstruction === type) {
     const existingNearbyBases = await nearbyBases({
-      position: base.position,
-      accuracy: BASE_COP_MIN_RANGE,
+      accuracy: BASE_COP_MIN_RANGE_METERS,
+      coalition,
+      position,
     })
 
     if (existingNearbyBases.length > 0) {
       return {
         valid: false,
-        reason: `Newly Constructed bases may only be created ${BASE_COP_MIN_RANGE} from any other base type`,
+        reason: `Newly Constructed bases may only be created ${BASE_COP_MIN_RANGE_METERS} from any other base type`,
       }
     }
 
     return { valid: true }
   }
-  if (BaseType.COP === base.type) {
+  if (BaseType.COP === type) {
     const existingNearbyBases = await nearbyBases({
-      position: base.position,
-      accuracy: BASE_COP_MIN_RANGE,
+      accuracy: BASE_COP_MIN_RANGE_METERS,
+      coalition,
+      position,
     })
 
     if (existingNearbyBases.length > 0) {
       return {
         valid: false,
-        reason: `COP base may only be created ${BASE_COP_MIN_RANGE} from any other base type`,
+        reason: `COP base may only be created ${BASE_COP_MIN_RANGE_METERS} from any other base type`,
       }
     }
 
     return { valid: true }
   }
-  if (BaseType.FARP === base.type) {
+  if (BaseType.FARP === type) {
     const existingNearbyFARPRangeBases = await nearbyBases({
-      position: base.position,
-      accuracy: BASE_FARP_MIN_RANGE,
+      accuracy: BASE_FARP_MIN_RANGE_METERS,
+      coalition,
+      position,
     })
     const existingNearbyCOPRangeBases = await nearbyBases({
-      position: base.position,
-      accuracy: BASE_COP_MIN_RANGE,
+      accuracy: BASE_COP_MIN_RANGE_METERS,
+      coalition,
+      position,
     })
 
     const existingNearbyEqualOrGreaterBases =
@@ -219,27 +241,29 @@ export async function validateBase(
     if (existingNearbyEqualOrGreaterBases.length > 0) {
       return {
         valid: false,
-        reason: `FARP base may only be created ${BASE_FARP_MIN_RANGE} from any other FARP or larger base`,
+        reason: `FARP base may only be created ${BASE_FARP_MIN_RANGE_METERS} from any other FARP or larger base`,
       }
     }
 
     if (existingNearbyLesserBases.length > 0) {
       return {
         valid: false,
-        reason: `FARP base may only be created ${BASE_COP_MIN_RANGE} from any other COP base`,
+        reason: `FARP base may only be created ${BASE_COP_MIN_RANGE_METERS} from any other COP base`,
       }
     }
 
     return { valid: true }
   }
-  if (BaseType.FOB === base.type) {
+  if (BaseType.FOB === type) {
     const existingNearbyFOBRangeBases = await nearbyBases({
-      position: base.position,
-      accuracy: BASE_FOB_MIN_RANGE,
+      accuracy: BASE_FOB_MIN_RANGE_METERS,
+      coalition,
+      position,
     })
     const existingNearbyFARPRangeBases = await nearbyBases({
-      position: base.position,
-      accuracy: BASE_FARP_MIN_RANGE,
+      accuracy: BASE_FARP_MIN_RANGE_METERS,
+      coalition,
+      position,
     })
 
     const existingNearbyEqualOrGreaterBases =
@@ -254,14 +278,14 @@ export async function validateBase(
     if (existingNearbyEqualOrGreaterBases.length > 0) {
       return {
         valid: false,
-        reason: `FOB base may only be created ${BASE_FOB_MIN_RANGE} from any other FOB or larger base`,
+        reason: `FOB base may only be created ${BASE_FOB_MIN_RANGE_METERS} from any other FOB or larger base`,
       }
     }
 
     if (existingNearbyLesserBases.length > 0) {
       return {
         valid: false,
-        reason: `FOB base may only be created ${BASE_FARP_MIN_RANGE} from any other FARM or smaller base`,
+        reason: `FOB base may only be created ${BASE_FARP_MIN_RANGE_METERS} from any other FARM or smaller base`,
       }
     }
 
@@ -269,7 +293,7 @@ export async function validateBase(
   }
   // TODO: handle MOB
 
-  throw new Error(`Unknown BaseType ${base.type} attemting to validateBase`)
+  throw new Error(`Unknown BaseType ${type} attemting to validateBase`)
 }
 
 /** A funtion to return the next base type if upgraded */
@@ -309,4 +333,112 @@ export function baseTypeDisplayName(baseType: BaseType): string {
   }
 
   throw new Error('unknown BaseType')
+}
+
+async function createBaseUnits(base: Base): Promise<Unit[]> {
+  // use base level to determine template
+  const template = baseTemplateFrom(base)
+
+  // collection of unit(s) to return
+  const units: Unit[] = []
+
+  // create and spawn units for template
+  for (const unitTemplate of template.units) {
+    const { bearing, distance, heading, typeName } = unitTemplate
+
+    // determine where this static object should be
+    const { lat, lon } = new LatLon(
+      base.position.lat,
+      base.position.lon
+    ).destinationPoint(distance, bearing)
+
+    // create the unit
+    const unit = await createUnit({
+      country: countryFrom(base.coalition),
+      heading: heading,
+      position: { lat: lat, lon: lon, alt: 0 },
+      typeName: typeName,
+      isPlayerSlot: false,
+    })
+
+    // assign this static as belonging to this base
+    await insertBaseUnit(base.baseId, unit.unitId)
+
+    // keep track of it to return
+    units.push(unit)
+  }
+
+  return units
+}
+
+export async function spawnBase(base: Base): Promise<void> {
+  const { baseId, coalition, name, position } = base
+
+  await spawnFarp({
+    name,
+    groupId: baseId,
+    country: countryFrom(coalition),
+    position: position,
+    type: 'Invisible FARP',
+  })
+
+  await spawnBaseUnitsAndObjects(base)
+}
+
+export async function despawnBase(base: Base): Promise<void> {
+  await despawnFarp()
+  await destroyAndDespawnBaseUnitsAndObject(base)
+}
+
+export async function createBaseUnitsAndObjects(base: Base): Promise<void> {
+  await Promise.all([createBaseObjects(base), createBaseUnits(base)])
+}
+
+export async function spawnBaseUnitsAndObjects(base: Base): Promise<void> {
+  await Promise.all([spawnBaseObjects(base), spawnBaseUnits(base)])
+}
+
+async function spawnBaseObjects({ baseId }: Base): Promise<void> {
+  for (const staticObject of await allBaseStaticObjects(baseId)) {
+    await spawnStaticObject(staticObject)
+  }
+}
+
+async function spawnBaseUnits({ baseId }: Base) {
+  for (const baseUnit of await allBaseUnits(baseId)) {
+    await spawnGroundUnit(baseUnit)
+  }
+}
+
+export async function createAndSpawnBaseUnitsAndObjects(
+  base: Base
+): Promise<void> {
+  await createBaseUnitsAndObjects(base)
+  await spawnBaseUnitsAndObjects(base)
+}
+
+export async function destroyAndDespawnBaseUnitsAndObject(
+  base: Base
+): Promise<void> {
+  await despawnFarp()
+
+  await Promise.all([destroyBaseObjects(base), destroyBaseUnits(base)])
+}
+
+async function destroyBaseObjects({ baseId }: Base): Promise<void> {
+  for (const staticObject of await allBaseStaticObjects(baseId)) {
+    const { staticObjectId } = staticObject
+    await deleteBaseStaticObject(baseId, staticObjectId)
+    await destroyStaticObject(staticObject)
+    await despawnStaticObject(staticObject)
+  }
+}
+
+async function destroyBaseUnits({ baseId }: Base): Promise<void> {
+  for (const unit of await allBaseUnits(baseId)) {
+    const { unitId } = unit
+    await deleteBaseUnit(baseId, unitId)
+    await destroyUnit(unit)
+    await despawnUnit(unit)
+  }
 }

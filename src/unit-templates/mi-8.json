@@ -1,0 +1,83 @@
+{
+  "alt": 500,
+  "hardpoint_racks": true,
+  "alt_type": "BARO",
+  "livery_id": "Russia_VVS_Standard",
+  "skill": "Client",
+  "ropeLength": 15,
+  "speed": 44.444444444444,
+  "AddPropAircraft": {
+    "LeftEngineResource": 90,
+    "RightEngineResource": 90,
+    "GunnersAISkill": 90,
+    "ExhaustScreen": true,
+    "CargoHalfdoor": true,
+    "NetCrewControlPriority": 1,
+    "AdditionalArmor": true,
+    "NS430allow": true
+  },
+  "type": "Mi-8MT",
+  "Radio": {
+    "1": {
+      "modulations": {},
+      "channels": {
+        "1": 127.5,
+        "2": 135,
+        "4": 127,
+        "8": 128,
+        "16": 132,
+        "17": 138,
+        "9": 126,
+        "18": 122,
+        "5": 125,
+        "10": 133,
+        "20": 137,
+        "11": 130,
+        "3": 136,
+        "6": 121,
+        "12": 129,
+        "13": 123,
+        "7": 141,
+        "14": 131,
+        "19": 124,
+        "15": 134
+      }
+    },
+    "2": {
+      "modulations": {},
+      "channels": {
+        "7": 40,
+        "1": 21.5,
+        "2": 25.7,
+        "4": 28,
+        "8": 50,
+        "9": 55.5,
+        "5": 30,
+        "10": 59.9,
+        "3": 27,
+        "6": 32
+      }
+    }
+  },
+  "unitId": 18,
+  "psi": -0.85521133347722,
+  "y": 631033.22333038,
+  "x": -327212.28059619,
+  "name": "Rotary-10-1",
+  "payload": {
+    "pylons": {},
+    "fuel": "1929",
+    "flare": 128,
+    "chaff": 0,
+    "gun": 100,
+    "restricted": {}
+  },
+  "heading": 0.85521133347722,
+  "callsign": {
+    "1": 2,
+    "2": 2,
+    "3": 1,
+    "name": "Springfield21"
+  },
+  "onboard_num": "019"
+}

@@ -29,12 +29,12 @@ export interface EventShape {
 }
 
 export interface Initiator {
-  unit: GameUnit
+  unit?: GameUnit
 }
 
 export interface MarkEvent {
   id: number
-  initiator: Partial<Initiator>
+  initiator: Initiator
   coalition: Coalition
   text?: string
 }
@@ -126,20 +126,18 @@ async function handleEvent(data: StreamEventsResponse__Output): Promise<void> {
       throw new Error('invalid markAdd event. missing coalition')
     }
 
-    const { id, coalition, initiator, text } = markAdd
+    const { id, coalition, text } = markAdd
 
-    if (!initiator.unit) {
-      throw new Error('invalid markAdd event. missing initiator unit')
-    }
+    const initiator = markAdd.initiator?.unit
+      ? { unit: unitFrom(markAdd.initiator.unit) }
+      : {}
 
     if (text) {
       const event: MarkAddEvent = {
         type: EventType.MarkAdd,
         id,
         coalition,
-        initiator: {
-          unit: unitFrom(initiator.unit),
-        },
+        initiator,
         text,
       }
 
@@ -150,9 +148,7 @@ async function handleEvent(data: StreamEventsResponse__Output): Promise<void> {
       type: EventType.MarkAdd,
       id,
       coalition,
-      initiator: {
-        unit: unitFrom(initiator.unit),
-      },
+      initiator,
     }
 
     return Events.next(event)
@@ -171,11 +167,11 @@ async function handleEvent(data: StreamEventsResponse__Output): Promise<void> {
       throw new Error('invalid markChange event. missing coalition')
     }
 
-    const { id, coalition, initiator, text } = markChange
+    const { id, coalition, text } = markChange
 
-    if (!initiator.unit) {
-      throw new Error('invalid markAdd event. missing initiator unit')
-    }
+    const initiator = markChange.initiator?.unit
+      ? { unit: unitFrom(markChange.initiator.unit) }
+      : {}
 
     if (text) {
       try {
@@ -186,9 +182,7 @@ async function handleEvent(data: StreamEventsResponse__Output): Promise<void> {
             type: EventType.MarkChange,
             id,
             coalition,
-            initiator: {
-              unit: unitFrom(initiator.unit),
-            },
+            initiator,
             text,
             command,
           }
@@ -204,9 +198,7 @@ async function handleEvent(data: StreamEventsResponse__Output): Promise<void> {
         type: EventType.MarkChange,
         id,
         coalition,
-        initiator: {
-          unit: unitFrom(initiator.unit),
-        },
+        initiator,
         text,
       }
 
@@ -217,9 +209,7 @@ async function handleEvent(data: StreamEventsResponse__Output): Promise<void> {
       type: EventType.MarkChange,
       id,
       coalition,
-      initiator: {
-        unit: unitFrom(initiator.unit),
-      },
+      initiator,
     }
 
     return Events.next(event)
@@ -287,7 +277,11 @@ async function handleEvent(data: StreamEventsResponse__Output): Promise<void> {
       throw new Error('invalid birth. missing initiator')
     }
 
-    const { initiator, place } = birth
+    const { place } = birth
+
+    const initiator = birth.initiator?.unit
+      ? { unit: unitFrom(birth.initiator.unit) }
+      : {}
 
     if (!initiator.unit) {
       // TODO: static objects get birth'd and don't have a unit
@@ -297,9 +291,7 @@ async function handleEvent(data: StreamEventsResponse__Output): Promise<void> {
 
     const event: BirthEvent = {
       type: EventType.Birth,
-      initiator: {
-        unit: unitFrom(initiator.unit),
-      },
+      initiator,
       place,
     }
 

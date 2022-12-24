@@ -1,0 +1,89 @@
+{
+  "alt": 500,
+  "alt_type": "BARO",
+  "livery_id": "georgian air force",
+  "skill": "Client",
+  "ropeLength": 15,
+  "speed": 44.444444444444,
+  "AddPropAircraft": {
+    "LeftEngineResource": 90,
+    "RightEngineResource": 90,
+    "SimplifiedAI": false,
+    "PilotNVG": true,
+    "GunnersAISkill": 90,
+    "NetCrewControlPriority": 0,
+    "R60equipment": true,
+    "HideAngleBoxes": false,
+    "OperatorNVG": true,
+    "ExhaustScreen": true,
+    "OverrideIFF": 0,
+    "HumanOrchestra": false,
+    "TrackAirTargets": true,
+    "NS430allow": true
+  },
+  "type": "Mi-24P",
+  "Radio": {
+    "1": {
+      "modulations": {},
+      "channels": {
+        "1": 127.5,
+        "2": 135,
+        "4": 127,
+        "8": 128,
+        "16": 132,
+        "17": 138,
+        "9": 126,
+        "18": 122,
+        "5": 125,
+        "10": 133,
+        "20": 137,
+        "11": 130,
+        "3": 136,
+        "6": 121,
+        "12": 129,
+        "13": 123,
+        "7": 141,
+        "14": 131,
+        "19": 124,
+        "15": 134
+      }
+    },
+    "2": {
+      "modulations": {},
+      "channels": {
+        "7": 40,
+        "1": 21.5,
+        "2": 25.7,
+        "4": 28,
+        "8": 50,
+        "9": 55.5,
+        "5": 30,
+        "10": 59.9,
+        "3": 27,
+        "6": 32
+      }
+    }
+  },
+  "unitId": 10,
+  "psi": -4.0840704496667,
+  "y": 631138.70671775,
+  "x": -327153.04064225,
+  "name": "Rotary-3-1",
+  "payload": {
+    "pylons": {},
+    "fuel": 1701,
+    "flare": 192,
+    "ammo_type": 1,
+    "chaff": 0,
+    "gun": 100,
+    "restricted": {}
+  },
+  "heading": 4.0840704496667,
+  "callsign": {
+    "1": 3,
+    "2": 1,
+    "3": 1,
+    "name": "Uzi11"
+  },
+  "onboard_num": "012"
+}

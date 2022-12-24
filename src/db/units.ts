@@ -171,12 +171,22 @@ export async function nearbyUnits({
   position: PositionLL
   accuracy: number
   coalition: Coalition
-}) {
+}): Promise<Unit[]> {
   const { lat, lon } = position
 
   let query = knex('units')
     .innerJoin('positions', 'bases.positionId', 'positions.positionId')
-    .select(['unitId', 'name', 'country', 'lat', 'lon', 'alt'])
+    .select([
+      'unitId',
+      'name',
+      'country',
+      'lat',
+      'lon',
+      'alt',
+      'isPlayerSlot',
+      'typeName',
+      'heading',
+    ])
     .whereBetween('lat', [
       lat - metersToDegree(accuracy),
       lat + metersToDegree(accuracy),
@@ -197,13 +207,12 @@ export async function nearbyUnits({
   const nearby = await query
 
   return await nearby
-    .map(unit => {
-      const { lat, lon, alt } = unit
-      const unitPosition = { lat, lon, alt }
+    .map(dbUnit => {
+      const unit = unitFrom(dbUnit)
       return {
         unit,
         distance: new LatLon(position.lat, position.lon).distanceTo(
-          new LatLon(unitPosition.lat, unitPosition.lon)
+          new LatLon(unit.position.lat, unit.position.lon)
         ),
       }
     })
@@ -244,4 +253,8 @@ export function unitFrom(
     typeName,
     unitId,
   }
+}
+
+export async function deleteUnit(unitId: Unit['unitId']): Promise<void> {
+  await knex('units').where({ unitId }).delete()
 }

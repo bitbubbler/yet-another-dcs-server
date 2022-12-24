@@ -1,4 +1,5 @@
 import { equal } from 'assert'
+import { Coalition } from '../../generated/dcs/common/v0/Coalition'
 import { Base } from '../base'
 import { metersToDegree, PositionLL } from '../common'
 import { LatLon } from '../geo'
@@ -120,15 +121,18 @@ export async function allBases(): Promise<Base[]> {
 export async function nearbyBases({
   position,
   accuracy,
+  coalition,
 }: {
   /** position to search from */
   position: Pick<PositionLL, 'lat' | 'lon'>
   /** accuracy of search in meters */
   accuracy: number
+  /** coalition to search for */
+  coalition: Coalition
 }): Promise<Base[]> {
   const { lat, lon } = position
 
-  const nearby = await knex('bases')
+  let query = knex('bases')
     .innerJoin('positions', 'bases.positionId', 'positions.positionId')
     .select(['baseId', 'coalition', 'heading', 'lat', 'lon', 'name', 'type'])
     .whereBetween('lat', [
@@ -140,6 +144,13 @@ export async function nearbyBases({
       lon + metersToDegree(accuracy),
     ])
     .whereNull('goneAt')
+
+  // if not Coalition_ALL, search by country
+  if (Coalition.COALITION_ALL !== coalition) {
+    query = query.where({ coalition })
+  }
+
+  const nearby = await query
 
   return nearby
     .map(dbBase => {
