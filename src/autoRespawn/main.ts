@@ -287,7 +287,8 @@ async function handleUnitGoneEvent(event: UnitGoneEvent) {
   const unit = await findUnit(event.unit.name)
 
   if (!unit) {
-    throw new Error('gone unit not found in db, or already destroyed/gone')
+    // quietly ignore units not in the database (units can exist in missions that YADS doesn't manage)
+    return
   }
 
   if (isPlayerUnit(unit)) {

@@ -386,6 +386,8 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
         coalition,
         `A new base has begun construction in <gridsquare>`
       )
+
+      await removeMapMark(id)
     }
     if (CommandType.Destroy === command.type) {
       if (command.toDestroy !== ToDestroy.Base) {

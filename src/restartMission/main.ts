@@ -8,7 +8,7 @@ import { outText } from '../trigger'
 import { MemoryReader, parse, stringify, Table } from '../lua'
 import { Mission } from './types'
 import { allBases } from '../db'
-import { baseTemplateFrom, BaseType } from '../base'
+import { baseTemplateFrom, BaseType, baseTypeDisplayNameShort } from '../base'
 import { LatLon } from '../geo'
 import { vector2DFrom } from '../coord'
 import { unitTemplateFrom } from '../unit-templates'
@@ -172,7 +172,9 @@ async function patchMission(mission: Mission): Promise<Mission> {
     for (const slot of template.slots) {
       const { bearing, distance, heading, typeName } = slot
       const groupId = groupIdCounter++
-      const name = `Rotary-${groupId}`
+      const name = `${baseTypeDisplayNameShort(base.type)} ${
+        base.name
+      } - ${typeName} (${groupId})`
 
       // find the position of the slot
       const spawnPosition = new LatLon(
