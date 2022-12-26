@@ -9,7 +9,8 @@
 import { CargoType, CargoTypeName, NewCargo } from '../cargo'
 import { UnitTypeName } from '../unit'
 
-export interface CargoDefinitionBase extends Omit<NewCargo, 'position'> {
+export interface CargoDefinitionBase
+  extends Omit<NewCargo, 'position' | 'originBaseId'> {
   id: string
 }
 

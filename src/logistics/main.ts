@@ -22,7 +22,6 @@ import {
   nearbyBases,
   updateBaseType,
 } from '../db'
-import { allStaticObjects } from '../db/staticObjects'
 import { findUnitCargo } from '../db/unitCargos'
 import {
   Events,
@@ -32,9 +31,8 @@ import {
 } from '../events'
 import { LatLon } from '../geo'
 import { getUnits } from '../group'
-import { spawnStaticObject } from '../staticObject'
 import { outCoalitionText, outGroupText, removeMapMark } from '../trigger'
-import { createUnit, spawnGroundUnit } from '../unit'
+import { createUnit, getPositionVelocity, spawnGroundUnit } from '../unit'
 import { cargoDefinitionFrom } from './definitions'
 
 const oneSecondMs = 1000
@@ -121,6 +119,7 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
       return
     }
 
+    const originBaseId = existingNearbyBases[0].baseId
     const { position } = unit
 
     const { cargoDefinitionId } = command
@@ -130,6 +129,7 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
 
     const cargo = await createCargo({
       ...cargoDefinition,
+      originBaseId,
       position,
     })
 
@@ -148,6 +148,7 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
     const { country, heading } = unit
     const coalition = coalitionFrom(country)
     const cargo = await findUnitCargo(unit)
+    const [{ p: startingVec3 }] = await getPositionVelocity(unit.name)
 
     if (!cargo) {
       await outGroupText(group.id, `You have no internal cargo to unpack`)
@@ -156,13 +157,25 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
 
     await outGroupText(
       group.id,
-      `Unpacking cargo at your 12 o'clock.. Hold still.`
+      `Unpacking ${cargo.displayName} at your 12 o'clock.. Hold still.`
     )
 
     // TODO: timeout if player has moved and show a message. Player should have to try again
     setTimeout(async () => {
       try {
-        // if you try to unpack too close to an existing base (prevent spawn spam without moving)
+        // if the player has moved while the random timer counted down, halt
+        const [{ p: currentVec3 }] = await getPositionVelocity(unit.name)
+
+        if (
+          startingVec3.x === currentVec3.x &&
+          startingVec3.y === currentVec3.y &&
+          startingVec3.z === currentVec3.z
+        ) {
+          await outGroupText(group.id, `Unpacking failed: You moved!`)
+          // go no further
+          return
+        }
+
         if (
           (
             await nearbyBases({
@@ -172,9 +185,10 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
             })
           ).length > 0
         ) {
+          // if you try to unpack too close to an existing base (prevent spawn spam without moving)
           await outGroupText(
             group.id,
-            `You can't unpack that here! You're too close to a base. You must be at least ${CARGO_UNPACK_MIN_DISTANCE_FROM_BASE_METERS} meters away.`
+            `Unpacking failed: You can't unpack that here! You're too close to a base. You must be at least ${CARGO_UNPACK_MIN_DISTANCE_FROM_BASE_METERS} meters away.`
           )
           // go no further
           return
@@ -198,7 +212,7 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
           if (baseIsValid.valid === false) {
             await outGroupText(
               group.id,
-              `A new base can't be created here: ${baseIsValid.reason}`
+              `Unpacking failed: A new base can't be created here: ${baseIsValid.reason}`
             )
             // go no further
             return
@@ -229,6 +243,7 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
           // we're done unpacking base create kit
           return
         }
+
         if (CargoType.BaseUpgrade === cargo.type) {
           // determine if an existing base is nearby to try and upgrade
           const basesNearby = await nearbyBases({
@@ -239,20 +254,37 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
 
           // if we don't find any base to upgrade
           if (basesNearby.length < 1) {
-            await outGroupText(group.id, `No base found nearby to upgrade.`)
+            await outGroupText(
+              group.id,
+              `Base upgrade failed: No base found nearby to upgrade.`
+            )
             // go no further
             return
           }
 
           // use nearest base as the base to upgrade (we only ever expect one base here)
           const base = basesNearby[0]
+
+          // ensure the cargo we are unpacking came from another base
+          if (base.baseId === cargo.originBaseId) {
+            await outGroupText(
+              group.id,
+              `Base upgrade failed: Nice try, but you got that cargo from here! You must use a base upgrade from a different base.`
+            )
+            // go no further
+            return
+          }
+
           const { type: previousBaseType } = base
 
           const nextBaseType = nextBaseTypeFrom(base.type)
 
           // if there are no further upgrades for this base
           if (typeof nextBaseType === 'undefined') {
-            await outGroupText(group.id, `This base can't be upgraded anymore.`)
+            await outGroupText(
+              group.id,
+              `Base upgrade failed: This base can't be upgraded anymore.`
+            )
             // go no further
             return
           }

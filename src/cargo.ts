@@ -22,21 +22,18 @@ export enum CargoTypeName {
   UH1HCargo = 'uh1h_cargo',
 }
 
-export type NewBaseCargo = Pick<
-  BaseCargo,
-  'displayName' | 'internal' | 'mass' | 'position' | 'type' | 'typeName'
->
-
-export type NewUnitCargo = Pick<
-  UnitCargo,
+export type NewCargoProperties =
   | 'displayName'
   | 'internal'
   | 'mass'
+  | 'originBaseId'
   | 'position'
   | 'type'
   | 'typeName'
-  | 'unitTypeName'
->
+
+export type NewBaseCargo = Pick<BaseCargo, NewCargoProperties>
+
+export type NewUnitCargo = Pick<UnitCargo, NewCargoProperties | 'unitTypeName'>
 
 export type NewCargo = NewBaseCargo | NewUnitCargo
 
@@ -45,6 +42,7 @@ export interface CargoBase {
   cargoId: number
   internal: boolean
   mass: number
+  originBaseId: number
   position: PositionLL
   type: CargoType
   typeName: CargoTypeName
