@@ -156,9 +156,7 @@ export function baseTemplateFrom(base: Base): Template {
 }
 
 export async function uniqueBaseName(): Promise<string> {
-  const name = `spawned base ${
-    baseNames[randomBetween(0, baseNames.length - 1)]
-  }`
+  const name = baseNames[randomBetween(0, baseNames.length - 1)]
 
   // check that the name is not already in use
   const existingbase = await knex('bases')
@@ -315,6 +313,26 @@ export function nextBaseTypeFrom(baseType: BaseType): BaseType | undefined {
   return undefined
 }
 
+export function baseTypeDisplayNameShort(baseType: BaseType): string {
+  if (BaseType.UnderConstruction === baseType) {
+    return 'UC'
+  }
+  if (BaseType.COP === baseType) {
+    return 'COP'
+  }
+  if (BaseType.FARP === baseType) {
+    return 'FARP'
+  }
+  if (BaseType.FOB === baseType) {
+    return 'FOB'
+  }
+  if (BaseType.MOB === baseType) {
+    return 'MOB'
+  }
+
+  return baseType
+}
+
 export function baseTypeDisplayName(baseType: BaseType): string {
   if (BaseType.UnderConstruction === baseType) {
     return 'Under Construction'
@@ -332,7 +350,7 @@ export function baseTypeDisplayName(baseType: BaseType): string {
     return 'Main Operating Base'
   }
 
-  throw new Error('unknown BaseType')
+  return baseType
 }
 
 async function createBaseUnits(base: Base): Promise<Unit[]> {
@@ -372,10 +390,10 @@ async function createBaseUnits(base: Base): Promise<Unit[]> {
 }
 
 export async function spawnBase(base: Base): Promise<void> {
-  const { baseId, coalition, name, position } = base
+  const { baseId, coalition, name, position, type } = base
 
   await spawnFarp({
-    name,
+    name: `${baseTypeDisplayName(type)} ${name}`,
     groupId: baseId,
     country: countryFrom(coalition),
     position: position,

@@ -73,6 +73,7 @@ export interface Cargo {
   goneAt?: Date
   internal: boolean
   mass: number
+  originBaseId: number
   positionId: number
   type: CargoType
   typeName: CargoTypeName
@@ -87,6 +88,7 @@ type CargoInsert = Pick<
   | 'displayName'
   | 'internal'
   | 'mass'
+  | 'originBaseId'
   | 'positionId'
   | 'type'
   | 'typeName'
