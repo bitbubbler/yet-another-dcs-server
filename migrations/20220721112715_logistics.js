@@ -30,7 +30,6 @@ exports.up = async function (knex) {
    */
   await knex.schema.createTable('cargos', table => {
     table.integer('cargoId').notNullable()
-    table.integer('originBaseId').notNullable()
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.string('displayName').notNullable()
     table.timestamp('goneAt') // when the cargos no longer exists (unpacked, destroyed, despawned, etc.)
@@ -45,7 +44,6 @@ exports.up = async function (knex) {
 
     table.primary('cargoId')
     table.unique('positionId') // one cargo per position
-    table.index('originBaseId') // we use this in where clause
 
     table.foreign('positionId').references('positions.positionId')
   })

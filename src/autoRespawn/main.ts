@@ -18,12 +18,12 @@ import {
   knex,
   Position,
   SpawnerQueue,
-  Unit,
   Spawner as DBSpawner,
   unitDestroyed,
+  unitFrom,
 } from '../db'
 import { PositionLL } from '../common'
-import { isPlayerUnit, spawnGroundUnitsInCircle } from '../unit'
+import { isPlayerUnit, spawnGroundUnitsInCircle, Unit } from '../unit'
 import { insertSpawnerQueue, spawnerQueueDone } from '../db/spawnerQueues'
 import { UnitEvents, UnitEventType, UnitGoneEvent } from '../unitEvents'
 import { closestPointOnRoads, findPathOnRoads, RoadType } from '../land'
@@ -149,7 +149,7 @@ function respawnQueue(): () => void {
           `Attempting to spawn ${SPAWNER_MAXIMUM_UNITS_PER_CYCLE} units for spawner ${spawnerId}. Spawner has a queue depth of ${depth}`
         )
 
-        const unitsToSpawn = await knex('units')
+        const dbUnitsToSpawn = await knex('units')
           .leftOuterJoin('positions', function () {
             this.on('units.positionId', '=', 'positions.positionId')
           })
@@ -166,6 +166,9 @@ function respawnQueue(): () => void {
               | 'lat'
               | 'lon'
               | 'alt'
+              | 'heading'
+              | 'isPlayerSlot'
+              | 'name'
             >[]
           >([
             'spawnerId',
@@ -175,10 +178,21 @@ function respawnQueue(): () => void {
             'lat',
             'lon',
             'alt',
+            'heading',
+            'isPlayerSlot',
+            'name',
           ])
           .where({ spawnerId })
           .whereNull('spawnerQueues.doneAt')
           .limit(SPAWNER_MAXIMUM_UNITS_PER_CYCLE)
+
+        const unitsToSpawn = dbUnitsToSpawn.map(unit => {
+          const { spawnerId } = unit
+          return {
+            ...unitFrom(unit),
+            spawnerId,
+          }
+        })
 
         const randomUnit =
           unitsToSpawn[randomBetween(1, unitsToSpawn.length) - 1]
@@ -188,9 +202,7 @@ function respawnQueue(): () => void {
         }
 
         // use the position of one of the units randomly
-        const { country, lat, lon, alt } = randomUnit
-
-        const unitDeathPosition: PositionLL = { lat, lon, alt }
+        const { country, position: unitDeathPosition } = randomUnit
 
         const [firstOnRoadPosition, lastOnRoadPosition]: [
           PositionLL,

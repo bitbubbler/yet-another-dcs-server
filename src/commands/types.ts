@@ -10,6 +10,7 @@ export enum CommandType {
   CreateSpawner,
   DefineSpawnGroup,
   Destroy,
+  DestroyInternalCargo,
   Flare,
   HideSpawners,
   Illumination,
@@ -62,6 +63,10 @@ export interface DestroyCommand extends Omit<CommandShape, 'args'> {
   radius: number | undefined
   coalition: Coalition | undefined
 }
+export interface DestroyInternalCargoCommand
+  extends Omit<CommandShape, 'args'> {
+  type: CommandType.DestroyInternalCargo
+}
 
 export interface FlareCommand extends Omit<CommandShape, 'args'> {
   type: CommandType.Flare
@@ -90,7 +95,7 @@ export interface SpawnBaseCommand extends Omit<CommandShape, 'args'> {
 
 export interface SpawnGroundUnitCommand extends Omit<CommandShape, 'args'> {
   type: CommandType.SpawnGroundUnit
-  units: { fuzzyUnitName: string; count?: number }[]
+  units: { fuzzyUnitName: string; count?: number; heading: number }[]
   coalition: Coalition | undefined
 }
 
@@ -136,6 +141,7 @@ export type Command =
   | CreateSpawnerCommand
   | DefineSpawnGroupCommand
   | DestroyCommand
+  | DestroyInternalCargoCommand
   | FlareCommand
   | HideSpawnersCommand
   | IlluminationCommand

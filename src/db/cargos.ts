@@ -314,3 +314,11 @@ export async function nearbyCargos({
     .sort((a, b) => a.distance - b.distance)
     .map(cargo => cargo.cargo)
 }
+
+export async function deleteCargo({ cargoId }: Cargo): Promise<void> {
+  await knex('cargos')
+    .where({
+      cargoId,
+    })
+    .delete()
+}

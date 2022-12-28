@@ -13,3 +13,7 @@ These defintions exist to provide alignment on the usage and definition of terms
 **unit**: an in-game dcs unit
 
 **slot**: the player slot that allows a player to spawn in as a unit in game
+
+**kill**: a player killing a unit, a unit killing a unit
+
+**confirmed kill**: survived kills (for players, return to a base and landing. after you get the kill)

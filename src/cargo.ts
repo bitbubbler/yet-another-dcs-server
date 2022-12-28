@@ -1,7 +1,7 @@
 import { v4 as uuidV4 } from 'uuid'
 import { Base } from './base'
 import { PositionLL } from './common'
-import { insertCargo } from './db'
+import { deleteCargo, insertCargo } from './db'
 import { deleteUnitCargo, insertUnitCargo } from './db/unitCargos'
 
 import { setUnitInternalCargoMass, Unit, UnitTypeName } from './unit'
@@ -95,11 +95,17 @@ export async function loadCargo(unit: Unit, cargo: Cargo): Promise<void> {
  * @param cargo the cargo to be unloaded
  */
 export async function unloadCargo(unit: Unit, cargo: Cargo): Promise<void> {
-  // mark cargo in db as loaded for this unit
-  await deleteUnitCargo(unit, cargo)
+  // destroy the cargo
+  await destroyCargo(unit, cargo)
 
   // set unit weight in dcs
   await setUnitInternalCargoMass(unit, 0)
+}
+
+export async function destroyCargo(unit: Unit, cargo: Cargo): Promise<void> {
+  await deleteUnitCargo(unit, cargo)
+
+  await deleteCargo(cargo)
 }
 
 export function isBaseCargo(cargo: Cargo): cargo is BaseCargo {
