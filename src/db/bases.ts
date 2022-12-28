@@ -134,7 +134,7 @@ export async function nearbyBases({
 
   let query = knex('bases')
     .innerJoin('positions', 'bases.positionId', 'positions.positionId')
-    .select(['baseId', 'coalition', 'heading', 'lat', 'lon', 'name', 'type'])
+    .select('*')
     .whereBetween('lat', [
       lat - metersToDegree(accuracy),
       lat + metersToDegree(accuracy),
@@ -166,4 +166,12 @@ export async function nearbyBases({
     .filter(base => base.distance <= accuracy)
     .sort((a, b) => a.distance - b.distance)
     .map(base => base.base)
+}
+
+export async function deleteBase({ baseId }: Base): Promise<void> {
+  await knex('bases')
+    .where({
+      baseId,
+    })
+    .delete()
 }

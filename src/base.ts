@@ -179,16 +179,27 @@ export async function uniqueBaseName(): Promise<string> {
  * This function, therefore, exists to answer the question "is this a valid base".
  * */
 export async function validateBase(
-  base: Pick<Base, 'coalition' | 'position' | 'type'>
+  base: Pick<Base, 'coalition' | 'position' | 'type'> &
+    Partial<Pick<Base, 'baseId'>>
 ): Promise<{ valid: true } | { valid: false; reason: string }> {
   const { coalition, position, type } = base
+
+  function excludeThisBase(baseToCheck: Base) {
+    if (base.baseId) {
+      return baseToCheck.baseId !== base.baseId
+    }
+    return false
+  }
+
   // TODO: exclude the given baseId from the lookups of nearby bases
   if (BaseType.UnderConstruction === type) {
-    const existingNearbyBases = await nearbyBases({
-      accuracy: BASE_COP_MIN_RANGE_METERS,
-      coalition,
-      position,
-    })
+    const existingNearbyBases = (
+      await nearbyBases({
+        accuracy: BASE_COP_MIN_RANGE_METERS,
+        coalition,
+        position,
+      })
+    ).filter(excludeThisBase)
 
     if (existingNearbyBases.length > 0) {
       return {
@@ -200,11 +211,13 @@ export async function validateBase(
     return { valid: true }
   }
   if (BaseType.COP === type) {
-    const existingNearbyBases = await nearbyBases({
-      accuracy: BASE_COP_MIN_RANGE_METERS,
-      coalition,
-      position,
-    })
+    const existingNearbyBases = (
+      await nearbyBases({
+        accuracy: BASE_COP_MIN_RANGE_METERS,
+        coalition,
+        position,
+      })
+    ).filter(excludeThisBase)
 
     if (existingNearbyBases.length > 0) {
       return {
@@ -216,16 +229,20 @@ export async function validateBase(
     return { valid: true }
   }
   if (BaseType.FARP === type) {
-    const existingNearbyFARPRangeBases = await nearbyBases({
-      accuracy: BASE_FARP_MIN_RANGE_METERS,
-      coalition,
-      position,
-    })
-    const existingNearbyCOPRangeBases = await nearbyBases({
-      accuracy: BASE_COP_MIN_RANGE_METERS,
-      coalition,
-      position,
-    })
+    const existingNearbyFARPRangeBases = (
+      await nearbyBases({
+        accuracy: BASE_FARP_MIN_RANGE_METERS,
+        coalition,
+        position,
+      })
+    ).filter(excludeThisBase)
+    const existingNearbyCOPRangeBases = (
+      await nearbyBases({
+        accuracy: BASE_COP_MIN_RANGE_METERS,
+        coalition,
+        position,
+      })
+    ).filter(excludeThisBase)
 
     const existingNearbyEqualOrGreaterBases =
       existingNearbyFARPRangeBases.filter(base =>
@@ -253,16 +270,20 @@ export async function validateBase(
     return { valid: true }
   }
   if (BaseType.FOB === type) {
-    const existingNearbyFOBRangeBases = await nearbyBases({
-      accuracy: BASE_FOB_MIN_RANGE_METERS,
-      coalition,
-      position,
-    })
-    const existingNearbyFARPRangeBases = await nearbyBases({
-      accuracy: BASE_FARP_MIN_RANGE_METERS,
-      coalition,
-      position,
-    })
+    const existingNearbyFOBRangeBases = (
+      await nearbyBases({
+        accuracy: BASE_FOB_MIN_RANGE_METERS,
+        coalition,
+        position,
+      })
+    ).filter(excludeThisBase)
+    const existingNearbyFARPRangeBases = (
+      await nearbyBases({
+        accuracy: BASE_FARP_MIN_RANGE_METERS,
+        coalition,
+        position,
+      })
+    ).filter(excludeThisBase)
 
     const existingNearbyEqualOrGreaterBases =
       existingNearbyFOBRangeBases.filter(base =>

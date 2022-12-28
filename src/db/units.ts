@@ -175,18 +175,8 @@ export async function nearbyUnits({
   const { lat, lon } = position
 
   let query = knex('units')
-    .innerJoin('positions', 'bases.positionId', 'positions.positionId')
-    .select([
-      'unitId',
-      'name',
-      'country',
-      'lat',
-      'lon',
-      'alt',
-      'isPlayerSlot',
-      'typeName',
-      'heading',
-    ])
+    .innerJoin('positions', 'units.positionId', 'positions.positionId')
+    .select('*')
     .whereBetween('lat', [
       lat - metersToDegree(accuracy),
       lat + metersToDegree(accuracy),
@@ -222,11 +212,10 @@ export async function nearbyUnits({
 }
 
 export function unitFrom(
-  dbUnit: Pick<
-    DBUnit,
-    'name' | 'country' | 'isPlayerSlot' | 'typeName' | 'unitId'
-  > &
-    Pick<DBPosition, 'lat' | 'lon' | 'alt' | 'heading'>
+  dbUnit: Pick<DBUnit, 'name' | 'country' | 'typeName' | 'unitId'> &
+    Pick<DBPosition, 'lat' | 'lon' | 'alt' | 'heading'> & {
+      isPlayerSlot: number | boolean
+    }
 ): Unit {
   const {
     alt,

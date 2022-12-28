@@ -1,0 +1,74 @@
+{
+  "alt": 500,
+  "alt_type": "BARO",
+  "livery_id": "default",
+  "skill": "Client",
+  "ropeLength": 15,
+  "speed": 44.444444444444,
+  "AddPropAircraft": {
+    "IMU alignment type": 3,
+    "Helmet-mounted device": 0,
+    "ExhaustScreen": true,
+    "modification": "Ka-50_3",
+    "Realistic INS": true
+  },
+  "type": "Ka-50_3",
+  "Radio": {
+    "1": {
+      "modulations": {},
+      "channels": {
+        "7": 40,
+        "1": 21.5,
+        "2": 25.7,
+        "4": 28,
+        "8": 50,
+        "9": 55.5,
+        "5": 30,
+        "10": 59.9,
+        "3": 27,
+        "6": 32
+      }
+    },
+    "2": {
+      "modulations": {},
+      "channels": {
+        "15": 0.995,
+        "13": 0.583,
+        "7": 0.443,
+        "1": 0.625,
+        "2": 0.303,
+        "4": 0.591,
+        "8": 0.215,
+        "16": 1.21,
+        "9": 0.525,
+        "5": 0.408,
+        "10": 1.065,
+        "14": 0.283,
+        "3": 0.289,
+        "6": 0.803,
+        "12": 0.35,
+        "11": 0.718
+      }
+    }
+  },
+  "unitId": 22,
+  "psi": -1.7976891295542,
+  "y": 631022.47000994,
+  "x": -327166.82061017,
+  "name": "Rotary-13-1",
+  "payload": {
+    "pylons": {},
+    "fuel": 1450,
+    "flare": 128,
+    "chaff": 0,
+    "gun": 100
+  },
+  "heading": 1.7976891295542,
+  "callsign": {
+    "1": 5,
+    "2": 2,
+    "3": 1,
+    "name": "Dodge21"
+  },
+  "onboard_num": "022"
+}

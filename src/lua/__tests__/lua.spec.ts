@@ -21,7 +21,6 @@ mission =
 
     const parsed = parse(new MemoryReader(input))
     const output = stringify(parsed)
-    debugger
     expect(output).toEqual(input)
   })
 })

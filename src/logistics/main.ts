@@ -94,11 +94,9 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
     })
 
     if (
-      !(
-        existingNearbyBases.find(function (base) {
-          return [BaseType.FARP, BaseType.FOB, BaseType.MOB].includes(base.type)
-        }) === undefined
-      )
+      existingNearbyBases.find(function (base) {
+        return [BaseType.FARP, BaseType.FOB, BaseType.MOB].includes(base.type)
+      }) === undefined
     ) {
       await outGroupText(
         group.id,
@@ -177,21 +175,26 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
         }
 
         if (
-          (
-            await nearbyBases({
-              position: unit.position,
-              accuracy: CARGO_UNPACK_MIN_DISTANCE_FROM_BASE_METERS,
-              coalition: coalitionFrom(country),
-            })
-          ).length > 0
+          [CargoType.BaseCreate, CargoType.BaseUpgrade].includes(cargo.type) ===
+          false
         ) {
-          // if you try to unpack too close to an existing base (prevent spawn spam without moving)
-          await outGroupText(
-            group.id,
-            `Unpacking failed: You can't unpack that here! You're too close to a base. You must be at least ${CARGO_UNPACK_MIN_DISTANCE_FROM_BASE_METERS} meters away.`
-          )
-          // go no further
-          return
+          if (
+            (
+              await nearbyBases({
+                position: unit.position,
+                accuracy: CARGO_UNPACK_MIN_DISTANCE_FROM_BASE_METERS,
+                coalition: coalitionFrom(country),
+              })
+            ).length > 0
+          ) {
+            // if you try to unpack too close to an existing base (prevent spawn spam without moving)
+            await outGroupText(
+              group.id,
+              `Unpacking failed: You can't unpack that here! You're too close to a base. You must be at least ${CARGO_UNPACK_MIN_DISTANCE_FROM_BASE_METERS} meters away.`
+            )
+            // go no further
+            return
+          }
         }
 
         // determine a point in front of the unit to unpack cargo at
@@ -380,6 +383,25 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
         )
       }
     }, randomBetween(CARGO_UNPACK_DELAY_MS_MIN, CARGO_UNPACK_DELAY_MS_MAX))
+  }
+  if (CommandType.DestroyInternalCargo === type) {
+    const units = await getUnits(group.name)
+    const unit = await findUnit(units[0].name) // assume cargo is carried by first unit in group.
+
+    if (!unit) {
+      throw new Error('missing unit')
+    }
+
+    const cargo = await findUnitCargo(unit)
+
+    if (!cargo) {
+      await outGroupText(group.id, `You have no internal cargo to destroy`)
+      return
+    }
+
+    await unloadCargo(unit, cargo)
+
+    await outGroupText(group.id, `Your internal cargo has beeen destroyed`)
   }
 }
 

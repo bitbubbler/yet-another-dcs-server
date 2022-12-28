@@ -71,6 +71,9 @@ export enum UnitTypeName {
   AH64D = 'AH-64D_BLK_II',
   MI24 = 'Mi-24P',
   MI8 = 'Mi-8MT',
+  UH60 = 'UH-60L',
+  KA50 = 'Ka-50',
+  KA503 = 'Ka-50_3',
   // utility
   M818 = 'M 818',
   M978 = 'M978 HEMTT Tanker',
@@ -111,7 +114,7 @@ export async function spawnGroundUnitsOnCircle(
   country: Country,
   focus: PositionLL,
   radius: number,
-  units: Pick<Unit, 'typeName'>[]
+  units: Pick<Unit, 'typeName' | 'heading'>[]
 ) {
   const circleUnits = units.map(unit => ({
     ...unit,
@@ -124,8 +127,6 @@ export async function spawnGroundUnitsOnCircle(
     circleUnits.map(async unitToSpawn => {
       const unit = await createUnit({
         country,
-        // TODO: choose the heading to spawn the unit at
-        heading: 0,
         isPlayerSlot: false,
         ...unitToSpawn,
       })
@@ -139,7 +140,7 @@ export async function spawnGroundUnitsInCircle(
   country: Country,
   focus: PositionLL,
   radius: number,
-  units: Pick<DBUnit, 'typeName'>[]
+  units: Pick<Unit, 'typeName' | 'heading'>[]
 ) {
   return Promise.all(
     units.map(unit => spawnGroundUnitInCircle(country, focus, radius, unit))
@@ -150,7 +151,7 @@ export async function spawnGroundUnitInCircle(
   country: Country,
   focus: PositionLL,
   radius: number,
-  unitToSpawn: Pick<DBUnit, 'typeName'>
+  unitToSpawn: Pick<Unit, 'typeName' | 'heading'>
 ) {
   const position: PositionLL = {
     ...randomPositionInCircle(focus, radius),
@@ -159,12 +160,12 @@ export async function spawnGroundUnitInCircle(
     alt: 0,
   }
 
-  const { typeName } = unitToSpawn
+  const { heading, typeName } = unitToSpawn
 
   const unit = await createUnit({
     country,
     // TODO: choose a heading to spawn the unit at
-    heading: 0,
+    heading,
     isPlayerSlot: false,
     position,
     typeName,

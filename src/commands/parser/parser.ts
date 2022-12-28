@@ -49,10 +49,11 @@ function processCommand(lexer: Lexer): Command {
   const type = matchCommand(typeToken.value)
 
   if (CommandType.SpawnGroundUnit === type) {
-    type Units = { fuzzyUnitName: string; count?: number }[]
+    type Units = { fuzzyUnitName: string; count?: number; heading: number }[]
 
     const units: Units = []
     let coalition: Coalition | undefined
+    let heading = 0
 
     // process all remaining tokens
     const parseParts = (): void => {
@@ -62,7 +63,7 @@ function processCommand(lexer: Lexer): Command {
         return
       }
 
-      // if string or word, assume it's a unitName
+      // if string or word, check for keywords. otherwise assume unitName
       if (
         TokenKind.String === nextToken.kind ||
         TokenKind.Word === nextToken.kind
@@ -79,9 +80,20 @@ function processCommand(lexer: Lexer): Command {
           return parseParts()
         }
 
+        if ('heading' === lowerValue) {
+          const headingValueToken = lexer.nextToken()
+
+          if (TokenKind.Number !== headingValueToken.kind) {
+            throw new Error('expected number token following heading keyword')
+          }
+
+          heading = headingValueToken.value
+          return parseParts()
+        }
+
         const fuzzyUnitName = nextToken.value
 
-        units.push({ fuzzyUnitName })
+        units.push({ fuzzyUnitName, heading })
 
         return parseParts()
       }
@@ -97,7 +109,7 @@ function processCommand(lexer: Lexer): Command {
         ) {
           const fuzzyUnitName = unitNameToken.value
 
-          units.push({ fuzzyUnitName, count })
+          units.push({ fuzzyUnitName, count, heading })
 
           return parseParts()
         }
@@ -110,8 +122,8 @@ function processCommand(lexer: Lexer): Command {
 
     return {
       type: CommandType.SpawnGroundUnit,
-      units,
       coalition,
+      units,
     }
   }
 
@@ -287,6 +299,7 @@ function processCommand(lexer: Lexer): Command {
   if (CommandType.SpawnBase === type) {
     let baseType: BaseType = BaseType.UnderConstruction
     let coalition: Coalition | undefined
+    let heading = 0
 
     const parseParts = () => {
       const nextToken = lexer.nextToken()
@@ -322,6 +335,16 @@ function processCommand(lexer: Lexer): Command {
         if ('mob' === lowerValue) {
           baseType = BaseType.MOB
         }
+
+        if (lowerValue === 'heading') {
+          const radiusValueToken = lexer.nextToken()
+
+          if (TokenKind.Number !== radiusValueToken.kind) {
+            throw new Error('expected number token following heading keyword')
+          }
+
+          heading = radiusValueToken.value
+        }
       }
 
       parseParts()
@@ -333,7 +356,7 @@ function processCommand(lexer: Lexer): Command {
       type: CommandType.SpawnBase,
       baseType,
       coalition,
-      heading: 0, // TODO handle this in the command
+      heading,
     }
   }
 

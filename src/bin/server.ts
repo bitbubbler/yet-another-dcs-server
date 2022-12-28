@@ -12,7 +12,7 @@ import { pingpong } from '../pingpong'
 import { startUnitEvents } from '../unitEvents'
 
 // bigger things
-import { spawnUnitsMain, spawnUnitsMenu } from '../spawnUnits'
+import { spawnUnitsMain } from '../spawnUnits'
 import { persistenceMain } from '../persistence'
 import { restartMissionMain, restartMissionMenu } from '../restartMission'
 import { visualMarkersMain } from '../visualMarkers'
@@ -24,7 +24,7 @@ import { createUnit } from '../unit'
 
 // NOTE: The order of menus in this array determines their order on the client
 const missionMenus: MissionMenu[] = [spawnersMenu, restartMissionMenu]
-const groupMenus: GroupMenu[] = [internalCargoMenu, spawnUnitsMenu]
+const groupMenus: GroupMenu[] = [internalCargoMenu]
 
 async function main(): Promise<void> {
   // things here only happen once
