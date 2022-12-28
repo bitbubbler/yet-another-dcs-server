@@ -53,10 +53,10 @@ function processCommand(lexer: Lexer): Command {
 
     const units: Units = []
     let coalition: Coalition | undefined
+    let heading = 0
 
     // process all remaining tokens
     const parseParts = (): void => {
-      let heading = 0
       const nextToken = lexer.nextToken()
 
       if (TokenKind.EOF === nextToken.kind) {
