@@ -24,13 +24,14 @@ import {
 } from '../db'
 import { findUnitCargo } from '../db/unitCargos'
 import {
+  BirthEvent,
   Events,
   EventType,
   GroupCommandEvent,
   MarkChangeEvent,
 } from '../events'
 import { LatLon } from '../geo'
-import { getUnits } from '../group'
+import { getUnits, groupFromGroupName } from '../group'
 import { outCoalitionText, outGroupText, removeMapMark } from '../trigger'
 import { createUnit, getPositionVelocity, spawnGroundUnit } from '../unit'
 import { cargoDefinitionFrom } from './definitions'
@@ -62,16 +63,49 @@ export async function logisticsMain(): Promise<() => Promise<void>> {
 
   const subscription = Events.subscribe(async event => {
     if (EventType.GroupCommand === event.type) {
-      return handleGroupCommand(event as GroupCommandEvent)
+      return handleGroupCommand(event)
     }
     if (EventType.MarkChange === event.type) {
-      return handleMarkChangeEvent(event as MarkChangeEvent)
+      return handleMarkChange(event)
+    }
+    if (EventType.Birth === event.type) {
+      return handleBirth(event)
     }
   })
 
   return async () => {
     subscription.unsubscribe()
   }
+}
+
+async function handleBirth(event: BirthEvent): Promise<void> {
+  if (!event.initiator.unit) {
+    // no-op
+    return
+  }
+
+  const group = await groupFromGroupName(event.initiator.unit.groupName)
+
+  const units = await getUnits(event.initiator.unit.name)
+  const unit = await findUnit(units[0].name) // assume cargo is carried by first unit in group.
+
+  if (!unit) {
+    // if there is no unit, we have nothing to do
+    return
+  }
+
+  const cargo = await findUnitCargo(unit)
+
+  if (!cargo) {
+    // if there is no cargo, we have nothing to do
+    return
+  }
+
+  // unload the units cargo at birth
+  await unloadCargo(unit, cargo)
+
+  // let the user know their internal cargo is reset (it's safe to load new cargo)
+  await outGroupText(group.id, `Your internal cargo has been reset`)
 }
 
 async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
@@ -384,6 +418,23 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
       }
     }, randomBetween(CARGO_UNPACK_DELAY_MS_MIN, CARGO_UNPACK_DELAY_MS_MAX))
   }
+  if (CommandType.CheckInternalCargo === type) {
+    const units = await getUnits(group.name)
+    const unit = await findUnit(units[0].name) // assume cargo is carried by first unit in group.
+
+    if (!unit) {
+      throw new Error('missing unit')
+    }
+
+    const cargo = await findUnitCargo(unit)
+
+    if (!cargo) {
+      await outGroupText(group.id, `You have no internal cargo onboard.`)
+      return
+    }
+
+    await outGroupText(group.id, `You have a ${cargo.displayName} onboard.`)
+  }
   if (CommandType.DestroyInternalCargo === type) {
     const units = await getUnits(group.name)
     const unit = await findUnit(units[0].name) // assume cargo is carried by first unit in group.
@@ -405,7 +456,7 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
   }
 }
 
-async function handleMarkChangeEvent(event: MarkChangeEvent) {
+async function handleMarkChange(event: MarkChangeEvent) {
   const { id, command } = event
 
   // attempt to handle command(s) from markers

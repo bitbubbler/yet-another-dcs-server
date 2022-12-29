@@ -15,7 +15,7 @@ type Color = typeof colors[number]
 export async function visualMarkersMain(): Promise<() => Promise<void>> {
   const subscription = Events.subscribe(async event => {
     if (EventType.MarkChange === event.type) {
-      return handleMarkChangeEvent(event as MarkChangeEvent)
+      return handleMarkChangeEvent(event)
     }
   })
 

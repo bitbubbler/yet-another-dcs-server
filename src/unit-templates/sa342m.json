@@ -1,0 +1,55 @@
+{
+  "alt": 500,
+  "alt_type": "BARO",
+  "livery_id": "combat sable",
+  "skill": "Client",
+  "speed": 44.444444444444,
+  "AddPropAircraft": {
+    "NS430allow": true
+  },
+  "type": "SA342M",
+  "Radio": {
+    "1": {
+      "modulations": {
+        "6": 0,
+        "2": 0,
+        "8": 0,
+        "3": 0,
+        "1": 0,
+        "4": 0,
+        "5": 0,
+        "7": 0
+      },
+      "channels": {
+        "6": 41,
+        "2": 31,
+        "8": 50,
+        "3": 32,
+        "1": 30,
+        "4": 33,
+        "5": 40,
+        "7": 42
+      }
+    }
+  },
+  "unitId": 65,
+  "psi": -3.9269908169872,
+  "y": 631164.31003314,
+  "x": -327494.08375127,
+  "name": "Rotary-7-1",
+  "payload": {
+    "pylons": {},
+    "fuel": 416.33,
+    "flare": 32,
+    "chaff": 0,
+    "gun": 100
+  },
+  "heading": 3.9269908169872,
+  "callsign": {
+    "1": 7,
+    "2": 1,
+    "3": 1,
+    "name": "Chevy11"
+  },
+  "onboard_num": "016"
+}

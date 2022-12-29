@@ -23,7 +23,8 @@ async function main(): Promise<void> {
 
   const template = templateFrom(staticObjects, units, slots)
 
-  console.log(template)
+  // TODO: fix serialization
+  console.log(serialize(template))
 }
 
 interface UnitPartial extends Pick<Unit, 'typeName' | 'heading'> {
@@ -35,6 +36,38 @@ interface StaticObject {
   typeName: string
   position: Pick<PositionLL, 'lat' | 'lon'>
   heading: number // in radians
+}
+
+type Json = string | number | boolean | Json[] | { [key: string]: Json }
+
+function serialize(template: Template): Json {
+  const serialized: Json = {
+    origin: template.origin,
+    slots: [],
+    staticObjects: [],
+    units: [],
+  }
+
+  for (const staticObject of template.staticObjects) {
+    ;(serialized.staticObjects as Array<Json>).push({
+      ...staticObject,
+      typeName: staticObjectTypeNameStringFrom(staticObject.typeName),
+    })
+  }
+  for (const slots of template.slots) {
+    ;(serialized.units as Array<Json>).push({
+      ...slots,
+      typeName: unitTypeNameStringFrom(slots.typeName),
+    })
+  }
+  for (const unit of template.units) {
+    ;(serialized.units as Array<Json>).push({
+      ...unit,
+      typeName: unitTypeNameStringFrom(unit.typeName),
+    })
+  }
+
+  return serialized
 }
 
 function templateFrom(
@@ -82,7 +115,7 @@ function templateFrom(
       }
 
       return {
-        typeName: typeNameFrom(typeName),
+        typeName: typeName as StaticObjectTypeName,
         bearing,
         distance,
         heading,
@@ -117,13 +150,133 @@ function templateFrom(
   return template
 }
 
-function typeNameFrom(maybeTypeName: string): StaticObjectTypeName {
+function UnitTypeNameFrom(maybeTypeName: string): UnitTypeName {
+  if (maybeTypeName === UnitTypeName.AH64D) {
+    return UnitTypeName.AH64D
+  }
+  if (maybeTypeName === UnitTypeName.UH1H) {
+    return UnitTypeName.UH1H
+  }
+  if (maybeTypeName === UnitTypeName.UH60) {
+    return UnitTypeName.UH60
+  }
+  if (maybeTypeName === UnitTypeName.MI24) {
+    return UnitTypeName.MI24
+  }
+  if (maybeTypeName === UnitTypeName.MI8) {
+    return UnitTypeName.MI8
+  }
+
+  debugger
+
+  throw new Error('unknown unit typeName')
+}
+function unitTypeNameStringFrom(maybeTypeName: string): string {
+  if (maybeTypeName === UnitTypeName.AH64D) {
+    return `UnitTypeName.AH64D`
+  }
+  if (maybeTypeName === UnitTypeName.UH1H) {
+    return `UnitTypeName.UH1H`
+  }
+  if (maybeTypeName === UnitTypeName.UH60) {
+    return `UnitTypeName.UH60`
+  }
+  if (maybeTypeName === UnitTypeName.MI24) {
+    return `UnitTypeName.MI24`
+  }
+  if (maybeTypeName === UnitTypeName.MI8) {
+    return `UnitTypeName.MI8`
+  }
+  if (maybeTypeName === UnitTypeName.M818) {
+    return `UnitTypeName.M818`
+  }
+  if (maybeTypeName === UnitTypeName.M978) {
+    return `UnitTypeName.M978`
+  }
+  if (maybeTypeName === UnitTypeName.KA50) {
+    return `UnitTypeName.KA50`
+  }
+  if (maybeTypeName === UnitTypeName.KA503) {
+    return `UnitTypeName.KA503`
+  }
+  if (maybeTypeName === UnitTypeName.SA342L) {
+    return `UnitTypeName.SA342L`
+  }
+  if (maybeTypeName === UnitTypeName.SA342M) {
+    return `UnitTypeName.SA342M`
+  }
+  if (maybeTypeName === UnitTypeName.SA342Minigun) {
+    return `UnitTypeName.SA342Minigun`
+  }
+  if (maybeTypeName === UnitTypeName.SA342Mistral) {
+    return `UnitTypeName.SA342Mistral`
+  }
+
+  debugger
+
+  throw new Error('unknown unit typeName')
+}
+
+function staticObjectTypeNameStringFrom(maybeTypeName: string): string {
   if (maybeTypeName === StaticObjectTypeName.FarpTent) {
-    return StaticObjectTypeName.FarpTent
+    return `StaticObjectTypeName.FarpTent`
   }
   if (maybeTypeName === StaticObjectTypeName.TowerCrane) {
-    return StaticObjectTypeName.TowerCrane
+    return `StaticObjectTypeName.TowerCrane`
   }
+  if (maybeTypeName === StaticObjectTypeName.CommsTowerM) {
+    return `StaticObjectTypeName.CommsTowerM`
+  }
+  if (maybeTypeName === StaticObjectTypeName.M1126StrykerICV) {
+    return `StaticObjectTypeName.M1126StrykerICV`
+  }
+  if (maybeTypeName === StaticObjectTypeName.Hummer) {
+    return `StaticObjectTypeName.Hummer`
+  }
+  if (maybeTypeName === StaticObjectTypeName.PatriotAMG) {
+    return `StaticObjectTypeName.PatriotAMG`
+  }
+  if (maybeTypeName === StaticObjectTypeName.ContainerCargo) {
+    return `StaticObjectTypeName.ContainerCargo`
+  }
+  if (maybeTypeName === StaticObjectTypeName.GeneratorF) {
+    return `StaticObjectTypeName.GeneratorF`
+  }
+  if (maybeTypeName === StaticObjectTypeName.FarpAmmoDumpCoating) {
+    return `StaticObjectTypeName.FarpAmmoDumpCoating`
+  }
+  if (maybeTypeName === StaticObjectTypeName.Windsock) {
+    return `StaticObjectTypeName.Windsock`
+  }
+  if (maybeTypeName === StaticObjectTypeName.FarpFuelDepot) {
+    return `StaticObjectTypeName.FarpFuelDepot`
+  }
+  if (maybeTypeName === StaticObjectTypeName.ShelterB) {
+    return `StaticObjectTypeName.ShelterB`
+  }
+  if (maybeTypeName === StaticObjectTypeName.MLRSFDDM) {
+    return `StaticObjectTypeName.MLRSFDDM`
+  }
+  if (maybeTypeName === StaticObjectTypeName.House2Arm) {
+    return `StaticObjectTypeName.House2Arm`
+  }
+  if (maybeTypeName === StaticObjectTypeName.FBarCargo) {
+    return `StaticObjectTypeName.FBarCargo`
+  }
+  if (maybeTypeName === StaticObjectTypeName.SoldierM4) {
+    return `StaticObjectTypeName.SoldierM4`
+  }
+  if (maybeTypeName === StaticObjectTypeName.AmmoCargo) {
+    return `StaticObjectTypeName.AmmoCargo`
+  }
+  if (maybeTypeName === StaticObjectTypeName.UH1HCargo) {
+    return `StaticObjectTypeName.UH1HCargo`
+  }
+  if (maybeTypeName === StaticObjectTypeName.HangerA) {
+    return `StaticObjectTypeName.HangerA`
+  }
+
+  debugger
 
   throw new Error('unknown typeName')
 }
@@ -134,16 +287,18 @@ async function getSlots(): Promise<UnitPartial[]> {
 
   for (const country of mission.mission.coalition.blue.country) {
     // helicopters
-    for (const group of country.helicopter.group) {
-      for (const unit of group.units) {
-        if (unit.skill.toLowerCase() === 'client') {
-          const position = await positionLatLonFrom({ x: unit.x, y: unit.y })
-          // this is a slot
-          slots.push({
-            heading: unit.heading,
-            position,
-            typeName: unit.type,
-          })
+    if (country.helicopter) {
+      for (const group of country.helicopter.group) {
+        for (const unit of group.units) {
+          if (unit.skill.toLowerCase() === 'client') {
+            const position = await positionLatLonFrom({ x: unit.x, y: unit.y })
+            // this is a slot
+            slots.push({
+              heading: unit.heading,
+              position,
+              typeName: unit.type,
+            })
+          }
         }
       }
     }

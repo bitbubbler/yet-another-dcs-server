@@ -44,15 +44,15 @@ let spawnersVisible = true // show/hide spawners on f10
 export async function autoRespawnMain(): Promise<() => Promise<void>> {
   const eventsSubscriptions = Events.subscribe(async event => {
     if (EventType.MarkChange === event.type) {
-      return handleMarkChangeEvent(event as MarkChangeEvent)
+      return handleMarkChangeEvent(event)
     }
     if (EventType.MissionCommand === event.type) {
-      return handleMissionCommand(event as MissionCommandEvent)
+      return handleMissionCommand(event)
     }
   })
   const unitEventsSubscriptions = UnitEvents.subscribe(async unitEvent => {
     if (UnitEventType.Gone === unitEvent.type) {
-      return handleUnitGoneEvent(unitEvent as UnitGoneEvent)
+      return handleUnitGoneEvent(unitEvent)
     }
   })
 

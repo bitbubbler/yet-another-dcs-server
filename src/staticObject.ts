@@ -3,13 +3,29 @@ import { PositionLL } from './common'
 import { services } from './services'
 import { Country } from '../generated/dcs/common/v0/Country'
 import { deleteStaticObject, insertStaticObject } from './db/staticObjects'
-import { deleteBaseStaticObject } from './db'
 
 const { custom } = services
 
 export enum StaticObjectTypeName {
   TowerCrane = 'Tower Crane',
   FarpTent = 'FARP Tent',
+  CommsTowerM = 'Comms tower M',
+  M1126StrykerICV = 'M1126 Stryker ICV',
+  Hummer = 'Hummer',
+  PatriotAMG = 'Patriot AMG',
+  ContainerCargo = 'container_cargo',
+  GeneratorF = 'GeneratorF',
+  FarpAmmoDumpCoating = 'FARP Ammo Dump Coating',
+  Windsock = 'Windsock',
+  FarpFuelDepot = 'FARP Fuel Depot',
+  ShelterB = 'Shelter B',
+  MLRSFDDM = 'MLRS FDDM',
+  House2Arm = 'house2arm',
+  FBarCargo = 'f_bar_cargo',
+  SoldierM4 = 'Soldier M4',
+  AmmoCargo = 'ammo_cargo',
+  UH1HCargo = 'uh1h_cargo',
+  HangerA = 'Hangar A',
 }
 
 export type NewStaticObject = Pick<

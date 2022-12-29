@@ -39,9 +39,12 @@ export interface MarkEvent {
   text?: string
 }
 
-export interface MarkAddEvent extends EventShape, MarkEvent {}
+export interface MarkAddEvent extends EventShape, MarkEvent {
+  type: EventType.MarkAdd
+}
 
 export interface MarkChangeEvent extends EventShape, MarkEvent {
+  type: EventType.MarkChange
   command?: Command
 }
 
