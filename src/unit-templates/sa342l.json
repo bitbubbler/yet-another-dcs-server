@@ -1,0 +1,57 @@
+{
+  "alt": 500,
+  "alt_type": "BARO",
+  "livery_id": "combat sable",
+  "skill": "Client",
+  "speed": 44.444444444444,
+  "AddPropAircraft": {
+    "SA342RemoveDoors": false,
+    "NS430allow": true
+  },
+  "type": "SA342L",
+  "Radio": {
+    "1": {
+      "modulations": {
+        "6": 0,
+        "2": 0,
+        "8": 0,
+        "3": 0,
+        "1": 0,
+        "4": 0,
+        "5": 0,
+        "7": 0
+      },
+      "channels": {
+        "6": 41,
+        "2": 31,
+        "8": 50,
+        "3": 32,
+        "1": 30,
+        "4": 33,
+        "5": 40,
+        "7": 42
+      }
+    }
+  },
+  "unitId": 64,
+  "psi": -5.4977871437821,
+  "y": 631164.34037095,
+  "x": -327469.70638187,
+  "name": "Rotary-6-1",
+  "payload": {
+    "pylons": {},
+    "fuel": 416.33,
+    "flare": 32,
+    "ammo_type": 1,
+    "chaff": 0,
+    "gun": 100
+  },
+  "heading": 5.4977871437821,
+  "callsign": {
+    "1": 6,
+    "2": 1,
+    "3": 1,
+    "name": "Ford11"
+  },
+  "onboard_num": "015"
+}

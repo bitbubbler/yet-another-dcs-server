@@ -1,14 +1,15 @@
 - [Map marker commands](#map-marker-commands)
-  * [!spawn](#spawn)
-  * [!destroy](#destroy)
-  * [!spawngroup](#spawngroup)
-  * [!smoke](#smoke)
-  * [!flare](#flare)
-  * [!illumination](#illumination)
-  * [!spawner](#spawmer)
+  - [!spawn](#spawn)
+  - [!destroy](#destroy)
+  - [!delete](#destroy)
+  - [!spawnbase](#spawnbase)
+  - [!spawngroup](#spawngroup)
+  - [!smoke](#smoke)
+  - [!flare](#flare)
+  - [!illumination](#illumination)
+  - [!spawner](#spawmer)
 - [Chat commands](#chat-commands)
-  * [!defgroup](#defgroup)
-
+  - [!defgroup](#defgroup)
 
 ## Map marker commands
 
@@ -21,11 +22,13 @@ Spawn one or more units of one or more types on the map marker
 
 - `unitName` fuzzy match string for a unit name, can be partial names
 - `coalition` 'red' or 'blue'
+- `heading` a numbered heading
+- `count` a numbered count of units to spawn
 
 **syntax**
 
 ```
-!spawn <unitName:required> <coalition:optional>
+!spawn [<coalition:optional> heading <heading: optional> <unitName:required>]...
 ```
 
 **examples**
@@ -70,7 +73,9 @@ You can also specify either unit or spawner type to destroy, and it will only de
 ```
 !destroy <toDestroy:optional> <radius:optional> <coalition:optional>
 ```
+
 optional with rad or radius as keyword for the specified radius:
+
 ```
 !destroy <toDestroy:optional> radius <radius:optional> <coalition:optional>
 ```
@@ -78,10 +83,12 @@ optional with rad or radius as keyword for the specified radius:
 available types to destroy:
 
 ```
-unit
+base
 spawner
+unit
 ```
-default: both
+
+default: unit & spawner
 
 available coalitions:
 
@@ -90,6 +97,7 @@ blue
 red
 all
 ```
+
 default: player coalition
 
 **examples**
@@ -112,6 +120,12 @@ Destroy spawner closest the map marker:
 !destroy spawner
 ```
 
+Destroy base closest the map marker:
+
+```
+!destroy base
+```
+
 Destroy everything from your own coalition in 1000 meter radius:
 
 ```
@@ -128,6 +142,55 @@ Destroy everything of blue and red coalition using the optional radius keyword f
 
 ```
 !destroy all radius 1000
+```
+
+### spawnbase
+
+Spawn a base. The base must be valid (meet distance requirements)
+
+**syntax**
+
+```
+!spawnbase <coalition:optional> <baseType:required>
+```
+
+available base types:
+
+```
+UC
+COP
+FOB
+MOB
+```
+
+default: UC (under construction)
+
+available coalitions:
+
+```
+blue
+red
+all
+```
+
+**examples**
+
+Spawn a `blue` under construction (the default) base
+
+```
+!spawnbase blue
+```
+
+Spawn a `blue` `FOB` base
+
+```
+!spawnbase blue fob
+```
+
+Spawn a `COP` base for your coalition
+
+```
+!spawnbase fob
 ```
 
 ### spawngroup

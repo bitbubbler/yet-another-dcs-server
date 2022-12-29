@@ -74,6 +74,10 @@ export enum UnitTypeName {
   UH60 = 'UH-60L',
   KA50 = 'Ka-50',
   KA503 = 'Ka-50_3',
+  SA342L = 'SA342L',
+  SA342M = 'SA342M',
+  SA342Minigun = 'SA342Minigun',
+  SA342Mistral = 'SA342Mistral',
   // utility
   M818 = 'M 818',
   M978 = 'M978 HEMTT Tanker',
@@ -140,7 +144,7 @@ export async function spawnGroundUnitsInCircle(
   country: Country,
   focus: PositionLL,
   radius: number,
-  units: Pick<Unit, 'typeName' | 'heading'>[]
+  units: Unit[]
 ) {
   return Promise.all(
     units.map(unit => spawnGroundUnitInCircle(country, focus, radius, unit))
@@ -151,7 +155,7 @@ export async function spawnGroundUnitInCircle(
   country: Country,
   focus: PositionLL,
   radius: number,
-  unitToSpawn: Pick<Unit, 'typeName' | 'heading'>
+  unitToSpawn: Unit
 ) {
   const position: PositionLL = {
     ...randomPositionInCircle(focus, radius),
@@ -214,6 +218,7 @@ export async function spawnGroundUnit(unit: Unit) {
       'player slots can not be spawned as ground units. it breaks the game'
     )
   }
+
   return new Promise<{ groupName: string }>(async (resolve, reject) => {
     const { country, heading, name, position, typeName } = unit
     const groundTemplate: GroundGroupTemplate = {

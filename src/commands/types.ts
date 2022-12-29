@@ -7,6 +7,7 @@ export type Argument = string | number
 
 export enum CommandType {
   // Keep these in alphabetical order, please
+  CheckInternalCargo,
   CreateSpawner,
   DefineSpawnGroup,
   Destroy,
@@ -44,6 +45,11 @@ export interface CommandShape {
  */
 
 /** */ // empty to allow a block above
+
+export interface CheckInternalCargoCommand extends Omit<CommandShape, 'args'> {
+  type: CommandType.CheckInternalCargo
+}
+
 export interface CreateSpawnerCommand extends Omit<CommandShape, 'args'> {
   type: CommandType.CreateSpawner
   coalition: Coalition | undefined
@@ -139,6 +145,7 @@ export interface UnknownCommand extends Omit<CommandShape, 'args'> {
 
 export type Command =
   | CreateSpawnerCommand
+  | CheckInternalCargoCommand
   | DefineSpawnGroupCommand
   | DestroyCommand
   | DestroyInternalCargoCommand

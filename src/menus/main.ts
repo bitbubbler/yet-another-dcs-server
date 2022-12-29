@@ -48,7 +48,7 @@ export async function menusMain(
   // listen for birth events to setup group menus
   const subscription = Events.subscribe(async event => {
     if (EventType.Birth === event.type) {
-      return handleBirth(event as BirthEvent)
+      return handleBirth(event)
     }
   })
 

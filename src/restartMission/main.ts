@@ -19,7 +19,7 @@ import { HelicopterUnit, Point } from './types'
 export async function restartMissionMain(): Promise<() => Promise<void>> {
   const subscription = Events.subscribe(async event => {
     if (EventType.MissionCommand === event.type) {
-      return handleMissionCommand(event as MissionCommandEvent)
+      return handleMissionCommand(event)
     }
   })
 
@@ -224,7 +224,7 @@ async function patchMission(mission: Mission): Promise<Mission> {
       }
 
       // update mission file with the new unit we generated from the slot
-      mission.mission.coalition.blue.country[0].helicopter.group.push({
+      mission.mission.coalition.blue.country[0].helicopter!.group.push({
         groupId: groupId,
         hidden: false,
         name,

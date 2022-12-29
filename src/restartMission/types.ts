@@ -19,7 +19,7 @@ export interface Coalition {
 export interface CoalitionCountry {
   id: number
   name: string
-  helicopter: {
+  helicopter?: {
     group: HelicopterGroup[]
   }
 }

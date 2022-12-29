@@ -262,6 +262,15 @@ export const internalCargoMenu = groupMenu({
 
     await addGroupCommand({
       groupName,
+      name: 'Check Internal Cargo',
+      path: rootPath,
+      command: {
+        type: CommandType.CheckInternalCargo,
+      },
+    })
+
+    await addGroupCommand({
+      groupName,
       name: 'Destroy Internal Cargo',
       path: rootPath,
       command: {
