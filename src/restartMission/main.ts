@@ -144,6 +144,11 @@ function fileTimestamp(): string {
 }
 
 async function patchMission(mission: Mission): Promise<Mission> {
+  // first, we set some basics
+
+  // this allows pilots (of helis/planes) to control ground units from f10
+  mission.groundControl.isPilotControlVehicles = true
+
   // we start our group numbering here to try and ensure uniqueness
   let groupIdCounter = 10000
 

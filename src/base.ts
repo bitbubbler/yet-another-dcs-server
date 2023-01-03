@@ -1,5 +1,5 @@
 import { LatLon } from './geo'
-import { Coalition } from '../generated/dcs/common/v0/Coalition'
+import { Coalition } from './generated/dcs/common/v0/Coalition'
 import { baseNames } from './baseNames'
 import { PositionLL, randomBetween } from './common'
 import { countryFrom } from './country'
@@ -95,7 +95,7 @@ export interface Base {
 export async function createBase(newBase: NewBase): Promise<Base> {
   const name = await uniqueBaseName()
 
-  const base = insertBase({
+  const base = await insertBase({
     ...newBase,
     name,
   })
@@ -395,6 +395,7 @@ async function createBaseUnits(base: Base): Promise<Unit[]> {
     const unit = await createUnit({
       country: countryFrom(base.coalition),
       heading: heading,
+      hidden: true,
       position: { lat: lat, lon: lon, alt: 0 },
       typeName: typeName,
       isPlayerSlot: false,
@@ -420,6 +421,27 @@ export async function spawnBase(base: Base): Promise<void> {
     position: position,
     type: 'Invisible FARP',
   })
+
+  // await mapTextToAll({
+  //   coalition: event.coalition,
+  //   position,
+  //   fillColor: {
+  //     red: 1,
+  //     blue: 0,
+  //     green: 0,
+  //     alpha: 1,
+  //   },
+  //   lineColor: {
+  //     red: 1,
+  //     blue: 1,
+  //     green: 1,
+  //     alpha: 1,
+  //   },
+  //   fontSize: 20,
+  //   readOnly: true,
+  //   text: `Attempt at multiline \n text`,
+  //   uniqueId: 203040,
+  // })
 
   await spawnBaseUnitsAndObjects(base)
 }

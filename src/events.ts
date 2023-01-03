@@ -1,10 +1,10 @@
 import { Subject } from 'rxjs'
 
-import { Coalition } from '../generated/dcs/common/v0/Coalition'
-import { StreamEventsResponse__Output } from '../generated/dcs/mission/v0/StreamEventsResponse'
-import { Struct } from '../generated/google/protobuf/Struct'
-import { Value } from '../generated/google/protobuf/Value'
-import { Airbase__Output } from '../generated/dcs/common/v0/Airbase'
+import { Coalition } from './generated/dcs/common/v0/Coalition'
+import { StreamEventsResponse__Output } from './generated/dcs/mission/v0/StreamEventsResponse'
+import { Struct } from './generated/google/protobuf/Struct'
+import { Value } from './generated/google/protobuf/Value'
+import { Airbase__Output } from './generated/dcs/common/v0/Airbase'
 
 import { services } from './services'
 import { Command } from './commands/types'

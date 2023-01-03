@@ -2,12 +2,6 @@ import { parse } from '../parser'
 import { reader } from '../reader'
 import { CommandType } from '../types'
 
-jest.mock('../../cli', () => ({
-  options: {
-    address: 'hi',
-  },
-}))
-
 describe('commands/parser', () => {
   it('should parse the basic command format without args', () => {
     expect(parse(reader('!unknown'))).toEqual({ type: CommandType.Unknown })

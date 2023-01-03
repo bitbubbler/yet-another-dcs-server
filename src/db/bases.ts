@@ -1,5 +1,5 @@
 import { equal } from 'assert'
-import { Coalition } from '../../generated/dcs/common/v0/Coalition'
+import { Coalition } from '../generated/dcs/common/v0/Coalition'
 import { Base } from '../base'
 import { metersToDegree, PositionLL } from '../common'
 import { LatLon } from '../geo'

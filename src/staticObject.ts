@@ -1,7 +1,7 @@
 import { v4 as uuidV4 } from 'uuid'
 import { PositionLL } from './common'
 import { services } from './services'
-import { Country } from '../generated/dcs/common/v0/Country'
+import { Country } from './generated/dcs/common/v0/Country'
 import { deleteStaticObject, insertStaticObject } from './db/staticObjects'
 
 const { custom } = services
@@ -101,6 +101,7 @@ export async function spawnStaticObject(
     ["y"] = vec3.z,
     ["x"] = vec3.x,
     ["dead"] = false,
+    ["hidden"] = true,
   }
 
   return coalition.addStaticObject(${country - 1}, staticObj)

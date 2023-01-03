@@ -1,4 +1,4 @@
-import { Position } from '../../generated/dcs/common/v0/Position'
+import { Position } from '../generated/dcs/common/v0/Position'
 import {
   BirthEvent,
   Events,
@@ -149,6 +149,7 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
         const unit = await createUnit({
           country,
           heading: rad(heading),
+          hidden: false,
           isPlayerSlot: false,
           position,
           typeName,
@@ -161,12 +162,13 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
       if (units.length > 0) {
         if (unitsToSpawn.length > 1) {
           // multiple units
-          await spawnGroundUnitsInCircle(
+          await spawnGroundUnitsInCircle({
             country,
-            position,
-            100, // TODO: handle radius here
-            units
-          )
+            focus: position,
+            hidden: false,
+            radius: 100, // TODO: handle radius here
+            units,
+          })
         } else {
           // single unit
           await spawnGroundUnit(units[0])
@@ -369,6 +371,7 @@ async function handleMarkAddEvent(event: MarkAddEvent) {
       country,
       // TODO: choose a heading to spawn the unit at
       heading: 0,
+      hidden: false,
       isPlayerSlot: false,
       position,
       typeName,
@@ -408,6 +411,7 @@ async function handleBirth(event: BirthEvent) {
       await createUnit({
         country,
         heading: 0,
+        hidden: false,
         name,
         isPlayerSlot: true,
         position,
@@ -436,6 +440,7 @@ async function handleGroupCommand(event: GroupCommandEvent) {
       const unit = await createUnit({
         country: countryFrom(group.coalition),
         heading: 0,
+        hidden: false,
         isPlayerSlot: false,
         position: positionLLFrom(position),
         typeName,

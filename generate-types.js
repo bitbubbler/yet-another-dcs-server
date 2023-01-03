@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-const { rm, readdir } = require('fs/promises')
-const { resolve } = require('path')
+const { rm } = require('fs/promises')
+const { resolve, join } = require('path')
 const util = require('util')
 const exec = util.promisify(require('child_process').exec)
 
-const generatedDir = resolve('generated')
+const generatedDir = resolve(join('src', 'generated'))
 
 async function main() {
   // delete existing generated files

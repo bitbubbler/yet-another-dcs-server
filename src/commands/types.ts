@@ -1,4 +1,4 @@
-import { Coalition } from '../../generated/dcs/common/v0/Coalition'
+import { Coalition } from '../generated/dcs/common/v0/Coalition'
 import { BaseType } from '../base'
 import { CargoDefinitionID } from '../logistics/definitions'
 import { SpawnerType } from '../spawner'

@@ -20,17 +20,7 @@ export async function insertBaseUnit(
 export async function allBaseUnits(baseId: Base['baseId']): Promise<Unit[]> {
   const units = await knex('units')
     .innerJoin('positions', 'units.positionId', 'positions.positionId')
-    .select([
-      'unitId',
-      'name',
-      'country',
-      'lat',
-      'lon',
-      'alt',
-      'isPlayerSlot',
-      'typeName',
-      'heading',
-    ])
+    .select('*')
     .whereIn('unitId', knex('baseUnits').select('unitId').where({ baseId }))
 
   return units.map(unitFrom)

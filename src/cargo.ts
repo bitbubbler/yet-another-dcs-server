@@ -22,7 +22,7 @@ export enum CargoTypeName {
   UH1HCargo = 'uh1h_cargo',
 }
 
-export type NewCargoProperties =
+type NewCargoProperties =
   | 'displayName'
   | 'internal'
   | 'mass'

@@ -4,16 +4,29 @@ import { getPositionVelocity, Unit } from '../unit'
 import { metersToDegree, headingFrom } from '../common'
 import { equal } from 'assert'
 import { PositionLL } from '../common'
-import { Coalition } from '../../generated/dcs/common/v0/Coalition'
+import { Coalition } from '../generated/dcs/common/v0/Coalition'
 import { LatLon } from '../geo'
 
 export async function insertUnit(
   unit: Pick<
     Unit,
-    'country' | 'heading' | 'isPlayerSlot' | 'name' | 'position' | 'typeName'
+    | 'country'
+    | 'heading'
+    | 'hidden'
+    | 'isPlayerSlot'
+    | 'name'
+    | 'position'
+    | 'typeName'
   >
 ): Promise<Unit> {
-  const { country, heading, name, position: positionLL, typeName } = unit
+  const {
+    country,
+    heading,
+    hidden,
+    name,
+    position: positionLL,
+    typeName,
+  } = unit
 
   const { alt, lat, lon } = positionLL
 
@@ -46,6 +59,7 @@ export async function insertUnit(
     .insert({
       country,
       createdAt: timestamp,
+      hidden,
       isPlayerSlot,
       name,
       positionId,
@@ -66,6 +80,7 @@ export async function insertUnit(
     alt,
     country,
     heading,
+    hidden,
     isPlayerSlot,
     name,
     lat,
@@ -212,7 +227,7 @@ export async function nearbyUnits({
 }
 
 export function unitFrom(
-  dbUnit: Pick<DBUnit, 'name' | 'country' | 'typeName' | 'unitId'> &
+  dbUnit: Pick<DBUnit, 'country' | 'hidden' | 'name' | 'typeName' | 'unitId'> &
     Pick<DBPosition, 'lat' | 'lon' | 'alt' | 'heading'> & {
       isPlayerSlot: number | boolean
     }
@@ -221,6 +236,7 @@ export function unitFrom(
     alt,
     country,
     heading,
+    hidden,
     isPlayerSlot,
     lat,
     lon,
@@ -232,6 +248,7 @@ export function unitFrom(
   return {
     country,
     heading,
+    hidden,
     isPlayerSlot: Boolean(isPlayerSlot),
     name,
     position: {

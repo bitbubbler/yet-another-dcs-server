@@ -94,6 +94,7 @@ async function main(): Promise<void> {
           name,
           // initial heading and position for player units is 0(s)
           heading: 0,
+          hidden: false,
           position: {
             alt: 0,
             lat: 0,

@@ -5,10 +5,6 @@
     "@babel/preset-typescript": "^7.17.12",
     "@grpc/grpc-js": "^1.6.7",
     "@grpc/proto-loader": "^0.6.12",
-    "@rollup/plugin-commonjs": "^22.0.0",
-    "@rollup/plugin-json": "^4.1.0",
-    "@rollup/plugin-node-resolve": "^13.3.0",
-    "@rollup/plugin-typescript": "^8.3.2",
     "@types/adm-zip": "^0.5.0",
     "@types/geodesy": "^2.2.3",
     "@types/jest": "^27.5.1",
@@ -24,7 +20,6 @@
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-promise": "^6.0.0",
     "jest": "^28.1.0",
-    "rollup": "^2.75.6",
     "ts-node": "^10.8.0",
     "typescript": "^4.6.4"
   },
@@ -36,10 +31,13 @@
     "typecheck": "tsc --noEmit",
     "prettier": "npx prettier --check src/",
     "full-build": "npm run codegen && npm run build",
-    "build": "rm -rf build/ && rollup --config && cp -r src/proto/ build/ && cp -r migrations/ build/ && cp -r package*.json build/",
+    "build": "rm -rf build/ && tsc && cp -r src/proto/ build/ && cp -r migrations/ build/ && cp -r package*.json build/",
     "codegen": "node generate-types.js"
   },
   "dependencies": {
+    "@mikro-orm/core": "^5.6.3",
+    "@mikro-orm/reflection": "^5.6.3",
+    "@mikro-orm/sqlite": "^5.6.3",
     "adm-zip": "^0.5.9",
     "better-sqlite3": "^7.5.3",
     "commander": "^9.3.0",

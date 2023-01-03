@@ -1,12 +1,13 @@
 import { Knex, knex as knexActual } from 'knex'
-import { Coalition } from '../../generated/dcs/common/v0/Coalition'
+import { Coalition } from '../generated/dcs/common/v0/Coalition'
 import { SpawnerType } from '../spawner'
 import { CargoType, CargoTypeName } from '../cargo'
 import { BaseType } from '../base'
 import { StaticObjectTypeName } from '../staticObject'
 import { UnitTypeName } from '../unit'
+import { LineType } from '../generated/dcs/trigger/v0/LineType'
+import { MarkupType } from '../markup'
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 export const knex = knexActual({
   client: 'better-sqlite3',
   connection: {
@@ -14,6 +15,13 @@ export const knex = knexActual({
   },
   migrations: {
     tableName: 'migrations',
+  },
+  pool: {
+    afterCreate: function (connection: any, callback: any) {
+      connection.prepare('PRAGMA foreign_keys = ON').run()
+      connection.prepare('PRAGMA journal_mode=WAL').run()
+      callback(null, connection)
+    },
   },
   useNullAsDefault: true,
 })
@@ -100,6 +108,45 @@ type CargoInsert = Pick<
 export type CargoUpdate = Pick<Cargo, 'updatedAt'> &
   Partial<Omit<Cargo, 'createdAt'>>
 
+export interface Color {
+  colorId: number
+  red: number
+  green: number
+  blue: number
+  alpha: number
+}
+
+export type ColorInsert = Pick<Color, 'red' | 'green' | 'blue' | 'alpha'>
+
+export type ColorUpdate = Partial<Color>
+
+export interface Markup {
+  markupId: number
+  positionId: number
+  fillColorId: number
+  lineColorId: number
+  readonly: boolean
+  coalition: Coalition
+  type: MarkupType
+  lineType?: LineType
+  fontSize?: number
+  text?: string
+  radius?: number
+}
+
+export type MarkupInsert = Pick<
+  Markup,
+  | 'coalition'
+  | 'fillColorId'
+  | 'lineColorId'
+  | 'positionId'
+  | 'readonly'
+  | 'type'
+> &
+  Partial<Pick<Markup, 'lineType' | 'fontSize' | 'text' | 'radius'>>
+
+export type MarkupUpdate = Partial<Markup>
+
 export interface Position {
   positionId: number
   lat: number
@@ -116,8 +163,7 @@ export type PositionInsert = Pick<
   'lat' | 'lon' | 'alt' | 'heading' | 'createdAt' | 'updatedAt'
 >
 
-export type PositionUpdate = Pick<Position, 'updatedAt'> &
-  Partial<Omit<Position, 'positionId' | 'createdAt'>>
+export type PositionUpdate = Pick<Position, 'updatedAt'> & Partial<Position>
 
 export interface SpawnGroup {
   name: string
@@ -192,6 +238,7 @@ export interface Unit {
   createdAt: Date
   destroyedAt: Date | null
   goneAt: Date | null
+  hidden: boolean
   isPlayerSlot: number // sqlite stores booles as as an integer acting as a bit (0 or 1)
   name: string
   positionId: number
@@ -204,6 +251,7 @@ export type UnitInsert = Pick<
   Unit,
   | 'country'
   | 'createdAt'
+  | 'hidden'
   | 'isPlayerSlot'
   | 'name'
   | 'positionId'
@@ -235,6 +283,8 @@ declare module 'knex/types/tables' {
     >
     baseUnits: Knex.CompositeTableType<BaseUnit, BaseUnitInsert, BaseUnitUpdate>
     cargos: Knex.CompositeTableType<Cargo, CargoInsert, CargoUpdate>
+    colors: Knex.CompositeTableType<Color, ColorInsert, ColorUpdate>
+    markups: Knex.CompositeTableType<Markup, MarkupInsert, MarkupUpdate>
     positions: Knex.CompositeTableType<Position, PositionInsert, PositionUpdate>
     spawnerQueues: Knex.CompositeTableType<
       SpawnerQueue,

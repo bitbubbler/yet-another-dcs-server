@@ -1,6 +1,7 @@
 import { equal } from 'assert'
-import { Position } from '../generated/dcs/common/v0/Position'
-import { Position__Output } from '../generated/dcs/common/v0/Position'
+import { Position } from './generated/dcs/common/v0/Position'
+import { Position__Output } from './generated/dcs/common/v0/Position'
+import { Color__Output } from './generated/dcs/trigger/v0/Color'
 import { LatLon } from './geo'
 
 export type TeardownFn = () => Promise<void>
@@ -19,6 +20,8 @@ export interface Vec3 {
 }
 
 export type PositionLL = Required<Position__Output>
+
+export type Color = Required<Color__Output>
 
 export interface Position3 {
   p: Vec3

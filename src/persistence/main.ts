@@ -84,25 +84,7 @@ async function trySpawnUnits() {
     })
     .whereNull('goneAt')
     .whereNull('destroyedAt')
-    .select<
-      Array<
-        Pick<
-          UnitTable,
-          'country' | 'isPlayerSlot' | 'name' | 'typeName' | 'unitId'
-        > &
-          Pick<Position, 'alt' | 'heading' | 'lat' | 'lon'>
-      >
-    >([
-      'alt',
-      'country',
-      'heading',
-      'isPlayerSlot',
-      'lat',
-      'lon',
-      'name',
-      'typeName',
-      'units.unitId',
-    ])
+    .select('*')
 
   // spawn the missing units
   await Promise.all(

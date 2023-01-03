@@ -1,6 +1,6 @@
 import { knex } from './db'
 import { distanceFrom, metersToDegree, PositionLL } from './common'
-import { Coalition } from '../generated/dcs/common/v0/Coalition'
+import { Coalition } from './generated/dcs/common/v0/Coalition'
 
 /**
  * IMPORTANT: DO NOT CHANGE THE NUMBER ON EACH OF THESE TYPES. Doing so is a breaking change

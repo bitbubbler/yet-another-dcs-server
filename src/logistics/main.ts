@@ -32,6 +32,7 @@ import {
 } from '../events'
 import { LatLon } from '../geo'
 import { getUnits, groupFromGroupName } from '../group'
+import { MarkupType, NewMarkup } from '../markup'
 import { outCoalitionText, outGroupText, removeMapMark } from '../trigger'
 import { createUnit, getPositionVelocity, spawnGroundUnit } from '../unit'
 import { cargoDefinitionFrom } from './definitions'
@@ -393,6 +394,7 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
           const newUnit = await createUnit({
             country,
             heading,
+            hidden: false,
             isPlayerSlot: false,
             position,
             typeName: unitTypeName,

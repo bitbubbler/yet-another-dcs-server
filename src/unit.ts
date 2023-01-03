@@ -3,10 +3,10 @@ import { services } from './services'
 import {
   _dcs_coalition_v0_AddGroupRequest_GroundGroupTemplate as GroundGroupTemplate,
   _dcs_coalition_v0_AddGroupRequest_Skill as Skill,
-} from '../generated/dcs/coalition/v0/AddGroupRequest'
-import { Country } from '../generated/dcs/common/v0/Country'
-import { GroupCategory } from '../generated/dcs/common/v0/GroupCategory'
-import { StreamUnitsResponse__Output } from '../generated/dcs/mission/v0/StreamUnitsResponse'
+} from './generated/dcs/coalition/v0/AddGroupRequest'
+import { Country } from './generated/dcs/common/v0/Country'
+import { GroupCategory } from './generated/dcs/common/v0/GroupCategory'
+import { StreamUnitsResponse__Output } from './generated/dcs/mission/v0/StreamUnitsResponse'
 import {
   position3From,
   positionLLFrom,
@@ -16,7 +16,7 @@ import {
 } from './common'
 import { Position3, PositionLL, Velocity } from './common'
 import { knex, Unit as DBUnit, insertUnit, deleteUnit } from './db'
-import { GetTransformResponse__Output } from '../generated/dcs/unit/v0/GetTransformResponse'
+import { GetTransformResponse__Output } from './generated/dcs/unit/v0/GetTransformResponse'
 import { countryFrom } from './country'
 
 const { coalition, custom, unit } = services
@@ -87,6 +87,8 @@ export interface Unit {
   country: Country
   /** heading in radians */
   heading: number
+  /** if the unit is visible on f10 (and to enemy units) */
+  hidden: boolean
   /** if the unit is a slot (slots are player controlled) */
   isPlayerSlot: boolean
   name: string
@@ -101,7 +103,10 @@ export interface Unit {
  * NOTE: The `heading` returned by dcs-grpc is currently not the users real heading.
  * https://github.com/DCS-gRPC/rust-server/issues/159
  */
-export type GameUnit = Omit<Unit, 'heading' | 'isPlayerSlot' | 'unitId'> & {
+export type GameUnit = Omit<
+  Unit,
+  'heading' | 'hidden' | 'isPlayerSlot' | 'unitId'
+> & {
   groupName: string
   playerName: string | undefined
 }
@@ -114,12 +119,30 @@ export function isPlayerUnit(unit: Unit): unit is PlayerUnit {
   return unit.isPlayerSlot === true
 }
 
+interface SpawnGroundUnitOptions {
+  country: Country
+  focus: PositionLL
+  hidden: boolean
+  radius: number
+  unit: Unit
+}
+
+interface SpawnGroundUnitsOptions {
+  country: Country
+  focus: PositionLL
+  hidden: boolean
+  radius: number
+  units: Unit[]
+}
+
 export async function spawnGroundUnitsOnCircle(
   country: Country,
   focus: PositionLL,
   radius: number,
   units: Pick<Unit, 'typeName' | 'heading'>[]
 ) {
+  // TODO: properly implement hidden units
+  const hidden = false
   const circleUnits = units.map(unit => ({
     ...unit,
     // use a dumb default alt of 0 here. We need to assume something,
@@ -129,8 +152,10 @@ export async function spawnGroundUnitsOnCircle(
 
   await Promise.all(
     circleUnits.map(async unitToSpawn => {
+      // TODO: a spawn function should not also be creating. fix this!
       const unit = await createUnit({
         country,
+        hidden,
         isPlayerSlot: false,
         ...unitToSpawn,
       })
@@ -140,23 +165,27 @@ export async function spawnGroundUnitsOnCircle(
   )
 }
 
-export async function spawnGroundUnitsInCircle(
-  country: Country,
-  focus: PositionLL,
-  radius: number,
-  units: Unit[]
-) {
+export async function spawnGroundUnitsInCircle({
+  country,
+  focus,
+  hidden,
+  radius,
+  units,
+}: SpawnGroundUnitsOptions) {
   return Promise.all(
-    units.map(unit => spawnGroundUnitInCircle(country, focus, radius, unit))
+    units.map(unit =>
+      spawnGroundUnitInCircle({ country, focus, hidden, radius, unit })
+    )
   )
 }
 
-export async function spawnGroundUnitInCircle(
-  country: Country,
-  focus: PositionLL,
-  radius: number,
-  unitToSpawn: Unit
-) {
+export async function spawnGroundUnitInCircle({
+  country,
+  focus,
+  hidden,
+  radius,
+  unit: unitToSpawn,
+}: SpawnGroundUnitOptions) {
   const position: PositionLL = {
     ...randomPositionInCircle(focus, radius),
     // use a dumb default alt of 0 here. We need to assume something,
@@ -170,6 +199,7 @@ export async function spawnGroundUnitInCircle(
     country,
     // TODO: choose a heading to spawn the unit at
     heading,
+    hidden,
     isPlayerSlot: false,
     position,
     typeName,
@@ -181,7 +211,7 @@ export async function spawnGroundUnitInCircle(
 export async function createUnit(
   newUnit: Pick<
     Unit,
-    'country' | 'heading' | 'isPlayerSlot' | 'position' | 'typeName'
+    'country' | 'heading' | 'hidden' | 'isPlayerSlot' | 'position' | 'typeName'
   > &
     Partial<Pick<Unit, 'name'>>
 ): Promise<Unit> {
@@ -220,11 +250,13 @@ export async function spawnGroundUnit(unit: Unit) {
   }
 
   return new Promise<{ groupName: string }>(async (resolve, reject) => {
-    const { country, heading, name, position, typeName } = unit
+    const { country, heading, hidden, name, position, typeName } = unit
     const groundTemplate: GroundGroupTemplate = {
       name,
       task: 'Ground Nothing', // wtf is this for? what values are available?
       position,
+      hidden,
+      uncontrollable: false,
       units: [
         {
           position,

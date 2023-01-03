@@ -6,6 +6,9 @@ export interface Mission {
       red: Coalition
     }
   }
+  groundControl: {
+    isPilotControlVehicles: boolean
+  }
 }
 
 export interface Coalition {

@@ -156,32 +156,7 @@ function respawnQueue(): () => void {
           .leftOuterJoin('spawnerQueues', function () {
             this.on('units.unitId', '=', 'spawnerQueues.unitId')
           })
-          .select<
-            Pick<
-              Unit & Position & SpawnerQueue,
-              | 'spawnerId'
-              | 'unitId'
-              | 'country'
-              | 'typeName'
-              | 'lat'
-              | 'lon'
-              | 'alt'
-              | 'heading'
-              | 'isPlayerSlot'
-              | 'name'
-            >[]
-          >([
-            'spawnerId',
-            'units.unitId as unitId',
-            'typeName',
-            'country',
-            'lat',
-            'lon',
-            'alt',
-            'heading',
-            'isPlayerSlot',
-            'name',
-          ])
+          .select('*')
           .where({ spawnerId })
           .whereNull('spawnerQueues.doneAt')
           .limit(SPAWNER_MAXIMUM_UNITS_PER_CYCLE)
@@ -229,12 +204,13 @@ function respawnQueue(): () => void {
         )
 
         // spawn the units in a circle on the position
-        const groups = await spawnGroundUnitsInCircle(
+        const groups = await spawnGroundUnitsInCircle({
           country,
-          spawnerPosition,
-          SPAWNER_UNIT_RANDOM_FOCUS_RADIUS,
-          unitsToSpawn
-        )
+          focus: spawnerPosition,
+          hidden: false,
+          radius: SPAWNER_UNIT_RANDOM_FOCUS_RADIUS,
+          units: unitsToSpawn,
+        })
 
         // we have to wait a short delay after spawning a unit before giving it tasks
         await new Promise(resolve => setTimeout(resolve, 100))

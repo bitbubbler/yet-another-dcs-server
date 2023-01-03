@@ -1,5 +1,5 @@
-import { Coalition } from '../generated/dcs/common/v0/Coalition'
-import { Country } from '../generated/dcs/common/v0/Country'
+import { Coalition } from './generated/dcs/common/v0/Coalition'
+import { Country } from './generated/dcs/common/v0/Country'
 import { countryFrom } from './country'
 import { services } from './services'
 
