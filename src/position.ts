@@ -1,6 +1,14 @@
-import { PositionLL } from './common'
+import { entityManager, orm } from './db'
+import { NewPosition, Position } from './db'
 
-export interface Position extends PositionLL {
-  positionId: number
-  heading: number
+export async function createPosition(
+  newPosition: NewPosition
+): Promise<Position> {
+  const position = new Position(newPosition)
+
+  await entityManager(await orm)
+    .persist(position)
+    .flush()
+
+  return position
 }

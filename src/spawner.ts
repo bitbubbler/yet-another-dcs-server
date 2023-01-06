@@ -1,73 +1,68 @@
-import { knex } from './db'
-import { distanceFrom, metersToDegree, PositionLL } from './common'
+import { entityManager, orm, Position, NewSpawner, Spawner } from './db'
+import { distanceFrom, metersToDegree } from './common'
 import { Coalition } from './generated/dcs/common/v0/Coalition'
 
-/**
- * IMPORTANT: DO NOT CHANGE THE NUMBER ON EACH OF THESE TYPES. Doing so is a breaking change
- * The number associate with each of these enums is used as a database value.
- * You may append to the end (add new numbers) only
- * Explicitly define the value for each entry so that there is no confusion
- */
-export enum SpawnerType {
-  Easy = 0,
-  Medium = 1,
-  Hard = 2,
+export async function createSpawner(newSpawner: NewSpawner): Promise<Spawner> {
+  const spawner = new Spawner(newSpawner)
+
+  await entityManager(await orm)
+    .persist(spawner)
+    .flush()
+
+  return spawner
 }
 
-export interface Spawner {
-  spawnerId: number
-  coalition: Coalition
-  position: PositionLL
-  type: SpawnerType
-}
-
-/**
- * Search for spawners nearby a given PositionLL within a given accuracy.
- * Search uses a very simple box model algorithm to reduce the initial search set
- * @param position PositionLL
- * @param accuracy accuracy of search in meters
- */
-export async function nearbySpawners({
+export async function findNearbySpawners({
   position,
   accuracy,
   coalition,
 }: {
-  position: PositionLL
+  position: Pick<Position, 'lat' | 'lon'>
   accuracy: number
   coalition: Coalition
-}) {
+}): Promise<Spawner[]> {
+  const em = entityManager(await orm)
+
+  const spawnerRepository = em.getRepository(Spawner)
+
   const { lat, lon } = position
 
-  let query = knex('spawners')
-    .leftOuterJoin('positions', function () {
-      this.on('spawners.positionId', '=', 'positions.positionId')
+  let query = spawnerRepository
+    .createQueryBuilder()
+    .select('*')
+    .where({
+      $and: [
+        { position: { lat: { $gte: lat - metersToDegree(accuracy) } } },
+        { position: { lat: { $lte: lat + metersToDegree(accuracy) } } },
+        { position: { lon: { $gte: lon - metersToDegree(accuracy) } } },
+        { position: { lon: { $lte: lon + metersToDegree(accuracy) } } },
+      ],
     })
-    .select(['spawnerId', 'lat', 'lon', 'alt'])
-    .whereBetween('lat', [
-      lat - metersToDegree(accuracy),
-      lat + metersToDegree(accuracy),
-    ])
-    .whereBetween('lon', [
-      lon - metersToDegree(accuracy),
-      lon + metersToDegree(accuracy),
-    ])
-    .whereNull('goneAt')
-    .whereNull('capturedAt')
 
   // if not all, search by coalition
   if (Coalition.COALITION_ALL !== coalition) {
-    query = query.where({ coalition })
+    query = query.andWhere({ coalition })
   }
 
   const nearby = await query
 
   return nearby
-    .map(unit => {
-      const { lat, lon, alt } = unit
-      const unitPosition = { lat, lon, alt }
-      return { unit, distance: distanceFrom(position, unitPosition) }
+    .map(spawner => {
+      return { spawner, distance: distanceFrom(position, spawner.position) }
     })
-    .filter(unit => unit.distance <= accuracy)
+    .filter(spawner => spawner.distance <= accuracy)
     .sort((a, b) => a.distance - b.distance)
-    .map(unit => unit.unit)
+    .map(spawner => spawner.spawner)
+}
+
+export async function allSpawners(): Promise<Spawner[]> {
+  return entityManager(await orm).find(Spawner, {})
+}
+
+export async function spawnerDestroyed(spawner: Spawner): Promise<void> {
+  const em = entityManager(await orm)
+
+  spawner.destroyed()
+
+  await em.persist(spawner).flush()
 }

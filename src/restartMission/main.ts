@@ -7,8 +7,8 @@ import { Restarts } from '../signals'
 import { outText } from '../trigger'
 import { MemoryReader, parse, stringify, Table } from '../lua'
 import { Mission } from './types'
-import { allBases } from '../db'
-import { baseTemplateFrom, BaseType, baseTypeDisplayNameShort } from '../base'
+import { allBases, baseTemplateFrom, baseTypeDisplayNameShort } from '../base'
+import { Base, BaseType, entityManager, orm } from '../db'
 import { LatLon } from '../geo'
 import { vector2DFrom } from '../coord'
 import { unitTemplateFrom } from '../unit-templates'
@@ -144,18 +144,21 @@ function fileTimestamp(): string {
 }
 
 async function patchMission(mission: Mission): Promise<Mission> {
+  const em = entityManager(await orm)
+
+  const baseRepository = em.getRepository(Base)
   // first, we set some basics
 
   // this allows pilots (of helis/planes) to control ground units from f10
-  mission.groundControl.isPilotControlVehicles = true
+  mission.mission.groundControl.isPilotControlVehicles = true
 
   // we start our group numbering here to try and ensure uniqueness
   let groupIdCounter = 10000
 
   // look at the bases in the db, filter down to the ones with spawn slots
-  const basesWithSpawnSlots = (await allBases()).filter(base =>
-    [BaseType.FOB, BaseType.MOB].includes(base.type)
-  )
+  const basesWithSpawnSlots = await baseRepository.find({
+    type: [BaseType.FOB, BaseType.MOB],
+  })
 
   if (mission.mission.coalition.blue.country.length < 1) {
     mission.mission.coalition.blue.country.push({
@@ -168,10 +171,8 @@ async function patchMission(mission: Mission): Promise<Mission> {
   }
 
   // for each base found
-
-  for await (const base of basesWithSpawnSlots) {
+  for (const base of basesWithSpawnSlots) {
     // TODO: define these in the databse
-
     const template = baseTemplateFrom(base)
 
     for (const slot of template.slots) {

@@ -1,6 +1,5 @@
 import { PositionLL } from '../common'
-import { StaticObjectTypeName } from '../staticObject'
-import { UnitTypeName } from '../unit'
+import { StaticObjectTypeName, UnitTypeName } from '../db'
 
 interface TemplateObject<TTypeName> {
   typeName: TTypeName

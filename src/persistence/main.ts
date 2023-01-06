@@ -1,13 +1,15 @@
-import { findUnit, knex, unitFrom as unitFromDbUnit, unitGone } from '../db'
+import { entityManager, orm, Position, Unit } from '../db'
 import { isPlayerUnit, spawnGroundUnit } from '../unit'
 import { UnitEventType, UnitEvents } from '../unitEvents'
-import { updateUnitPosition, Position, Unit as UnitTable } from '../db'
 
 export async function persistenceMain(): Promise<() => Promise<void>> {
   await trySpawnUnits()
 
   // handle unit updates
   const subscription = UnitEvents.subscribe(async event => {
+    const em = entityManager(await orm)
+
+    const unitRepository = em.getRepository(Unit)
     /**
      * IMPORTANT: Player controlled units MAY NOT be persisted using this module.
      * Attempting to use the this persistence for player controlled units
@@ -22,10 +24,22 @@ export async function persistenceMain(): Promise<() => Promise<void>> {
      * as described above
      */
     if (UnitEventType.Update === event.type) {
-      const { unit } = event
-
       try {
-        await updateUnitPosition(unit)
+        const { lat, lon, alt } = event.unit.position
+
+        // TODO: get unit heading (new dcs-grpc update gives us this)
+        const newPosition = new Position({ lat, lon, alt, heading: 0 })
+
+        const unit = await unitRepository.findOneOrFail({
+          name: event.unit.name,
+        })
+
+        // NOTE: this leaves a dangling position in the db, which is fine.
+        // we should use these positions in the future to keep position history for debugging
+        unit.position = newPosition
+
+        // flush the changes to the db
+        await em.flush()
       } catch (error) {
         // surpress failed position updates if a unit doesn't exist in the db
         if (/No known unit/.test((error as Error).message)) {
@@ -36,16 +50,18 @@ export async function persistenceMain(): Promise<() => Promise<void>> {
     }
     if (UnitEventType.Gone === event.type) {
       const name = event.unit.name
-      const unit = await findUnit(name)
+      const unit = await unitRepository.findOne({ name })
 
-      if (typeof unit === 'undefined') {
+      if (!unit) {
         throw new Error(`MissingUnit: no unit found in db with name ${name}`)
       }
 
       // do not record gone events for player units
       // see the giant comment block above for details
       if (isPlayerUnit(unit) === false) {
-        await unitGone(unit)
+        unit.gone()
+
+        em.flush()
       }
     }
   })
@@ -77,22 +93,16 @@ async function trySpawnUnits() {
   // this means that on restart, even if the mission hasn't reset, we'll reset the all units
   // to the position we have for each in the database
 
-  // get the units in the db
-  const unitsToSpawn = await knex('units')
-    .leftOuterJoin('positions', function () {
-      this.on('units.positionId', '=', 'positions.positionId')
-    })
-    .whereNull('goneAt')
-    .whereNull('destroyedAt')
-    .select('*')
+  const em = entityManager(await orm)
+
+  const unitRepository = em.getRepository(Unit)
+
+  const unitsToSpawn = await unitRepository.find({ isPlayerSlot: false })
 
   // spawn the missing units
   await Promise.all(
-    unitsToSpawn
-      .map(unit => unitFromDbUnit(unit))
-      .filter(unit => unit.isPlayerSlot === false)
-      .map(async unit => {
-        await spawnGroundUnit(unit)
-      })
+    unitsToSpawn.map(async unit => {
+      await spawnGroundUnit(unit)
+    })
   )
 }

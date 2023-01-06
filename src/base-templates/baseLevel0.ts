@@ -1,4 +1,4 @@
-import { StaticObjectTypeName } from '../staticObject'
+import { StaticObjectTypeName } from '../db'
 import { Template } from './types'
 
 export const baseLevel0: Template = {

@@ -8,6 +8,8 @@ import { Country } from './generated/dcs/common/v0/Country'
 import { GroupCategory } from './generated/dcs/common/v0/GroupCategory'
 import { StreamUnitsResponse__Output } from './generated/dcs/mission/v0/StreamUnitsResponse'
 import {
+  distanceFrom,
+  metersToDegree,
   position3From,
   positionLLFrom,
   randomPositionInCircle,
@@ -15,87 +17,13 @@ import {
   vec3From,
 } from './common'
 import { Position3, PositionLL, Velocity } from './common'
-import { knex, Unit as DBUnit, insertUnit, deleteUnit } from './db'
+import { entityManager, NewUnit, orm, Position, Unit, UnitTypeName } from './db'
 import { GetTransformResponse__Output } from './generated/dcs/unit/v0/GetTransformResponse'
 import { countryFrom } from './country'
+import { createPosition } from './position'
+import { Coalition } from './generated/dcs/common/v0/Coalition'
 
 const { coalition, custom, unit } = services
-
-/** The values of this enum must exactly match dcs in-game unit typeName values */
-export enum UnitTypeName {
-  // F1 Supplies and Utility
-  M939 = 'M 818', // Truck M939 Heavy
-  FPS117 = 'FPS-117', // EWR AN/FPS-117 Radar
-  // F2 Light
-  HmmwvJtac = 'Hummer', // LUV HMMWV Jeep
-  HmmwvMg = 'M1043 HMMWV Armament', // Scout HMMWV
-  HmmwvTow = 'M1045 HMMWV TOW', // ATGM HMMWV
-  Fuchs = 'TPZ', // APC TPz Fuchs
-  LAV25 = 'LAV-25', // IFV LAV-25
-  StrykerMgs = 'M1128 Stryker MGS', // SPG Stryker MGS
-  StrykerAtgm = 'M1134 Stryker ATGM', // ATGM Stryker
-  MephistoAtgm = 'VAB_Mephisto', // ATGM VAB Mephisto
-  // F3 Heavy
-  M1A2 = 'M-1 Abrams', // MBT M1A2 Abrams
-  M2A2 = 'M-2 Bradley', // IFV M2A2 Bradley
-  Marder = 'Marder', // IFV Marder
-  MCV80 = 'MCV-80', // IFV Warrior
-  Leopard2 = 'Leopard-2', // MBT Leopard-2A6M
-  Leclerc = 'Leclerc', // MBT Leclerc
-  Challenger2 = 'Challenger2', // MBT Challenger II
-  // F4 Artillery
-  M109 = 'M-109', // SPH M109 Paladin 155mm
-  Dana = 'SpGH_Dana', // SPH Dana vz77 152mm
-  Firtina = 'T155_Firtina', // SPH T155 Firtina 155mm
-  MlrsM270 = 'MLRS', // MLRS M270 227mm
-  Mlrs9A52 = 'Smerch_HE', // MLRS 9A52 Smerch HE 300mm
-  // F5 - SHORAD
-  Vulcan = 'Vulcan', // SPAAA Vulcan M163
-  Gepard = 'Gepard', // SPAAA Gepard
-  Avenger = 'M1097 Avenger', // SAM Avenger (Stinger)
-  Chaparral = 'M48 Chaparral', // SAM Chaparral M48
-  RolandAds = 'Roland ADS', // SAM Roland ADS
-  Linebacker = 'M6 Linebacker', // SAM Linebacker - Bradley M6
-  // F6 - MRAD
-  HawkSr = 'Hawk sr', // SAM Hawk SR (AN/MPQ50)*
-  HawkCwar = 'Hawk cwar', // SAM Hawk CWAR (AN/MPQ55)
-  HawkTr = 'Hawk tr', // SAM Hawk TR (AN/MPQ46)
-  HawkPcp = 'Hawk pcp', // SAM Hawk Platoon Command Post (PCP)
-  HawkLn = 'Hawk ln', // SAM Hawk LN M192
-  NasamLnB = 'NASAMS_LN_B', // SAM NASAMS LN AIM-120B
-  NasamLnC = 'NASAMS_LN_C', // SAM NASAMS LN AIM-120C
-  NasamSr = 'NASAMS_Radar_MPQ64F1', // SAM NASAMS SR MPQ64F1
-  NasamC2 = 'NASAMS_Command_Post', // SAM NASAMS C2
-  // helicopters
-  UH1H = 'UH-1H',
-  AH64D = 'AH-64D_BLK_II',
-  MI24 = 'Mi-24P',
-  MI8 = 'Mi-8MT',
-  UH60 = 'UH-60L',
-  KA50 = 'Ka-50',
-  KA503 = 'Ka-50_3',
-  SA342L = 'SA342L',
-  SA342M = 'SA342M',
-  SA342Minigun = 'SA342Minigun',
-  SA342Mistral = 'SA342Mistral',
-  // utility
-  M818 = 'M 818',
-  M978 = 'M978 HEMTT Tanker',
-}
-
-export interface Unit {
-  country: Country
-  /** heading in radians */
-  heading: number
-  /** if the unit is visible on f10 (and to enemy units) */
-  hidden: boolean
-  /** if the unit is a slot (slots are player controlled) */
-  isPlayerSlot: boolean
-  name: string
-  position: PositionLL
-  typeName: string
-  unitId: number
-}
 
 /**
  * The unit as represented by the game. Typically recieved from dcs-grpc or lua calls.
@@ -103,13 +31,13 @@ export interface Unit {
  * NOTE: The `heading` returned by dcs-grpc is currently not the users real heading.
  * https://github.com/DCS-gRPC/rust-server/issues/159
  */
-export type GameUnit = Omit<
-  Unit,
-  'heading' | 'hidden' | 'isPlayerSlot' | 'unitId'
-> & {
+export type GameUnit = Pick<Unit, 'country' | 'name' | 'typeName'> & {
+  position: PositionLL
   groupName: string
   playerName: string | undefined
 }
+
+type c = keyof GameUnit
 
 export interface PlayerUnit extends Unit {
   isPlayerSlot: true
@@ -119,108 +47,71 @@ export function isPlayerUnit(unit: Unit): unit is PlayerUnit {
   return unit.isPlayerSlot === true
 }
 
-interface SpawnGroundUnitOptions {
+interface CreateGroundUnitOptions {
   country: Country
   focus: PositionLL
   hidden: boolean
   radius: number
-  unit: Unit
+  unit: Pick<Unit, 'typeName'> & Pick<Position, 'heading'>
 }
 
-interface SpawnGroundUnitsOptions {
+interface CreateGroundUnitsOptions
+  extends Omit<CreateGroundUnitOptions, 'unit'> {
   country: Country
   focus: PositionLL
   hidden: boolean
   radius: number
-  units: Unit[]
+  units: CreateGroundUnitOptions['unit'][]
 }
 
-export async function spawnGroundUnitsOnCircle(
-  country: Country,
-  focus: PositionLL,
-  radius: number,
-  units: Pick<Unit, 'typeName' | 'heading'>[]
-) {
-  // TODO: properly implement hidden units
-  const hidden = false
-  const circleUnits = units.map(unit => ({
-    ...unit,
-    // use a dumb default alt of 0 here. We need to assume something,
-    // but we don't really want to make a call to the game engine
-    position: { ...randomPositionOnCircle(focus, radius), alt: 0 },
-  }))
-
-  await Promise.all(
-    circleUnits.map(async unitToSpawn => {
-      // TODO: a spawn function should not also be creating. fix this!
-      const unit = await createUnit({
-        country,
-        hidden,
-        isPlayerSlot: false,
-        ...unitToSpawn,
-      })
-
-      await spawnGroundUnit(unit)
-    })
-  )
-}
-
-export async function spawnGroundUnitsInCircle({
+export async function createGroundUnitsInCircle({
   country,
   focus,
   hidden,
   radius,
   units,
-}: SpawnGroundUnitsOptions) {
+}: CreateGroundUnitsOptions): Promise<Unit[]> {
   return Promise.all(
     units.map(unit =>
-      spawnGroundUnitInCircle({ country, focus, hidden, radius, unit })
+      createGroundUnitInCircle({ country, focus, hidden, radius, unit })
     )
   )
 }
 
-export async function spawnGroundUnitInCircle({
+export async function createGroundUnitInCircle({
   country,
   focus,
   hidden,
   radius,
-  unit: unitToSpawn,
-}: SpawnGroundUnitOptions) {
-  const position: PositionLL = {
+  unit: newUnit,
+}: CreateGroundUnitOptions): Promise<Unit> {
+  const { heading, typeName } = newUnit
+
+  const position = await createPosition({
     ...randomPositionInCircle(focus, radius),
-    // use a dumb default alt of 0 here. We need to assume something,
-    // but we don't really want to make a call to the game engine
     alt: 0,
-  }
-
-  const { heading, typeName } = unitToSpawn
-
-  const unit = await createUnit({
-    country,
-    // TODO: choose a heading to spawn the unit at
     heading,
-    hidden,
-    isPlayerSlot: false,
-    position,
-    typeName,
   })
 
-  return spawnGroundUnit(unit)
+  return createUnit({
+    country,
+    position,
+    hidden,
+    isPlayerSlot: false,
+    typeName,
+  })
 }
 
 export async function createUnit(
-  newUnit: Pick<
-    Unit,
-    'country' | 'heading' | 'hidden' | 'isPlayerSlot' | 'position' | 'typeName'
-  > &
-    Partial<Pick<Unit, 'name'>>
+  newUnit: Omit<NewUnit, 'name'> & Partial<Pick<NewUnit, 'name'>>
 ): Promise<Unit> {
   const name = newUnit.name || (await uniqueUnitName())
 
-  const unit = await insertUnit({
-    ...newUnit,
-    name,
-  })
+  const unit = new Unit({ ...newUnit, name })
+
+  await entityManager(await orm)
+    .persist(unit)
+    .flush()
 
   return unit
 }
@@ -241,21 +132,27 @@ export async function setUnitInternalCargoMass(
   })
 }
 
-export async function spawnGroundUnit(unit: Unit) {
+export async function spawnGroundUnit(
+  unit: Unit
+): Promise<{ groupName: string }> {
   console.log('trying to spawn ground unit')
+
   if (unit.isPlayerSlot) {
     throw new Error(
       'player slots can not be spawned as ground units. it breaks the game'
     )
   }
 
-  return new Promise<{ groupName: string }>(async (resolve, reject) => {
-    const { country, heading, hidden, name, position, typeName } = unit
+  return new Promise(async (resolve, reject) => {
+    const { country, hidden, name, typeName } = unit
+    const { heading, lat, lon, alt } = unit.position
+    const position: PositionLL = { lat, lon, alt }
     const groundTemplate: GroundGroupTemplate = {
       name,
       task: 'Ground Nothing', // wtf is this for? what values are available?
       position,
       hidden,
+      visible: hidden,
       uncontrollable: false,
       units: [
         {
@@ -280,7 +177,6 @@ export async function spawnGroundUnit(unit: Unit) {
           console.log('add group failed', error)
           return reject(error)
         }
-        console.log('add group', result)
         resolve({
           groupName: name,
         })
@@ -336,15 +232,15 @@ export async function getTransform(
 }
 
 export async function uniqueUnitName(): Promise<string> {
+  const em = entityManager(await orm)
+  const unitRepository = em.getRepository(Unit)
+
   const id = Math.floor(1000 + Math.random() * 9000)
 
   const name = `spawned unit ${id}`
 
   // check that the name is not already in use
-  const existingUnit = await knex('units')
-    .select('unitId')
-    .where({ name })
-    .first()
+  const existingUnit = await unitRepository.findOne({ name })
 
   // if the name is alredy in use
   if (existingUnit) {
@@ -400,6 +296,49 @@ export async function getPositionVelocity(
   )
 }
 
+export async function findNearbyUnits({
+  position,
+  accuracy,
+  coalition,
+}: {
+  position: Pick<Position, 'lat' | 'lon'>
+  accuracy: number
+  coalition: Coalition
+}): Promise<Unit[]> {
+  const em = entityManager(await orm)
+
+  const unitRepository = em.getRepository(Unit)
+
+  const { lat, lon } = position
+
+  let query = unitRepository
+    .createQueryBuilder()
+    .select('*')
+    .where({
+      $and: [
+        { position: { lat: { $gte: lat - metersToDegree(accuracy) } } },
+        { position: { lat: { $lte: lat + metersToDegree(accuracy) } } },
+        { position: { lon: { $gte: lon - metersToDegree(accuracy) } } },
+        { position: { lon: { $lte: lon + metersToDegree(accuracy) } } },
+      ],
+    })
+
+  // if not all, search by coalition
+  if (Coalition.COALITION_ALL !== coalition) {
+    query = query.andWhere({ coalition })
+  }
+
+  const nearby = await query
+
+  return nearby
+    .map(unit => {
+      return { unit, distance: distanceFrom(position, unit.position) }
+    })
+    .filter(unit => unit.distance <= accuracy)
+    .sort((a, b) => a.distance - b.distance)
+    .map(unit => unit.unit)
+}
+
 export function unitFrom(
   maybeUnit: Partial<
     Pick<
@@ -436,10 +375,6 @@ export function unitFrom(
     name,
     playerName,
     position: positionLLFrom(position),
-    typeName: type,
+    typeName: type as UnitTypeName,
   }
-}
-
-export async function destroyUnit(unit: Unit): Promise<void> {
-  await deleteUnit(unit.unitId)
 }

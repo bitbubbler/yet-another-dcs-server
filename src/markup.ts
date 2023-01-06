@@ -1,73 +1,50 @@
-import { Coalition } from './generated/dcs/common/v0/Coalition'
-import { Color__Output } from './generated/dcs/trigger/v0/Color'
-import { LineType } from './generated/dcs/trigger/v0/LineType'
-import { PositionLL, Color } from './common'
-import { deleteMarkup, insertMarkup } from './db'
+import { entityManager, NewCircleMarkup, NewTextMarkup, orm } from './db'
 import { markupTextToAll } from './trigger'
+import { CircleMarkup, Markup, MarkupType, TextMarkup } from './db'
+import { wrap } from '@mikro-orm/core'
 
-export enum MarkupType {
-  Text,
-  Circle,
+export async function createCircleMarkup(
+  newMarkup: NewCircleMarkup
+): Promise<CircleMarkup> {
+  const circleMarkup = new CircleMarkup(newMarkup)
+
+  await entityManager(await orm)
+    .persist(circleMarkup)
+    .flush()
+
+  return circleMarkup
 }
 
-type NewMarkupPropertyNames =
-  | 'coalition'
-  | 'fillColor'
-  | 'lineColor'
-  | 'position'
-  | 'readonly'
-  | 'type'
+export async function createTextMarkup(
+  newMarkup: NewTextMarkup
+): Promise<TextMarkup> {
+  const textMarkup = new TextMarkup(newMarkup)
 
-export type NewTextMarkup = Pick<
-  TextMarkup,
-  NewMarkupPropertyNames | 'fontSize' | 'text'
->
-export type NewCircleMarkup = Pick<
-  CircleMarkup,
-  NewMarkupPropertyNames | 'lineType' | 'radius'
->
+  await entityManager(await orm)
+    .persist(textMarkup)
+    .flush()
 
-export type NewMarkup = NewTextMarkup | NewCircleMarkup
-
-export interface MarkupBase {
-  coalition: Coalition
-  fillColor: Color
-  lineColor: Color
-  markupId: number
-  position: PositionLL
-  readonly: boolean
+  return textMarkup
 }
 
-export interface TextMarkup extends MarkupBase {
-  type: MarkupType.Text
-  fontSize: number
-  text: string
-}
-
-export interface CircleMarkup extends MarkupBase {
-  type: MarkupType.Circle
-  lineType: LineType
-  radius: number
-}
-
-export type Markup = TextMarkup | CircleMarkup
-
-export async function createMarkup(newMarkup: NewMarkup): Promise<Markup> {
-  const markup = await insertMarkup(newMarkup)
-
-  return markup
-}
-
-export async function spawnMarkup(markup: Markup): Promise<void> {
+export async function spawnMarkup(
+  markup: TextMarkup | CircleMarkup
+): Promise<void> {
   const { type } = markup
 
   if (MarkupType.Text === type) {
-    await markupTextToAll({ ...markup, uniqueId: 20000 + markup.markupId })
+    await markupTextToAll({
+      ...markup.toJSON(),
+      uniqueId: 20000 + markup.markupId,
+    })
+    return
   }
 
   throw new Error('attempted to spawn markup of unknown type')
 }
 
 export async function destroyMarkup(markup: Markup): Promise<void> {
-  await deleteMarkup(markup)
+  await entityManager(await orm)
+    .remove(markup)
+    .flush()
 }

@@ -137,7 +137,8 @@ export async function markupTextToAll(options: {
         reject(error)
       }
       if (!result || !result.json) {
-        throw new Error('missing result json')
+        reject(Error('missing result json'))
+        return
       }
 
       resolve(JSON.parse(result.json))

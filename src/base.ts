@@ -1,15 +1,11 @@
 import { LatLon } from './geo'
-import { Coalition } from './generated/dcs/common/v0/Coalition'
 import { baseNames } from './baseNames'
-import { PositionLL, randomBetween } from './common'
+import { distanceFrom, metersToDegree, randomBetween } from './common'
 import { countryFrom } from './country'
-import { insertBase, knex, nearbyBases } from './db'
 import {
   createStaticObject,
   despawnStaticObject,
-  destroyStaticObject,
   spawnStaticObject,
-  StaticObject,
 } from './staticObject'
 import {
   baseLevel0,
@@ -18,21 +14,25 @@ import {
   baseLevel3,
   Template,
 } from './base-templates'
-import {
-  allBaseStaticObjects,
-  deleteBaseStaticObject,
-  insertBaseStaticObject,
-} from './db/baseStaticObjects'
-import { allBaseUnits, deleteBaseUnit, insertBaseUnit } from './db/baseUnit'
 import assert from 'assert'
-import {
-  createUnit,
-  despawnUnit,
-  destroyUnit,
-  spawnGroundUnit,
-  Unit,
-} from './unit'
+import { createUnit, despawnUnit, spawnGroundUnit } from './unit'
 import { despawnFarp, spawnFarp } from './farp'
+import {
+  entityManager,
+  orm,
+  Base,
+  BaseType,
+  NewBase,
+  Position,
+  StaticObject,
+  Unit,
+  TextMarkup,
+  Color,
+} from './db'
+import { Coalition } from './generated/dcs/common/v0/Coalition'
+import { createPosition } from './position'
+import { Ref, wrap } from '@mikro-orm/core'
+import { spawnMarkup } from './markup'
 
 /** Min range between COP bases in meters */
 const BASE_COP_MIN_RANGE_METERS = 3500
@@ -49,66 +49,59 @@ assert(
   'BASE MIN VALUES SHOULD INCREASE IN DISTANCE AS BASE SIZE INCREASES'
 )
 
-export enum BaseType {
-  /**
-   * Under Construction (new base being created)
-   * - no cargo
-   * - no lives
-   */
-  UnderConstruction,
-  /**
-   * Main operating base (MOB)
-   * - more spawn points
-   */
-  MOB,
-  /**
-   * Forward operating base (FOB)
-   * - spawn points
-   */
-  FOB,
-  /**
-   * Forward arming and refueling point (FARP)
-   * NOTE: only for arming and refueling
-   * - no spawning here
-   */
-  FARP,
-  /**
-   * Combat outpost (COP)
-   * - troops only (no cargo pickups here')
-   * - no spawning here
-   */
-  COP,
-}
-
-export type NewBase = Pick<Base, 'coalition' | 'heading' | 'position' | 'type'>
-
-export interface Base {
-  baseId: number
-  coalition: Coalition
-  /** heading in radians */
-  heading: number
-  name: string
-  position: Pick<PositionLL, 'lat' | 'lon'>
-  type: BaseType
-}
-
-export async function createBase(newBase: NewBase): Promise<Base> {
+export async function createBase(
+  newBase: Omit<NewBase, 'name' | 'labelMarkup'>
+): Promise<Base> {
   const name = await uniqueBaseName()
+  const { coalition, position } = newBase
 
-  const base = await insertBase({
-    ...newBase,
-    name,
+  // determine where the label should be, using the base position
+  const { lat, lon } = new LatLon(position.lat, position.lon)
+    .destinationPoint(250, 90)
+    .destinationPoint(100, 0)
+
+  const labelPosition = new Position({ lat, lon, alt: 0, heading: 0 })
+
+  const labelMarkup = new TextMarkup({
+    coalition,
+    fillColor: new Color({ red: 0, green: 0, blue: 0, alpha: 0 }),
+    fontSize: 16,
+    lineColor: new Color({ red: 0, green: 0, blue: 0, alpha: 1 }),
+    position: labelPosition,
+    readonly: true,
+    text: `
+Friendly Base:
+Type: ${baseTypeDisplayNameShort(newBase.type)}
+Name: ${name}`.trim(), // use trim to remove leading and trailing whitespace/newlines
   })
+
+  const base = new Base({ ...newBase, labelMarkup, name })
+
+  await entityManager(await orm)
+    .persist(base)
+    .flush()
 
   return base
 }
 
-async function createBaseObjects(base: Base): Promise<StaticObject[]> {
+export async function baseGone(base: Base): Promise<void> {
+  // set the base goneAt
+  base.goneAt = new Date()
+
+  // flush the changes
+  await entityManager(await orm)
+    .persist(base)
+    .flush()
+}
+
+export async function allBases(): Promise<Base[]> {
+  return entityManager(await orm).find(Base, {})
+}
+
+async function createBaseObjects(base: Base): Promise<void> {
+  const em = entityManager(await orm)
   // use base level to determine template
   const template = baseTemplateFrom(base)
-
-  // collection of StaticObject(s) to return
-  const staticObjects: StaticObject[] = []
 
   // create and spawn static objects for template
   for (const staticObjectTemplate of template.staticObjects) {
@@ -119,23 +112,19 @@ async function createBaseObjects(base: Base): Promise<StaticObject[]> {
       base.position.lat,
       base.position.lon
     ).destinationPoint(distance, bearing)
-
+    const position = new Position({ lat, lon, heading, alt: 0 })
     // create the static object
-    const staticObject = await createStaticObject({
+    const staticObject = new StaticObject({
       country: countryFrom(base.coalition),
-      heading,
-      position: { lat, lon },
+      position,
       typeName,
     })
 
-    // assign this static as belonging to this base
-    await insertBaseStaticObject(base.baseId, staticObject.staticObjectId)
-
-    // keep track of it to return
-    staticObjects.push(staticObject)
+    base.staticObjects.add(staticObject)
   }
 
-  return staticObjects
+  // flush everything to the db
+  await em.persistAndFlush(base)
 }
 
 export function baseTemplateFrom(base: Base): Template {
@@ -156,13 +145,13 @@ export function baseTemplateFrom(base: Base): Template {
 }
 
 export async function uniqueBaseName(): Promise<string> {
+  const em = entityManager(await orm)
+  const baseRepository = em.getRepository(Base)
+
   const name = baseNames[randomBetween(0, baseNames.length - 1)]
 
   // check that the name is not already in use
-  const existingbase = await knex('bases')
-    .select('baseId')
-    .where({ name })
-    .first()
+  const existingbase = await baseRepository.findOne({ name })
 
   // if the name is alredy in use
   if (existingbase) {
@@ -188,13 +177,13 @@ export async function validateBase(
     if (base.baseId) {
       return baseToCheck.baseId !== base.baseId
     }
-    return false
+    return true
   }
 
   // TODO: exclude the given baseId from the lookups of nearby bases
   if (BaseType.UnderConstruction === type) {
     const existingNearbyBases = (
-      await nearbyBases({
+      await findNearbyBases({
         accuracy: BASE_COP_MIN_RANGE_METERS,
         coalition,
         position,
@@ -204,7 +193,7 @@ export async function validateBase(
     if (existingNearbyBases.length > 0) {
       return {
         valid: false,
-        reason: `Newly Constructed bases may only be created ${BASE_COP_MIN_RANGE_METERS} from any other base type`,
+        reason: `Newly Constructed bases may only be created ${BASE_COP_MIN_RANGE_METERS} meters from any other base type`,
       }
     }
 
@@ -212,7 +201,7 @@ export async function validateBase(
   }
   if (BaseType.COP === type) {
     const existingNearbyBases = (
-      await nearbyBases({
+      await findNearbyBases({
         accuracy: BASE_COP_MIN_RANGE_METERS,
         coalition,
         position,
@@ -222,7 +211,7 @@ export async function validateBase(
     if (existingNearbyBases.length > 0) {
       return {
         valid: false,
-        reason: `COP base may only be created ${BASE_COP_MIN_RANGE_METERS} from any other base type`,
+        reason: `COP base may only be created ${BASE_COP_MIN_RANGE_METERS} meters from any other base type`,
       }
     }
 
@@ -230,14 +219,14 @@ export async function validateBase(
   }
   if (BaseType.FARP === type) {
     const existingNearbyFARPRangeBases = (
-      await nearbyBases({
+      await findNearbyBases({
         accuracy: BASE_FARP_MIN_RANGE_METERS,
         coalition,
         position,
       })
     ).filter(excludeThisBase)
     const existingNearbyCOPRangeBases = (
-      await nearbyBases({
+      await findNearbyBases({
         accuracy: BASE_COP_MIN_RANGE_METERS,
         coalition,
         position,
@@ -256,14 +245,14 @@ export async function validateBase(
     if (existingNearbyEqualOrGreaterBases.length > 0) {
       return {
         valid: false,
-        reason: `FARP base may only be created ${BASE_FARP_MIN_RANGE_METERS} from any other FARP or larger base`,
+        reason: `FARP base may only be created ${BASE_FARP_MIN_RANGE_METERS} meters from any other FARP or larger base`,
       }
     }
 
     if (existingNearbyLesserBases.length > 0) {
       return {
         valid: false,
-        reason: `FARP base may only be created ${BASE_COP_MIN_RANGE_METERS} from any other COP base`,
+        reason: `FARP base may only be created ${BASE_COP_MIN_RANGE_METERS} meters from any other COP base`,
       }
     }
 
@@ -271,14 +260,14 @@ export async function validateBase(
   }
   if (BaseType.FOB === type) {
     const existingNearbyFOBRangeBases = (
-      await nearbyBases({
+      await findNearbyBases({
         accuracy: BASE_FOB_MIN_RANGE_METERS,
         coalition,
         position,
       })
     ).filter(excludeThisBase)
     const existingNearbyFARPRangeBases = (
-      await nearbyBases({
+      await findNearbyBases({
         accuracy: BASE_FARP_MIN_RANGE_METERS,
         coalition,
         position,
@@ -297,14 +286,14 @@ export async function validateBase(
     if (existingNearbyEqualOrGreaterBases.length > 0) {
       return {
         valid: false,
-        reason: `FOB base may only be created ${BASE_FOB_MIN_RANGE_METERS} from any other FOB or larger base`,
+        reason: `FOB base may only be created ${BASE_FOB_MIN_RANGE_METERS} meters from any other FOB or larger base`,
       }
     }
 
     if (existingNearbyLesserBases.length > 0) {
       return {
         valid: false,
-        reason: `FOB base may only be created ${BASE_FARP_MIN_RANGE_METERS} from any other FARM or smaller base`,
+        reason: `FOB base may only be created ${BASE_FARP_MIN_RANGE_METERS} meters from any other FARM or smaller base`,
       }
     }
 
@@ -374,12 +363,11 @@ export function baseTypeDisplayName(baseType: BaseType): string {
   return baseType
 }
 
-async function createBaseUnits(base: Base): Promise<Unit[]> {
+async function createBaseUnits(base: Base): Promise<void> {
+  const em = entityManager(await orm)
+
   // use base level to determine template
   const template = baseTemplateFrom(base)
-
-  // collection of unit(s) to return
-  const units: Unit[] = []
 
   // create and spawn units for template
   for (const unitTemplate of template.units) {
@@ -391,24 +379,26 @@ async function createBaseUnits(base: Base): Promise<Unit[]> {
       base.position.lon
     ).destinationPoint(distance, bearing)
 
+    const position = new Position({
+      lat,
+      lon,
+      alt: 0,
+      heading,
+    })
+
     // create the unit
     const unit = await createUnit({
       country: countryFrom(base.coalition),
-      heading: heading,
       hidden: true,
-      position: { lat: lat, lon: lon, alt: 0 },
+      position,
       typeName: typeName,
       isPlayerSlot: false,
     })
 
-    // assign this static as belonging to this base
-    await insertBaseUnit(base.baseId, unit.unitId)
-
-    // keep track of it to return
-    units.push(unit)
+    base.units.add(unit)
   }
 
-  return units
+  await em.persistAndFlush(base)
 }
 
 export async function spawnBase(base: Base): Promise<void> {
@@ -422,26 +412,10 @@ export async function spawnBase(base: Base): Promise<void> {
     type: 'Invisible FARP',
   })
 
-  // await mapTextToAll({
-  //   coalition: event.coalition,
-  //   position,
-  //   fillColor: {
-  //     red: 1,
-  //     blue: 0,
-  //     green: 0,
-  //     alpha: 1,
-  //   },
-  //   lineColor: {
-  //     red: 1,
-  //     blue: 1,
-  //     green: 1,
-  //     alpha: 1,
-  //   },
-  //   fontSize: 20,
-  //   readOnly: true,
-  //   text: `Attempt at multiline \n text`,
-  //   uniqueId: 203040,
-  // })
+  // make sure we have a labelMarkup to spawn
+  await wrap(base.labelMarkup).init()
+
+  await spawnMarkup(base.labelMarkup)
 
   await spawnBaseUnitsAndObjects(base)
 }
@@ -459,16 +433,28 @@ export async function spawnBaseUnitsAndObjects(base: Base): Promise<void> {
   await Promise.all([spawnBaseObjects(base), spawnBaseUnits(base)])
 }
 
-async function spawnBaseObjects({ baseId }: Base): Promise<void> {
-  for (const staticObject of await allBaseStaticObjects(baseId)) {
-    await spawnStaticObject(staticObject)
-  }
+async function spawnBaseObjects(base: Base): Promise<void> {
+  await base.staticObjects.loadItems()
+
+  await Promise.all(
+    Array.from(base.staticObjects).map(async staticObject => {
+      await wrap(staticObject).init()
+
+      await spawnStaticObject(staticObject)
+    })
+  )
 }
 
-async function spawnBaseUnits({ baseId }: Base) {
-  for (const baseUnit of await allBaseUnits(baseId)) {
-    await spawnGroundUnit(baseUnit)
-  }
+async function spawnBaseUnits(base: Base) {
+  await base.staticObjects.loadItems()
+
+  await Promise.all(
+    Array.from(base.units).map(async baseUnit => {
+      await wrap(baseUnit).init()
+
+      await spawnGroundUnit(baseUnit)
+    })
+  )
 }
 
 export async function createAndSpawnBaseUnitsAndObjects(
@@ -486,20 +472,80 @@ export async function destroyAndDespawnBaseUnitsAndObject(
   await Promise.all([destroyBaseObjects(base), destroyBaseUnits(base)])
 }
 
-async function destroyBaseObjects({ baseId }: Base): Promise<void> {
-  for (const staticObject of await allBaseStaticObjects(baseId)) {
-    const { staticObjectId } = staticObject
-    await deleteBaseStaticObject(baseId, staticObjectId)
-    await destroyStaticObject(staticObject)
+async function destroyBaseObjects(base: Base): Promise<void> {
+  const em = entityManager(await orm)
+
+  const staticObjects = await base.staticObjects.loadItems()
+
+  for (const staticObject of staticObjects) {
+    // delete the static object
+    await em.removeAndFlush(staticObject)
+    // despawn the static object
     await despawnStaticObject(staticObject)
   }
 }
 
-async function destroyBaseUnits({ baseId }: Base): Promise<void> {
-  for (const unit of await allBaseUnits(baseId)) {
-    const { unitId } = unit
-    await deleteBaseUnit(baseId, unitId)
-    await destroyUnit(unit)
+async function destroyBaseUnits(base: Base): Promise<void> {
+  const em = entityManager(await orm)
+
+  const baseUnits = await base.units.loadItems()
+  for (const unit of baseUnits) {
+    // delete the unit
+    await em.removeAndFlush(unit)
+    // despawn the unit
     await despawnUnit(unit)
   }
+}
+
+export async function findNearbyBases({
+  position,
+  accuracy,
+  coalition,
+}: {
+  position: Pick<Position, 'lat' | 'lon'>
+  accuracy: number
+  coalition: Coalition
+}): Promise<Base[]> {
+  const em = entityManager(await orm)
+
+  const baseRepository = em.getRepository(Base)
+
+  const { lat, lon } = position
+
+  let query = baseRepository
+    .createQueryBuilder('b')
+    .select('*')
+    .leftJoinAndSelect('b.position', 'p')
+    .where({
+      $and: [
+        { position: { lat: { $gte: lat - metersToDegree(accuracy) } } },
+        { position: { lat: { $lte: lat + metersToDegree(accuracy) } } },
+        { position: { lon: { $gte: lon - metersToDegree(accuracy) } } },
+        { position: { lon: { $lte: lon + metersToDegree(accuracy) } } },
+      ],
+    })
+
+  // if not all, search by coalition
+  if (Coalition.COALITION_ALL !== coalition) {
+    query = query.andWhere({ coalition })
+  }
+
+  const nearby = await query.getResultList()
+
+  // initialize the returned
+  return nearby
+    .map(base => baseRepository.map(base))
+    .map(base => {
+      return { base, distance: distanceFrom(position, base.position) }
+    })
+    .filter(base => base.distance <= accuracy)
+    .sort((a, b) => a.distance - b.distance)
+    .map(base => base.base)
+}
+
+export async function upgradeBaseTypeTo(
+  base: Base,
+  nextBaseType: BaseType
+): Promise<void> {
+  //
 }

@@ -1,4 +1,4 @@
-import { UnitTypeName } from '../unit'
+import { UnitTypeName } from '../db'
 import UH1H from './uh-1h.json'
 import AH64D from './ah-64d.json'
 import MI24 from './mi-24.json'

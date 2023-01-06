@@ -1,5 +1,5 @@
 import {
-  BaseType,
+  baseGone,
   baseTypeDisplayName,
   createBase,
   nextBaseTypeFrom,
@@ -9,20 +9,27 @@ import {
   createAndSpawnBaseUnitsAndObjects,
   spawnBase,
   createBaseUnitsAndObjects,
+  allBases,
+  findNearbyBases,
 } from '../base'
-import { CargoType, createCargo, loadCargo, unloadCargo } from '../cargo'
+import { createCargo, loadCargo, unloadCargo } from '../cargo'
 import { coalitionFrom } from '../coalition'
 import { CommandType, ToDestroy } from '../commands'
 import { deg, randomBetween } from '../common'
 import { getMarkById } from '../custom'
 import {
-  allBases,
-  baseGone,
-  findUnit,
-  nearbyBases,
-  updateBaseType,
+  entityManager,
+  orm,
+  BaseType,
+  BaseCargoType,
+  CargoSuperType,
+  Position,
+  UnitCargoType,
+  Unit,
+  TextMarkup,
+  MarkupType,
+  Color,
 } from '../db'
-import { findUnitCargo } from '../db/unitCargos'
 import {
   BirthEvent,
   Events,
@@ -32,7 +39,7 @@ import {
 } from '../events'
 import { LatLon } from '../geo'
 import { getUnits, groupFromGroupName } from '../group'
-import { MarkupType, NewMarkup } from '../markup'
+import { createPosition } from '../position'
 import { outCoalitionText, outGroupText, removeMapMark } from '../trigger'
 import { createUnit, getPositionVelocity, spawnGroundUnit } from '../unit'
 import { cargoDefinitionFrom } from './definitions'
@@ -80,22 +87,23 @@ export async function logisticsMain(): Promise<() => Promise<void>> {
 }
 
 async function handleBirth(event: BirthEvent): Promise<void> {
+  const em = entityManager(await orm)
+
+  const unitRepository = em.getRepository(Unit)
+
   if (!event.initiator.unit) {
     // no-op
     return
   }
 
-  const group = await groupFromGroupName(event.initiator.unit.groupName)
-
-  const units = await getUnits(event.initiator.unit.name)
-  const unit = await findUnit(units[0].name) // assume cargo is carried by first unit in group.
+  const unit = await unitRepository.findOne({ name: event.initiator.unit.name }) // assume cargo is carried by first unit in group.
 
   if (!unit) {
     // if there is no unit, we have nothing to do
     return
   }
 
-  const cargo = await findUnitCargo(unit)
+  const cargo = (await unit.cargos.matching({ limit: 1 }))[0]
 
   if (!cargo) {
     // if there is no cargo, we have nothing to do
@@ -103,26 +111,36 @@ async function handleBirth(event: BirthEvent): Promise<void> {
   }
 
   // unload the units cargo at birth
-  await unloadCargo(unit, cargo)
+  await unloadCargo(unit, cargo.unwrap())
 
-  // let the user know their internal cargo is reset (it's safe to load new cargo)
-  await outGroupText(group.id, `Your internal cargo has been reset`)
+  try {
+    const group = await groupFromGroupName(event.initiator.unit.groupName)
+
+    // let the user know their internal cargo is reset (it's safe to load new cargo)
+    await outGroupText(group.id, `Your internal cargo has been reset`)
+  } catch (error) {
+    // TODO: sometimes this fails to get a group name on first birth, maybe because the group doesn't exist yet?
+  }
 }
 
 async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
+  const em = entityManager(await orm)
+
+  const unitRepository = em.getRepository(Unit)
+
   const { command, group } = event
 
   const { type } = command
 
   if (CommandType.LoadInternalCargo === type) {
     const units = await getUnits(group.name)
-    const unit = await findUnit(units[0].name) // assume cargo is carried by first unit in group.
+    const unit = await unitRepository.findOne({ name: units[0].name }) // assume cargo is carried by first unit in group.
 
     if (!unit) {
       throw new Error('missing unit')
     }
 
-    const existingNearbyBases = await nearbyBases({
+    const existingNearbyBases = await findNearbyBases({
       position: unit.position,
       accuracy: UNIT_LOGISTICS_PICKUP_RANGE_METERS,
       coalition: coalitionFrom(unit.country),
@@ -141,7 +159,7 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
       return
     }
 
-    const existingUnitCargo = await findUnitCargo(unit)
+    const existingUnitCargo = (await unit.cargos.matching({ limit: 1 }))[0]
 
     if (typeof existingUnitCargo !== 'undefined') {
       await outGroupText(
@@ -152,7 +170,6 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
       return
     }
 
-    const originBaseId = existingNearbyBases[0].baseId
     const { position } = unit
 
     const { cargoDefinitionId } = command
@@ -162,7 +179,7 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
 
     const cargo = await createCargo({
       ...cargoDefinition,
-      originBaseId,
+      originBase: existingNearbyBases[0],
       position,
     })
 
@@ -172,21 +189,26 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
   }
   if (CommandType.UnpackInternalCargo === type) {
     const units = await getUnits(group.name)
-    const unit = await findUnit(units[0].name) // assume cargo is carried by first unit in group.
+    const unit = await unitRepository.findOne({ name: units[0].name }) // assume cargo is carried by first unit in group.
 
     if (!unit) {
       throw new Error('missing unit')
     }
 
-    const { country, heading } = unit
+    const {
+      country,
+      position: { heading },
+    } = unit
     const coalition = coalitionFrom(country)
-    const cargo = await findUnitCargo(unit)
+    const onboardCargo = await unit.cargos.matching({ limit: 1 })
     const [{ p: startingVec3 }] = await getPositionVelocity(unit.name)
 
-    if (!cargo) {
+    if (onboardCargo.length < 1) {
       await outGroupText(group.id, `You have no internal cargo to unpack`)
       return
     }
+
+    const cargo = onboardCargo[0].unwrap()
 
     await outGroupText(
       group.id,
@@ -209,13 +231,10 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
           return
         }
 
-        if (
-          [CargoType.BaseCreate, CargoType.BaseUpgrade].includes(cargo.type) ===
-          false
-        ) {
+        if (CargoSuperType.Base === cargo.superType) {
           if (
             (
-              await nearbyBases({
+              await findNearbyBases({
                 position: unit.position,
                 accuracy: CARGO_UNPACK_MIN_DISTANCE_FROM_BASE_METERS,
                 coalition: coalitionFrom(country),
@@ -233,147 +252,140 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
         }
 
         // determine a point in front of the unit to unpack cargo at
-        const basePosition = new LatLon(
+        const { lat, lon } = new LatLon(
           unit.position.lat,
           unit.position.lon
         ).destinationPoint(CARGO_UNPACK_DISTANCE_FROM_UNIT_METERS, deg(heading))
+        const position = new Position({ lat, lon, alt: 0, heading })
+        if (CargoSuperType.Base === cargo.superType) {
+          if (BaseCargoType.BaseCreate === cargo.type) {
+            // make sure a new base here would be valid
+            const baseIsValid = await validateBase({
+              coalition,
+              position,
+              type: BaseType.UnderConstruction,
+            })
 
-        if (CargoType.BaseCreate === cargo.type) {
-          // make sure a new base here would be valid
-          const baseIsValid = await validateBase({
-            coalition,
-            position: basePosition,
-            type: BaseType.UnderConstruction,
-          })
+            // If this base would be invalid after we upgrade it's type
+            if (baseIsValid.valid === false) {
+              await outGroupText(
+                group.id,
+                `Unpacking failed: A new base can't be created here: ${baseIsValid.reason}`
+              )
+              // go no further
+              return
+            }
 
-          // If this base would be invalid after we upgrade it's type
-          if (baseIsValid.valid === false) {
-            await outGroupText(
-              group.id,
-              `Unpacking failed: A new base can't be created here: ${baseIsValid.reason}`
+            // assume that if we get here we are creating a base
+
+            // remove the cargo from the unit
+            await unloadCargo(unit, cargo)
+
+            // create the new base
+            const base = await createBase({
+              coalition,
+              position,
+              type: BaseType.UnderConstruction,
+            })
+
+            await createBaseUnitsAndObjects(base)
+
+            await spawnBase(base)
+
+            // TODO: get the gridsquare and print it here
+            await outCoalitionText(
+              coalitionFrom(country),
+              `${unit.name} has started constructing a new base` // TODO: Add a gridsquare here
             )
-            // go no further
+            // we're done unpacking base create kit
             return
           }
 
-          // assume that if we get here we are creating a base
+          if (BaseCargoType.BaseUpgrade === cargo.type) {
+            // determine if an existing base is nearby to try and upgrade
+            const basesNearby = await findNearbyBases({
+              accuracy: BASE_UPGRADE_RANGE_METERS,
+              coalition,
+              position: unit.position,
+            })
 
-          // remove the cargo from the unit
-          await unloadCargo(unit, cargo)
+            // if we don't find any base to upgrade
+            if (basesNearby.length < 1) {
+              await outGroupText(
+                group.id,
+                `Base upgrade failed: No base found nearby to upgrade.`
+              )
+              // go no further
+              return
+            }
 
-          // create the new base
-          const base = await createBase({
-            coalition,
-            heading,
-            position: basePosition,
-            type: BaseType.UnderConstruction,
-          })
+            // use nearest base as the base to upgrade (we only ever expect one base here)
+            const base = basesNearby[0]
 
-          await createBaseUnitsAndObjects(base)
+            // ensure the cargo we are unpacking came from another base
+            if (base.baseId === cargo.originBase.baseId) {
+              await outGroupText(
+                group.id,
+                `Base upgrade failed: Nice try, but you got that cargo from here! You must use a base upgrade from a different base.`
+              )
+              // go no further
+              return
+            }
 
-          await spawnBase(base)
+            const { type: previousBaseType } = base
 
-          // TODO: get the gridsquare and print it here
-          await outCoalitionText(
-            coalitionFrom(country),
-            `${unit.name} has started constructing a new base in <gridsquare>`
-          )
-          // we're done unpacking base create kit
-          return
+            const nextBaseType = nextBaseTypeFrom(base.type)
+
+            // if there are no further upgrades for this base
+            if (typeof nextBaseType === 'undefined') {
+              await outGroupText(
+                group.id,
+                `Base upgrade failed: This base can't be upgraded anymore.`
+              )
+              // go no further
+              return
+            }
+
+            // make sure the upgraded base (with it's new type) is still valid
+            const baseIsValid = await validateBase({
+              ...base,
+              type: nextBaseType,
+            })
+
+            // If this base would be invalid after we upgrade it's type
+            if (baseIsValid.valid === false) {
+              await outGroupText(
+                group.id,
+                `This base can't be upgraded: ${baseIsValid.reason}`
+              )
+              // go no further
+              return
+            }
+
+            // assume that if we get here we are upgrading a base
+
+            // unload the cargo from the unit
+            await unloadCargo(unit, cargo)
+
+            await destroyAndDespawnBaseUnitsAndObject(base)
+
+            await upgradeBaseTypeTo(base, nextBaseType)
+
+            createAndSpawnBaseUnitsAndObjects(base)
+
+            // TODO: get the gridsquare and print it here
+            await outCoalitionText(
+              coalitionFrom(country),
+              `${unit.name} has upgraded a base from ${baseTypeDisplayName(
+                previousBaseType
+              )} to ${baseTypeDisplayName(nextBaseType)}` // TODO: Add a gridsquare here
+            )
+            // we're done unpacking base upgrade kit
+            return
+          }
         }
 
-        if (CargoType.BaseUpgrade === cargo.type) {
-          // determine if an existing base is nearby to try and upgrade
-          const basesNearby = await nearbyBases({
-            accuracy: BASE_UPGRADE_RANGE_METERS,
-            coalition,
-            position: unit.position,
-          })
-
-          // if we don't find any base to upgrade
-          if (basesNearby.length < 1) {
-            await outGroupText(
-              group.id,
-              `Base upgrade failed: No base found nearby to upgrade.`
-            )
-            // go no further
-            return
-          }
-
-          // use nearest base as the base to upgrade (we only ever expect one base here)
-          const base = basesNearby[0]
-
-          // ensure the cargo we are unpacking came from another base
-          if (base.baseId === cargo.originBaseId) {
-            await outGroupText(
-              group.id,
-              `Base upgrade failed: Nice try, but you got that cargo from here! You must use a base upgrade from a different base.`
-            )
-            // go no further
-            return
-          }
-
-          const { type: previousBaseType } = base
-
-          const nextBaseType = nextBaseTypeFrom(base.type)
-
-          // if there are no further upgrades for this base
-          if (typeof nextBaseType === 'undefined') {
-            await outGroupText(
-              group.id,
-              `Base upgrade failed: This base can't be upgraded anymore.`
-            )
-            // go no further
-            return
-          }
-
-          // make sure the upgraded base (with it's new type) is still valid
-          const baseIsValid = await validateBase({
-            ...base,
-            type: nextBaseType,
-          })
-
-          // If this base would be invalid after we upgrade it's type
-          if (baseIsValid.valid === false) {
-            await outGroupText(
-              group.id,
-              `This base can't be upgraded: ${baseIsValid.reason}`
-            )
-            // go no further
-            return
-          }
-
-          // assume that if we get here we are upgrading a base
-
-          // unload the cargo from the unit
-          await unloadCargo(unit, cargo)
-
-          await destroyAndDespawnBaseUnitsAndObject(base)
-
-          // change the base type
-          await updateBaseType({
-            baseId: base.baseId,
-            type: nextBaseType,
-          })
-
-          // update the base type on our base object to simplify logic below
-          base.type = nextBaseType
-
-          createAndSpawnBaseUnitsAndObjects(base)
-
-          // TODO: get the gridsquare and print it here
-          await outCoalitionText(
-            coalitionFrom(country),
-            `${
-              unit.name
-            } has upgraded a base in <gridsquare> from ${baseTypeDisplayName(
-              previousBaseType
-            )} to ${baseTypeDisplayName(nextBaseType)}`
-          )
-          // we're done unpacking base upgrade kit
-          return
-        }
-        if (CargoType.UnitCreate === cargo.type) {
+        if (UnitCargoType.UnitCreate === cargo.type) {
           const { unitTypeName } = cargo
 
           // determine a point in front of the unit to unpack cargo at
@@ -385,7 +397,7 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
             deg(heading)
           )
 
-          const position = { lat, lon, alt: 0 }
+          const position = await createPosition({ lat, lon, alt: 0, heading })
 
           // unload the cargo from the unit
           await unloadCargo(unit, cargo)
@@ -393,7 +405,6 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
           // create the new unit
           const newUnit = await createUnit({
             country,
-            heading,
             hidden: false,
             isPlayerSlot: false,
             position,
@@ -403,10 +414,9 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
           // spawn the unit in the game
           await spawnGroundUnit(newUnit)
 
-          // TODO: get the gridsquare and print it here
           await outCoalitionText(
             coalitionFrom(country),
-            `${unit.name} has unpacked a ${cargo.displayName} in <gridsquare>`
+            `${unit.name} has unpacked a ${cargo.displayName}` // TODO: Add a gridsquare here
           )
           // we're done unpacking base upgrade kit
           return
@@ -422,37 +432,40 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
   }
   if (CommandType.CheckInternalCargo === type) {
     const units = await getUnits(group.name)
-    const unit = await findUnit(units[0].name) // assume cargo is carried by first unit in group.
+    const unit = await unitRepository.findOne({ name: units[0].name }) // assume cargo is carried by first unit in group.
 
     if (!unit) {
       throw new Error('missing unit')
     }
 
-    const cargo = await findUnitCargo(unit)
+    const cargo = (await unit.cargos.matching({ limit: 1 }))[0]
 
     if (!cargo) {
       await outGroupText(group.id, `You have no internal cargo onboard.`)
       return
     }
 
-    await outGroupText(group.id, `You have a ${cargo.displayName} onboard.`)
+    await outGroupText(
+      group.id,
+      `You have a ${cargo.unwrap().displayName} onboard.`
+    )
   }
   if (CommandType.DestroyInternalCargo === type) {
     const units = await getUnits(group.name)
-    const unit = await findUnit(units[0].name) // assume cargo is carried by first unit in group.
+    const unit = await unitRepository.findOne({ name: units[0].name }) // assume cargo is carried by first unit in group.
 
     if (!unit) {
       throw new Error('missing unit')
     }
 
-    const cargo = await findUnitCargo(unit)
+    const cargo = (await unit.cargos.matching({ limit: 1 }))[0]
 
     if (!cargo) {
       await outGroupText(group.id, `You have no internal cargo to destroy`)
       return
     }
 
-    await unloadCargo(unit, cargo)
+    await unloadCargo(unit, cargo.unwrap())
 
     await outGroupText(group.id, `Your internal cargo has beeen destroyed`)
   }
@@ -474,15 +487,29 @@ async function handleMarkChange(event: MarkChangeEvent) {
         throw new Error('expected addedMark')
       }
 
-      const { position } = addedMark
+      const { lat, lon } = addedMark.position
 
-      // create the new base
-      const base = await createBase({
+      const position = new Position({ lat, lon, alt: 0, heading: 0 })
+
+      const newBase = {
         coalition,
-        heading: 0,
         position,
         type: baseType,
-      })
+      }
+
+      const baseIsValid = await validateBase(newBase)
+
+      if (baseIsValid.valid === false) {
+        // base would not be valid, don't continue
+        await outCoalitionText(
+          coalition,
+          `A new base can't be created here: ${baseIsValid.reason}`
+        )
+        return
+      }
+
+      // create the new base
+      const base = await createBase(newBase)
 
       await createBaseUnitsAndObjects(base)
 
@@ -491,7 +518,7 @@ async function handleMarkChange(event: MarkChangeEvent) {
       // TODO: get the gridsquare and print it here
       await outCoalitionText(
         coalition,
-        `A new base has begun construction in <gridsquare>`
+        `A new base has been constructed` // TODO: Add a gridsquare here
       )
 
       await removeMapMark(id)
@@ -510,7 +537,7 @@ async function handleMarkChange(event: MarkChangeEvent) {
 
       const { position } = addedMark
 
-      const foundBases = await nearbyBases({
+      const foundBases = await findNearbyBases({
         position,
         accuracy: command.radius || DESTROY_SINGLE_BASE_SEARCH_RANGE_METERS,
         coalition: command.coalition || event.coalition, // coalition should prioritize command input
@@ -527,10 +554,8 @@ async function handleMarkChange(event: MarkChangeEvent) {
 
       await Promise.all(
         foundBases.map(async base => {
-          const { baseId } = base
-
           await despawnBase(base)
-          await baseGone(baseId)
+          await baseGone(base)
         })
       )
 
