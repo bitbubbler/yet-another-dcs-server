@@ -1,3 +1,11 @@
+// db must be the first import
+import { orm } from '../db/db'
+
+// just hold a reference here (i promise, this fixes a bug)
+const db = orm
+
+import { Position, StaticObjectTypeName, Unit, UnitTypeName } from '../db'
+
 import assert from 'assert'
 import { PositionLL } from '../common'
 
@@ -5,7 +13,6 @@ import { LatLon } from '../geo'
 import { Mission } from '../restartMission/types'
 import { services } from '../services'
 import { Template } from '../base-templates/types'
-import { Position, StaticObjectTypeName, Unit, UnitTypeName } from '../db'
 import { positionLatLonFrom } from '../coord'
 
 const { custom, hook } = services
@@ -255,6 +262,27 @@ function staticObjectTypeNameStringFrom(maybeTypeName: string): string {
   }
   if (maybeTypeName === StaticObjectTypeName.HangerA) {
     return `StaticObjectTypeName.HangerA`
+  }
+  if (maybeTypeName === StaticObjectTypeName.CV59NS60) {
+    return `StaticObjectTypeName.CV59NS60`
+  }
+  if (maybeTypeName === StaticObjectTypeName.SoldierM4GRG) {
+    return `StaticObjectTypeName.SoldierM4GRG`
+  }
+  if (maybeTypeName === StaticObjectTypeName.TACANBeacon) {
+    return `StaticObjectTypeName.TACANBeacon`
+  }
+  if (maybeTypeName === StaticObjectTypeName.ISOContainer) {
+    return `StaticObjectTypeName.ISOContainer`
+  }
+  if (maybeTypeName === StaticObjectTypeName.PatriotEPP) {
+    return `StaticObjectTypeName.PatriotEPP`
+  }
+  if (maybeTypeName === StaticObjectTypeName.PatriotEPP) {
+    return `StaticObjectTypeName.PatriotEPP`
+  }
+  if (maybeTypeName === StaticObjectTypeName.M818) {
+    return `StaticObjectTypeName.M818`
   }
 
   debugger

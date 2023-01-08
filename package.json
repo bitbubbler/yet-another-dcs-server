@@ -23,7 +23,6 @@
   },
   "scripts": {
     "start": "ts-node --compilerOptions {\\\"module\\\":\\\"CommonJS\\\"} src/bin/server.ts",
-    "say": "ts-node --compilerOptions {\\\"module\\\":\\\"CommonJS\\\"} src/bin/test.ts",
     "dump-template": "ts-node --compilerOptions {\\\"module\\\":\\\"CommonJS\\\"} src/bin/dump-template.ts",
     "test": "jest",
     "lint": "eslint src/",
