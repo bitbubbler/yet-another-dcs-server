@@ -1,6 +1,7 @@
 import {
   Collection,
   Entity,
+  Filter,
   Index,
   ManyToMany,
   OneToOne,
@@ -12,8 +13,9 @@ import {
 import { Position } from '../Position'
 import { BaseEntity } from '../BaseEntity'
 import { UnitUnitCargo } from '../UnitUnitCargo'
-import { BaseCargo, CargoBase, UnitCargo } from '../Cargo'
+import { BaseCargo, CargoBase, CsarCargo, UnitCargo } from '../Cargo'
 import { UnitTypeName } from './types'
+import { coalitionFrom } from '../../../coalition'
 
 /**
  * An array of unit types that can never respawn
@@ -44,6 +46,15 @@ export type NewUnit = Pick<
   Partial<Pick<Unit, 'canRespawn'>>
 
 @Entity({ tableName: 'units' })
+@Filter({
+  name: 'notGone',
+  cond: {
+    goneAt: {
+      $eq: null,
+    },
+  },
+  default: true,
+})
 export class Unit extends BaseEntity {
   @PrimaryKey()
   unitId!: number
@@ -58,8 +69,11 @@ export class Unit extends BaseEntity {
   @Property()
   canRespawn: boolean
 
-  @ManyToMany({ entity: () => CargoBase, pivotEntity: () => UnitUnitCargo })
-  cargos = new Collection<Ref<BaseCargo | UnitCargo>>(this)
+  @ManyToMany({
+    entity: () => CargoBase, // NOTE: entity is REQUIRED on this relation due to complexity
+    pivotEntity: () => UnitUnitCargo,
+  })
+  cargos = new Collection<BaseCargo | CsarCargo | UnitCargo>(this)
 
   @Property()
   country: number
@@ -101,6 +115,10 @@ export class Unit extends BaseEntity {
     this.name = name
     this.position = position
     this.typeName = typeName
+  }
+
+  get coalition() {
+    return coalitionFrom(this.country)
   }
 
   destroyed() {

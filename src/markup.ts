@@ -43,6 +43,12 @@ export async function spawnMarkup(
   throw new Error('attempted to spawn markup of unknown type')
 }
 
+export async function despawnMarkup(
+  markup: TextMarkup | CircleMarkup
+): Promise<void> {
+  // TODO: implement this
+}
+
 export async function destroyMarkup(markup: Markup): Promise<void> {
   await entityManager(await orm)
     .remove(markup)

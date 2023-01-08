@@ -1,26 +1,20 @@
-import { Position } from '../generated/dcs/common/v0/Position'
 import {
-  BirthEvent,
   Events,
   EventType,
   GroupCommandEvent,
-  MarkAddEvent,
   MarkChangeEvent,
   PlayerSendChatEvent,
 } from '../events'
 import { outGroupText, outUnitText, removeMapMark } from '../trigger'
 
-import { getMarkById, getMarkPanels, MarkPanel } from '../custom'
-import { MarkPanelsMissingError } from '../errors'
-import { groupFromGroupName } from '../group'
+import { getMarkById } from '../custom'
 import { countryFrom } from '../country'
 import { searchUnits } from './searchUnits'
 import {
-  createUnit,
-  despawnUnit,
   spawnGroundUnit,
   createGroundUnitsInCircle,
   findNearbyUnits,
+  despawnGroundUnit,
 } from '../unit'
 import {
   CommandType,
@@ -29,7 +23,6 @@ import {
 } from '../commands/types'
 import { distanceFrom } from '../common'
 import { entityManager, orm, SpawnGroup, UnitTypeName } from '../db'
-import { createPosition } from '../position'
 
 const DESTROY_SINGLE_UNIT_SEARCH_RANGE = 250
 
@@ -37,9 +30,6 @@ export async function spawnUnitsMain(): Promise<() => Promise<void>> {
   const subscription = Events.subscribe(async event => {
     if (EventType.GroupCommand === event.type) {
       return handleGroupCommand(event)
-    }
-    if (EventType.Birth === event.type) {
-      return handleBirth(event)
     }
     if (EventType.MarkChange === event.type) {
       return handleMarkChangeEvent(event)
@@ -184,7 +174,7 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
             (command.radius || DESTROY_SINGLE_UNIT_SEARCH_RANGE)
           ) {
             // despawn the unit.
-            await despawnUnit(unit)
+            await despawnGroundUnit(unit)
 
             // mark it as gone
             unit.gone()
@@ -240,35 +230,6 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
 
       // remove the map marker
       await removeMapMark(id)
-    }
-  }
-}
-
-async function handleBirth(event: BirthEvent) {
-  if (!event.initiator.unit) {
-    // no-op
-    return
-  }
-  const { country, name, playerName, typeName } = event.initiator.unit
-
-  if (playerName && playerName.length > 0) {
-    // create a player unit if it doesn't exist`
-    try {
-      const position = await createPosition({
-        ...event.initiator.unit.position,
-        heading: 0,
-      })
-
-      await createUnit({
-        country,
-        hidden: false,
-        name,
-        isPlayerSlot: true,
-        position,
-        typeName: typeName as UnitTypeName,
-      })
-    } catch (err) {
-      // silently ignore these
     }
   }
 }

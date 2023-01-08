@@ -66,6 +66,177 @@
     },
     {
       "columns": {
+        "playerId": {
+          "name": "playerId",
+          "type": "integer",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "mappedType": "integer"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "datetime",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "datetime",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "text"
+        },
+        "ucid": {
+          "name": "ucid",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "text"
+        }
+      },
+      "name": "players",
+      "indexes": [
+        {
+          "columnNames": [
+            "ucid"
+          ],
+          "composite": false,
+          "keyName": "players_ucid_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "keyName": "primary",
+          "columnNames": [
+            "playerId"
+          ],
+          "composite": false,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {}
+    },
+    {
+      "columns": {
+        "playerIpId": {
+          "name": "playerIpId",
+          "type": "integer",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "mappedType": "integer"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "datetime",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "datetime",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
+        },
+        "playerId": {
+          "name": "playerId",
+          "type": "integer",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "integer"
+        },
+        "ip": {
+          "name": "ip",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "text"
+        }
+      },
+      "name": "playerIps",
+      "indexes": [
+        {
+          "columnNames": [
+            "playerId"
+          ],
+          "composite": false,
+          "keyName": "playerIps_playerId_index",
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "playerIps_playerId_ip_unique",
+          "columnNames": [
+            "playerId",
+            "ip"
+          ],
+          "composite": true,
+          "primary": false,
+          "unique": true
+        },
+        {
+          "keyName": "primary",
+          "columnNames": [
+            "playerIpId"
+          ],
+          "composite": false,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "playerIps_playerId_foreign": {
+          "constraintName": "playerIps_playerId_foreign",
+          "columnNames": [
+            "playerId"
+          ],
+          "localTableName": "playerIps",
+          "referencedColumnNames": [
+            "playerId"
+          ],
+          "referencedTableName": "players",
+          "updateRule": "cascade"
+        }
+      }
+    },
+    {
+      "columns": {
         "positionId": {
           "name": "positionId",
           "type": "integer",
@@ -597,209 +768,6 @@
     },
     {
       "columns": {
-        "cargoId": {
-          "name": "cargoId",
-          "type": "integer",
-          "unsigned": true,
-          "autoincrement": true,
-          "primary": true,
-          "nullable": false,
-          "mappedType": "integer"
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "datetime",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 0,
-          "mappedType": "datetime"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "datetime",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 0,
-          "mappedType": "datetime"
-        },
-        "displayName": {
-          "name": "displayName",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "text"
-        },
-        "goneAt": {
-          "name": "goneAt",
-          "type": "datetime",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 0,
-          "mappedType": "datetime"
-        },
-        "internal": {
-          "name": "internal",
-          "type": "integer",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "integer"
-        },
-        "mass": {
-          "name": "mass",
-          "type": "integer",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "integer"
-        },
-        "positionId": {
-          "name": "positionId",
-          "type": "integer",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "integer"
-        },
-        "superType": {
-          "name": "superType",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "enumItems": [
-            "0",
-            "1"
-          ],
-          "mappedType": "text"
-        },
-        "typeName": {
-          "name": "typeName",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "text"
-        },
-        "uuid": {
-          "name": "uuid",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "originBaseId": {
-          "name": "originBaseId",
-          "type": "integer",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "integer"
-        },
-        "type": {
-          "name": "type",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "text"
-        },
-        "unitTypeName": {
-          "name": "unitTypeName",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "text"
-        }
-      },
-      "name": "cargos",
-      "indexes": [
-        {
-          "columnNames": [
-            "positionId"
-          ],
-          "composite": false,
-          "keyName": "cargos_positionId_unique",
-          "primary": false,
-          "unique": true
-        },
-        {
-          "columnNames": [
-            "superType"
-          ],
-          "composite": false,
-          "keyName": "cargos_superType_index",
-          "primary": false,
-          "unique": false
-        },
-        {
-          "columnNames": [
-            "originBaseId"
-          ],
-          "composite": false,
-          "keyName": "cargos_originBaseId_unique",
-          "primary": false,
-          "unique": true
-        },
-        {
-          "keyName": "primary",
-          "columnNames": [
-            "cargoId"
-          ],
-          "composite": false,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "cargos_positionId_foreign": {
-          "constraintName": "cargos_positionId_foreign",
-          "columnNames": [
-            "positionId"
-          ],
-          "localTableName": "cargos",
-          "referencedColumnNames": [
-            "positionId"
-          ],
-          "referencedTableName": "positions",
-          "updateRule": "cascade"
-        },
-        "cargos_originBaseId_foreign": {
-          "constraintName": "cargos_originBaseId_foreign",
-          "columnNames": [
-            "originBaseId"
-          ],
-          "localTableName": "cargos",
-          "referencedColumnNames": [
-            "baseId"
-          ],
-          "referencedTableName": "bases",
-          "updateRule": "cascade"
-        }
-      }
-    },
-    {
-      "columns": {
         "spawnerId": {
           "name": "spawnerId",
           "type": "integer",
@@ -1049,12 +1017,12 @@
         },
         "typeName": {
           "name": "typeName",
-          "type": "text",
+          "type": "integer",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "mappedType": "text"
+          "mappedType": "integer"
         },
         "uuid": {
           "name": "uuid",
@@ -1459,6 +1427,472 @@
             "unitId"
           ],
           "referencedTableName": "units",
+          "updateRule": "cascade"
+        }
+      }
+    },
+    {
+      "columns": {
+        "csarId": {
+          "name": "csarId",
+          "type": "integer",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "mappedType": "integer"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "datetime",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "datetime",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
+        },
+        "coalition": {
+          "name": "coalition",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "text"
+        },
+        "goneAt": {
+          "name": "goneAt",
+          "type": "datetime",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 0,
+          "mappedType": "datetime"
+        },
+        "pickedUpAt": {
+          "name": "pickedUpAt",
+          "type": "datetime",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 0,
+          "mappedType": "datetime"
+        },
+        "playerId": {
+          "name": "playerId",
+          "type": "integer",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "integer"
+        },
+        "positionId": {
+          "name": "positionId",
+          "type": "integer",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "integer"
+        },
+        "rescuedAt": {
+          "name": "rescuedAt",
+          "type": "datetime",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 0,
+          "mappedType": "datetime"
+        },
+        "diedUnitId": {
+          "name": "diedUnitId",
+          "type": "integer",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "integer"
+        },
+        "markerStaticObjectId": {
+          "name": "markerStaticObjectId",
+          "type": "integer",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "integer"
+        },
+        "unitId": {
+          "name": "unitId",
+          "type": "integer",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "integer"
+        }
+      },
+      "name": "csars",
+      "indexes": [
+        {
+          "columnNames": [
+            "playerId"
+          ],
+          "composite": false,
+          "keyName": "csars_playerId_index",
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "positionId"
+          ],
+          "composite": false,
+          "keyName": "csars_positionId_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "markerStaticObjectId"
+          ],
+          "composite": false,
+          "keyName": "csars_markerStaticObjectId_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "unitId"
+          ],
+          "composite": false,
+          "keyName": "csars_unitId_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "keyName": "primary",
+          "columnNames": [
+            "csarId"
+          ],
+          "composite": false,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "csars_playerId_foreign": {
+          "constraintName": "csars_playerId_foreign",
+          "columnNames": [
+            "playerId"
+          ],
+          "localTableName": "csars",
+          "referencedColumnNames": [
+            "playerId"
+          ],
+          "referencedTableName": "players",
+          "updateRule": "cascade"
+        },
+        "csars_positionId_foreign": {
+          "constraintName": "csars_positionId_foreign",
+          "columnNames": [
+            "positionId"
+          ],
+          "localTableName": "csars",
+          "referencedColumnNames": [
+            "positionId"
+          ],
+          "referencedTableName": "positions",
+          "updateRule": "cascade"
+        },
+        "csars_diedUnitId_foreign": {
+          "constraintName": "csars_diedUnitId_foreign",
+          "columnNames": [
+            "diedUnitId"
+          ],
+          "localTableName": "csars",
+          "referencedColumnNames": [
+            "unitId"
+          ],
+          "referencedTableName": "units",
+          "updateRule": "cascade"
+        },
+        "csars_markerStaticObjectId_foreign": {
+          "constraintName": "csars_markerStaticObjectId_foreign",
+          "columnNames": [
+            "markerStaticObjectId"
+          ],
+          "localTableName": "csars",
+          "referencedColumnNames": [
+            "staticObjectId"
+          ],
+          "referencedTableName": "staticObjects",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "csars_unitId_foreign": {
+          "constraintName": "csars_unitId_foreign",
+          "columnNames": [
+            "unitId"
+          ],
+          "localTableName": "csars",
+          "referencedColumnNames": [
+            "unitId"
+          ],
+          "referencedTableName": "units",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        }
+      }
+    },
+    {
+      "columns": {
+        "cargoId": {
+          "name": "cargoId",
+          "type": "integer",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "mappedType": "integer"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "datetime",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "datetime",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "mappedType": "datetime"
+        },
+        "displayName": {
+          "name": "displayName",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "text"
+        },
+        "goneAt": {
+          "name": "goneAt",
+          "type": "datetime",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 0,
+          "mappedType": "datetime"
+        },
+        "internal": {
+          "name": "internal",
+          "type": "integer",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "integer"
+        },
+        "mass": {
+          "name": "mass",
+          "type": "integer",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "integer"
+        },
+        "positionId": {
+          "name": "positionId",
+          "type": "integer",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "integer"
+        },
+        "superType": {
+          "name": "superType",
+          "type": "integer",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "enumItems": [
+            "0",
+            "1",
+            "2"
+          ],
+          "mappedType": "integer"
+        },
+        "typeName": {
+          "name": "typeName",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "text"
+        },
+        "uuid": {
+          "name": "uuid",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "originBaseId": {
+          "name": "originBaseId",
+          "type": "integer",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "integer"
+        },
+        "csarId": {
+          "name": "csarId",
+          "type": "integer",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "integer"
+        },
+        "type": {
+          "name": "type",
+          "type": "integer",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "integer"
+        },
+        "unitTypeName": {
+          "name": "unitTypeName",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "text"
+        }
+      },
+      "name": "cargos",
+      "indexes": [
+        {
+          "columnNames": [
+            "positionId"
+          ],
+          "composite": false,
+          "keyName": "cargos_positionId_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "superType"
+          ],
+          "composite": false,
+          "keyName": "cargos_superType_index",
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "originBaseId"
+          ],
+          "composite": false,
+          "keyName": "cargos_originBaseId_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "csarId"
+          ],
+          "composite": false,
+          "keyName": "cargos_csarId_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "keyName": "primary",
+          "columnNames": [
+            "cargoId"
+          ],
+          "composite": false,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "cargos_positionId_foreign": {
+          "constraintName": "cargos_positionId_foreign",
+          "columnNames": [
+            "positionId"
+          ],
+          "localTableName": "cargos",
+          "referencedColumnNames": [
+            "positionId"
+          ],
+          "referencedTableName": "positions",
+          "updateRule": "cascade"
+        },
+        "cargos_originBaseId_foreign": {
+          "constraintName": "cargos_originBaseId_foreign",
+          "columnNames": [
+            "originBaseId"
+          ],
+          "localTableName": "cargos",
+          "referencedColumnNames": [
+            "baseId"
+          ],
+          "referencedTableName": "bases",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "cargos_csarId_foreign": {
+          "constraintName": "cargos_csarId_foreign",
+          "columnNames": [
+            "csarId"
+          ],
+          "localTableName": "cargos",
+          "referencedColumnNames": [
+            "csarId"
+          ],
+          "referencedTableName": "csars",
+          "deleteRule": "set null",
           "updateRule": "cascade"
         }
       }

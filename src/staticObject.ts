@@ -53,7 +53,7 @@ export async function spawnStaticObject(
   const { country, position, typeName } = staticObject
   const { lat, lon, heading } = position
 
-  console.log('trying to spawn static', staticObject)
+  console.log(`attempting to spawn staticObject of type ${typeName}`)
 
   const lua = `
   local vec3 = coord.LLtoLO(${lat}, ${lon}, 0)

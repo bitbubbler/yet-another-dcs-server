@@ -15,6 +15,7 @@ import { unitTemplateFrom } from '../unit-templates'
 import { loadMissionFile } from '../net'
 import { options } from '../cli'
 import { HelicopterUnit, Point } from './types'
+import { waitForTime } from '../common'
 
 export async function restartMissionMain(): Promise<() => Promise<void>> {
   const subscription = Events.subscribe(async event => {
@@ -104,19 +105,11 @@ async function handleMissionCommand(event: MissionCommandEvent): Promise<void> {
     await loadMissionFile(newMissionFileName)
 
     // wait ???? why do we wait here?
-    await waitForTimeout(1000)
+    await waitForTime(1000)
 
     // Tell the rest of the application we restarted
     Restarts.next()
   }
-}
-
-async function waitForTimeout(ms?: number | undefined): Promise<void> {
-  return new Promise(resolve => {
-    // TODO: timeouts can be canceled/cleared. Right now this has potential for a memory leak
-    // if this timeout is canceled/cleared this promise chain will be left unresolve and unrejected.
-    setTimeout(() => resolve(), ms)
-  })
 }
 
 async function zipEntryDataFrom(zipEntry: IZipEntry): Promise<Buffer> {
@@ -211,7 +204,7 @@ async function patchMission(mission: Mission): Promise<Mission> {
 
       const point: Point = {
         alt: 500,
-        action: 'From Ground Area',
+        action: 'From Ground Area Hot',
         alt_type: 'BARO',
         speed: 44.444444444444,
         task: {
@@ -220,7 +213,7 @@ async function patchMission(mission: Mission): Promise<Mission> {
             tasks: {},
           },
         },
-        type: 'TakeOffGround',
+        type: 'TakeOffGroundHot',
         ETA: 0,
         ETA_locked: true,
         y,

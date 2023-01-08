@@ -3,11 +3,12 @@ import { orm } from '../db/db'
 jest.mock('../cli', () => ({
   options: {
     address: 'hi',
+    dbName: ':memory:',
   },
 }))
 
 beforeEach(async () => {
-  await (await orm).getSchemaGenerator().refreshDatabase()
+  await (await orm).getSchemaGenerator().clearDatabase()
 })
 
 afterAll(async () => {

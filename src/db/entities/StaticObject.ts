@@ -24,7 +24,7 @@ export class StaticObject extends BaseEntity {
   @Property()
   country: Country
 
-  @Property()
+  @Property({ type: 'integer' })
   typeName: StaticObjectTypeName
 
   @Property({ columnType: 'uuid' })
@@ -61,4 +61,6 @@ export enum StaticObjectTypeName {
   UH1HCargo = 'uh1h_cargo',
   HangerA = 'Hangar A',
   BigWhoop = 'Big Whoop',
+  FlagWhite = 'White_Flag',
+  FlagRed = 'Red_Flag',
 }

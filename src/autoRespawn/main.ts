@@ -9,15 +9,8 @@ import {
 import { markToAll, outText, removeMapMark } from '../trigger'
 import { getMarkById, getMarkPanels, MarkPanel } from '../custom'
 import { CommandType, ToDestroy } from '../commands'
-import {
-  entityManager,
-  orm,
-  Position,
-  Spawner,
-  SpawnerQueuedUnit,
-  SpawnerType,
-  Unit,
-} from '../db'
+import { entityManager, orm } from '../db/db'
+import { Position, Spawner, SpawnerQueuedUnit, SpawnerType, Unit } from '../db'
 import { distanceFrom, PositionLL, randomBetween } from '../common'
 import {
   createGroundUnitsInCircle,

@@ -5,7 +5,7 @@ import { StreamUnitsResponse__Output } from './generated/dcs/mission/v0/StreamUn
 
 import { services } from './services'
 import { Restarts } from './signals'
-import { GameUnit, unitFrom } from './unit'
+import { GameUnit, gameUnitFrom } from './unit'
 
 const { mission } = services
 
@@ -65,7 +65,7 @@ async function handleUnitEvent(
     try {
       return UnitEvents.next({
         type: UnitEventType.Update,
-        unit: unitFrom(event.unit),
+        unit: gameUnitFrom(event.unit),
       })
     } catch (error) {
       console.log('failed to handle unit event', event)

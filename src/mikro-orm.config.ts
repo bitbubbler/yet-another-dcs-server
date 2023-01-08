@@ -1,4 +1,8 @@
-import { EntityCaseNamingStrategy, Options } from '@mikro-orm/core'
+import {
+  EntityCaseNamingStrategy,
+  LoadStrategy,
+  Options,
+} from '@mikro-orm/core'
 import { SqlHighlighter } from '@mikro-orm/sql-highlighter'
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection'
 
@@ -10,9 +14,11 @@ import {
   CargoBase,
   CircleMarkup,
   Color,
+  Csar,
   MarkupBase,
   MarkupPoint,
   Position,
+  PlayerIp,
   Spawner,
   SpawnerQueuedUnit,
   SpawnGroup,
@@ -21,11 +27,13 @@ import {
   Unit,
   UnitCargo,
   UnitUnitCargo,
+  Player,
+  CsarCargo,
 } from './db'
 import { BetterSqliteDriver } from '@mikro-orm/better-sqlite'
 
 const config: Options<BetterSqliteDriver> = {
-  dbName: ':memory:',
+  dbName: '../dev.sqlite',
   debug: false, // TODO: put this on a config from cli.ts
   entities: [
     Base,
@@ -33,10 +41,14 @@ const config: Options<BetterSqliteDriver> = {
     BaseUnit,
     BaseCargo,
     CargoBase,
+    CsarCargo,
     CircleMarkup,
     Color,
+    Csar,
     MarkupBase,
     MarkupPoint,
+    Player,
+    PlayerIp,
     Position,
     Spawner,
     SpawnerQueuedUnit,
@@ -49,6 +61,7 @@ const config: Options<BetterSqliteDriver> = {
   ],
   forceUtcTimezone: true,
   highlighter: new SqlHighlighter(),
+  loadStrategy: LoadStrategy.JOINED,
   metadataProvider: TsMorphMetadataProvider,
   migrations: {
     snapshot: true, // required for auto-diffing generated migrations from entities

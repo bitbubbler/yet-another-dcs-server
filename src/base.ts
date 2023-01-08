@@ -2,11 +2,7 @@ import { LatLon } from './geo'
 import { baseNames } from './baseNames'
 import { distanceFrom, metersToDegree, randomBetween } from './common'
 import { countryFrom } from './country'
-import {
-  createStaticObject,
-  despawnStaticObject,
-  spawnStaticObject,
-} from './staticObject'
+import { despawnStaticObject, spawnStaticObject } from './staticObject'
 import {
   baseLevel0,
   baseLevel1,
@@ -15,23 +11,20 @@ import {
   Template,
 } from './base-templates'
 import assert from 'assert'
-import { createUnit, despawnUnit, spawnGroundUnit } from './unit'
+import { createUnit, despawnGroundUnit, spawnGroundUnit } from './unit'
 import { despawnFarp, spawnFarp } from './farp'
+import { entityManager, orm } from './db/db'
 import {
-  entityManager,
-  orm,
   Base,
   BaseType,
   NewBase,
   Position,
   StaticObject,
-  Unit,
   TextMarkup,
   Color,
 } from './db'
 import { Coalition } from './generated/dcs/common/v0/Coalition'
-import { createPosition } from './position'
-import { Ref, wrap } from '@mikro-orm/core'
+import { wrap } from '@mikro-orm/core'
 import { spawnMarkup } from './markup'
 
 /** Min range between COP bases in meters */
@@ -493,7 +486,7 @@ async function destroyBaseUnits(base: Base): Promise<void> {
     // delete the unit
     await em.removeAndFlush(unit)
     // despawn the unit
-    await despawnUnit(unit)
+    await despawnGroundUnit(unit)
   }
 }
 
@@ -534,7 +527,6 @@ export async function findNearbyBases({
 
   // initialize the returned
   return nearby
-    .map(base => baseRepository.map(base))
     .map(base => {
       return { base, distance: distanceFrom(position, base.position) }
     })

@@ -8,7 +8,7 @@
 node_modules/
 coverage/
 
-src/generated/
+generated/
 build/
 temp/
 *.sqlite

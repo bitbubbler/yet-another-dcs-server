@@ -1,98 +1,76 @@
-import { Coalition } from './generated/dcs/common/v0/Coalition'
-import { Country } from './generated/dcs/common/v0/Country'
-import { countryFrom } from './country'
+import { PositionLL } from './common'
+import { entityManager, NewPlayer, orm, Player } from './db'
 import { services } from './services'
+
+/**
+ * The player as represented by the game. Typically recieved from dcs-grpc or lua calls.
+ */
+export type GamePlayer = Pick<Player, 'ucid'> & {
+  position: PositionLL
+  playerName: string
+}
+
+export type NetPlayer = Pick<Player, 'name' | 'ucid'>
 
 const { hook } = services
 
-export interface GameSlot extends Omit<Slot, 'country'> {
-  countryName: string
+export async function createPlayer(newPlayer: NewPlayer): Promise<Player> {
+  const em = entityManager(await orm)
+
+  const player = new Player(newPlayer)
+
+  await em.persistAndFlush(player)
+
+  return player
 }
 
-export interface Slot {
-  country: Country
-  groupName: string | undefined
-  groupSize: number
-  multicrew_place: number
-  onboard_numb: string
-  role: string
-  task: string
-  type: string
-  unitId: string
-}
+export async function netPlayerFrom(playerName: string): Promise<NetPlayer> {
+  const gamePlayers = await allNetPlayers()
 
-export async function getAvailableSlots(
-  coalition: Coalition.COALITION_BLUE | Coalition.COALITION_RED
-): Promise<GameSlot[]> {
-  const side = coalition === Coalition.COALITION_BLUE ? 'blue' : 'red'
-  return new Promise((resolve, reject) =>
-    hook.eval(
-      { lua: `return DCS.getAvailableSlots("${side}")` },
-      (error, result) => {
-        if (error) {
-          return reject(error)
-        }
-
-        if (!result?.json) {
-          return reject(Error('missing json from result'))
-        }
-
-        const json = JSON.parse(result.json)
-
-        if (Array.isArray(json)) {
-          return resolve(json)
-        }
-
-        return resolve([])
-      }
-    )
-  )
-}
-
-/**
- * Returns an array of player slots
- */
-export async function getPlayerSlots(): Promise<Slot[]> {
-  const [redGameSlots, blueGameSlots] = await Promise.all([
-    getAvailableSlots(Coalition.COALITION_RED),
-    getAvailableSlots(Coalition.COALITION_BLUE),
-  ])
-
-  const redSlots: Slot[] = redGameSlots.map(
-    gameSlotToSlot(Coalition.COALITION_RED)
-  )
-  const blueSlots: Slot[] = blueGameSlots.map(
-    gameSlotToSlot(Coalition.COALITION_BLUE)
+  const nameMatchingGamePlayers = gamePlayers.filter(
+    player => player.name === playerName
   )
 
-  return redSlots.concat(blueSlots)
-}
-
-function gameSlotToSlot(coalition: Coalition): (gameSlot: GameSlot) => Slot {
-  return gameSlot => {
-    const {
-      groupName,
-      groupSize,
-      multicrew_place,
-      onboard_numb,
-      role,
-      task,
-      type,
-      unitId,
-    } = gameSlot
-
-    const slot: Slot = {
-      country: countryFrom(coalition),
-      groupName,
-      groupSize,
-      multicrew_place,
-      onboard_numb,
-      role,
-      task,
-      type,
-      unitId,
-    }
-
-    return slot
+  if (nameMatchingGamePlayers.length < 1) {
+    throw new Error(`Player with the name '${playerName}' was not found`)
   }
+  if (nameMatchingGamePlayers.length > 1) {
+    // TODO: kick both players when we find clashing names
+    throw new Error(
+      `Multiple players exist with the same name: '${playerName}'`
+    )
+  }
+
+  // expect that array has exactly one item
+  const gamePlayer = gamePlayers[0]
+
+  return gamePlayer
+}
+
+export async function allNetPlayers(): Promise<NetPlayer[]> {
+  const lua = `
+
+  local players = {}
+
+  for _, playerId in ipairs(net.get_player_list()) do
+    table.insert(players, net.get_player_info(playerId))
+  end
+
+  return players
+`
+
+  return new Promise((resolve, reject) => {
+    hook.eval({ lua }, (error, result) => {
+      if (error) {
+        return reject(error)
+      }
+
+      if (typeof result === 'undefined' || typeof result.json === 'undefined') {
+        return reject(new Error('missing result or result json'))
+      }
+      const json = JSON.parse(result.json)
+
+      return resolve(json as NetPlayer[])
+    })
+  })
 }

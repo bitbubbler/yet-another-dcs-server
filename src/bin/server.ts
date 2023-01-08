@@ -1,3 +1,5 @@
+import { orm } from '../db/db'
+
 import { backOff } from 'exponential-backoff'
 
 // dependencies
@@ -10,18 +12,20 @@ import { GroupMenu, menusMain, MissionMenu } from '../menus'
 import { pingpong } from '../pingpong'
 import { startUnitEvents } from '../unitEvents'
 
-// bigger things
+// // bigger things
 import { spawnUnitsMain } from '../spawnUnits'
 import { persistenceMain } from '../persistence'
 import { restartMissionMain, restartMissionMenu } from '../restartMission'
 import { visualMarkersMain } from '../visualMarkers'
 import { autoRespawnMain, spawnersMenu } from '../autoRespawn'
 import { logisticsMain, internalCargoMenu } from '../logistics'
-import { orm } from '../db'
+import { csarMenu, searchAndRescueMain } from '../searchAndRescue'
 
 // NOTE: The order of menus in this array determines their order on the client
 const missionMenus: MissionMenu[] = [spawnersMenu, restartMissionMenu]
-const groupMenus: GroupMenu[] = [internalCargoMenu]
+const groupMenus: GroupMenu[] = [internalCargoMenu, csarMenu]
+
+let shutdown = false
 
 async function main(): Promise<void> {
   await start()
@@ -47,6 +51,7 @@ async function main(): Promise<void> {
     const teardownVisualMarkers = await visualMarkersMain()
     const teardownAutoRespawn = await autoRespawnMain()
     const teardownLogisticsMain = await logisticsMain()
+    const teardownSearchAndRescueMain = await searchAndRescueMain()
 
     return async () => {
       await teardownPingpong()
@@ -56,6 +61,7 @@ async function main(): Promise<void> {
       await teardownVisualMarkers()
       await teardownAutoRespawn()
       await teardownLogisticsMain()
+      await teardownSearchAndRescueMain()
       await teardownMenus()
     }
   }
@@ -74,6 +80,9 @@ async function main(): Promise<void> {
       {
         delayFirstAttempt: false,
         retry: error => {
+          if (shutdown) {
+            return false
+          }
           console.log('Startup failed', error)
           console.log('Retrying...')
           return true
@@ -95,11 +104,16 @@ process.on('uncaughtException', function (err) {
 })
 
 async function handleExit() {
-  const ormActual = await orm
+  // mark shutdown
+  shutdown = true
 
-  await ormActual.close()
-
-  process.exit(0)
+  try {
+    const ormActual = await orm
+    await ormActual.close()
+    process.exit(0)
+  } catch (error) {
+    process.exit(1)
+  }
 }
 
 // shutdown/exist signals

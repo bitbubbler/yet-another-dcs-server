@@ -8,11 +8,18 @@ export enum CommandType {
   // Keep these in alphabetical order, please
   CheckInternalCargo,
   CreateSpawner,
+  CsarGoOnDuty,
+  CsarGoOffDuty,
+  CsarCheckOnboard,
+  CsarListActive,
+  CsarRequestSignalFlare,
+  CsarRequestSmoke,
   DefineSpawnGroup,
   Destroy,
   DestroyInternalCargo,
   Flare,
   HideSpawners,
+  Identify,
   Illumination,
   LoadInternalCargo,
   RestartMission,
@@ -56,6 +63,30 @@ export interface CreateSpawnerCommand extends Omit<CommandShape, 'args'> {
   onRoad: boolean | undefined
 }
 
+export interface CsarCheckOnboardCommand extends Omit<CommandShape, 'args'> {
+  type: CommandType.CsarCheckOnboard
+}
+
+export interface CsarGoOnDutyCommand extends Omit<CommandShape, 'args'> {
+  type: CommandType.CsarGoOnDuty
+}
+export interface CsarGoOffDutyCommand extends Omit<CommandShape, 'args'> {
+  type: CommandType.CsarGoOffDuty
+}
+
+export interface CsarListActiveCommand extends Omit<CommandShape, 'args'> {
+  type: CommandType.CsarListActive
+}
+
+export interface CsarRequestSignalFlareCommand
+  extends Omit<CommandShape, 'args'> {
+  type: CommandType.CsarRequestSignalFlare
+}
+
+export interface CsarRequestSmokeCommand extends Omit<CommandShape, 'args'> {
+  type: CommandType.CsarRequestSmoke
+}
+
 export interface DefineSpawnGroupCommand extends Omit<CommandShape, 'args'> {
   type: CommandType.DefineSpawnGroup
   groupName: string
@@ -84,6 +115,10 @@ export interface HideSpawnersCommand extends Omit<CommandShape, 'args'> {
 
 export interface IlluminationCommand extends Omit<CommandShape, 'args'> {
   type: CommandType.Illumination
+}
+
+export interface IdentifyCommand extends Omit<CommandShape, 'args'> {
+  type: CommandType.Identify
 }
 
 export interface LoadInternalCargoCommand extends Omit<CommandShape, 'args'> {
@@ -143,13 +178,20 @@ export interface UnknownCommand extends Omit<CommandShape, 'args'> {
 }
 
 export type Command =
-  | CreateSpawnerCommand
   | CheckInternalCargoCommand
+  | CreateSpawnerCommand
+  | CsarCheckOnboardCommand
+  | CsarGoOnDutyCommand
+  | CsarGoOffDutyCommand
+  | CsarListActiveCommand
+  | CsarRequestSignalFlareCommand
+  | CsarRequestSmokeCommand
   | DefineSpawnGroupCommand
   | DestroyCommand
   | DestroyInternalCargoCommand
   | FlareCommand
   | HideSpawnersCommand
+  | IdentifyCommand
   | IlluminationCommand
   | LoadInternalCargoCommand
   | RestartMissionCancelCommand

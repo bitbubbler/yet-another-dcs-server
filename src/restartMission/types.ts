@@ -77,7 +77,7 @@ export interface Unit {
 export interface Point {
   alt: number
   alt_type: 'BARO'
-  action: 'From Parking Area Hot' | 'From Ground Area'
+  action: 'From Parking Area Hot' | 'From Ground Area' | 'From Ground Area Hot'
   speed: number
   task: {
     id: 'ComboTask'
@@ -85,7 +85,7 @@ export interface Point {
       tasks: Record<never, never>
     }
   }
-  type: 'TakeOffParkingHot' | 'TakeOffGround'
+  type: 'TakeOffParkingHot' | 'TakeOffGround' | 'TakeOffGroundHot'
   ETA: 0
   ETA_locked: true
   formation_template: ''

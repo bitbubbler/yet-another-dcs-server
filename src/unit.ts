@@ -13,11 +13,11 @@ import {
   position3From,
   positionLLFrom,
   randomPositionInCircle,
-  randomPositionOnCircle,
   vec3From,
 } from './common'
 import { Position3, PositionLL, Velocity } from './common'
-import { entityManager, NewUnit, orm, Position, Unit, UnitTypeName } from './db'
+import { NewUnit, Position, Unit, UnitTypeName } from './db'
+import { entityManager, orm } from './db/db'
 import { GetTransformResponse__Output } from './generated/dcs/unit/v0/GetTransformResponse'
 import { countryFrom } from './country'
 import { createPosition } from './position'
@@ -36,8 +36,6 @@ export type GameUnit = Pick<Unit, 'country' | 'name' | 'typeName'> & {
   groupName: string
   playerName: string | undefined
 }
-
-type c = keyof GameUnit
 
 export interface PlayerUnit extends Unit {
   isPlayerSlot: true
@@ -109,11 +107,36 @@ export async function createUnit(
 
   const unit = new Unit({ ...newUnit, name })
 
-  await entityManager(await orm)
-    .persist(unit)
-    .flush()
+  await entityManager(await orm).persistAndFlush(unit)
 
   return unit
+}
+
+export async function unitInAir(unit: Unit): Promise<boolean> {
+  const lua = `
+  local unit = Unit.getByName("${unit.name}")
+  
+  if unit == nil then
+    return nil
+  end
+
+  return unit:inAir()
+`
+
+  return new Promise((resolve, reject) => {
+    custom.eval({ lua }, (error, result) => {
+      if (error) {
+        return reject(error)
+      }
+      if (!result || !result.json) {
+        return reject(Error('missing json from result'))
+      }
+
+      const inAir = JSON.parse(result.json) as boolean
+
+      return resolve(inAir)
+    })
+  })
 }
 
 export async function setUnitInternalCargoMass(
@@ -135,7 +158,9 @@ export async function setUnitInternalCargoMass(
 export async function spawnGroundUnit(
   unit: Unit
 ): Promise<{ groupName: string }> {
-  console.log('trying to spawn ground unit')
+  const { country, hidden, name, typeName } = unit
+
+  console.log(`attempting to spawn gruondUnit of type ${typeName}`)
 
   if (unit.isPlayerSlot) {
     throw new Error(
@@ -144,9 +169,12 @@ export async function spawnGroundUnit(
   }
 
   return new Promise(async (resolve, reject) => {
-    const { country, hidden, name, typeName } = unit
+    if (!unit.position) {
+      debugger
+    }
     const { heading, lat, lon, alt } = unit.position
     const position: PositionLL = { lat, lon, alt }
+
     const groundTemplate: GroundGroupTemplate = {
       name,
       task: 'Ground Nothing', // wtf is this for? what values are available?
@@ -252,8 +280,17 @@ export async function uniqueUnitName(): Promise<string> {
   return name
 }
 
-export async function despawnUnit({ name }: Pick<Unit, 'name'>): Promise<void> {
-  const lua = `Unit.getByName("${name}"):destroy()`
+export async function despawnGroundUnit({
+  name,
+}: Pick<Unit, 'name'>): Promise<void> {
+  const lua = `
+  local unit = Unit.getByName("${name}")
+
+  if unit == nil then
+    return nil
+  end
+  
+  return unit:destroy()`
   return new Promise<void>((resolve, reject) =>
     services.custom.eval({ lua }, error => {
       if (error) {
@@ -261,6 +298,31 @@ export async function despawnUnit({ name }: Pick<Unit, 'name'>): Promise<void> {
       }
 
       resolve()
+    })
+  )
+}
+
+export async function getPositionLL(unitName: string): Promise<PositionLL> {
+  const lua = `
+    local unit = Unit.getByName("${unitName}")
+    local position = unit:getPosition()
+
+    loal lat, lon, alt = coord.LOtoLL(position.p)
+
+    return { lat = lat, lon = lon, alt = alt }
+`
+
+  return new Promise<PositionLL>((resolve, reject) =>
+    services.custom.eval({ lua }, (error, result) => {
+      if (error) {
+        return reject(error)
+      }
+
+      if (!result || !result.json) {
+        throw new Error('missing results or results json')
+      }
+
+      resolve(JSON.parse(result.json))
     })
   )
 }
@@ -339,7 +401,7 @@ export async function findNearbyUnits({
     .map(unit => unit.unit)
 }
 
-export function unitFrom(
+export function gameUnitFrom(
   maybeUnit: Partial<
     Pick<
       Required<StreamUnitsResponse__Output>['unit'],
@@ -377,4 +439,31 @@ export function unitFrom(
     position: positionLLFrom(position),
     typeName: type as UnitTypeName,
   }
+}
+
+export async function unitIsAlive(unit: Unit): Promise<boolean> {
+  const lua = `
+  local unit = Unit.getByName("${unit.name}")
+  
+  if unit == nil then
+    return false
+  end
+
+  return true
+`
+
+  return new Promise((resolve, reject) => {
+    custom.eval({ lua }, (error, result) => {
+      if (error) {
+        return reject(error)
+      }
+      if (!result || !result.json) {
+        return reject(Error('missing json from result'))
+      }
+
+      const isAlive = JSON.parse(result.json) as boolean
+
+      return resolve(isAlive)
+    })
+  })
 }

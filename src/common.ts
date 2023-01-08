@@ -2,7 +2,10 @@ import { equal } from 'assert'
 import { Position } from './generated/dcs/common/v0/Position'
 import { Position__Output } from './generated/dcs/common/v0/Position'
 import { Color__Output } from './generated/dcs/trigger/v0/Color'
+import { _dcs_trigger_v0_SmokeRequest_SmokeColor as SmokeColor } from './generated/dcs/trigger/v0/SmokeRequest'
 import { LatLon } from './geo'
+
+export { SmokeColor }
 
 export type TeardownFn = () => Promise<void>
 
@@ -20,6 +23,13 @@ export interface Vec3 {
 }
 
 export type PositionLL = Required<Position__Output>
+
+export interface PositionMGRS {
+  Easting: number
+  MGRSDigraph: string
+  Northing: number
+  UTMZone: string
+}
 
 export type Color = Required<Color__Output>
 
@@ -160,7 +170,7 @@ export function distanceFrom(
   a: Pick<PositionLL, 'lat' | 'lon'>,
   b: Pick<PositionLL, 'lat' | 'lon'>
 ): number {
-  return Math.sqrt(Math.pow(a.lat - b.lat, 2) + Math.pow(a.lon - b.lon, 2))
+  return new LatLon(a.lat, a.lon).distanceTo(new LatLon(b.lat, b.lon))
 }
 
 /**
@@ -273,4 +283,12 @@ export function positionLLFrom(maybePositionLL: Position): PositionLL {
  */
 export function headingFrom(position3: Position3): number {
   return Math.atan2(position3.x.z, position3.x.x)
+}
+
+export async function waitForTime(ms?: number | undefined): Promise<void> {
+  return new Promise(resolve => {
+    // TODO: timeouts can be canceled/cleared. Right now this has potential for a memory leak
+    // if this timeout is canceled/cleared this promise chain will be left unresolve and unrejected.
+    setTimeout(() => resolve(), ms)
+  })
 }

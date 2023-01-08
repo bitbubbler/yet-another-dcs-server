@@ -2,7 +2,11 @@ import {
   BaseCargo,
   Cargo,
   CargoSuperType,
+  CsarCargo,
+  NewBaseCargo,
   NewCargo,
+  NewCsarCargo,
+  NewUnitCargo,
   Unit,
   UnitCargo,
 } from './db'
@@ -10,29 +14,33 @@ import { setUnitInternalCargoMass } from './unit'
 import { entityManager, orm } from './db'
 import { wrap } from '@mikro-orm/core'
 
-export async function createCargo(newCargo: NewCargo): Promise<Cargo> {
-  const { superType } = newCargo
+export async function createBaseCargo(
+  newCargo: NewBaseCargo
+): Promise<BaseCargo> {
+  const baseCargo = new BaseCargo(newCargo)
 
-  if (CargoSuperType.Base === superType) {
-    const baseCargo = new BaseCargo(newCargo)
+  await entityManager(await orm).persistAndFlush(baseCargo)
 
-    await entityManager(await orm)
-      .persist(baseCargo)
-      .flush()
+  return baseCargo
+}
 
-    return baseCargo
-  }
-  if (CargoSuperType.Unit === superType) {
-    const unitCargo = new UnitCargo(newCargo)
+export async function createUnitCargo(
+  newCargo: NewUnitCargo
+): Promise<UnitCargo> {
+  const unitCargo = new UnitCargo(newCargo)
 
-    await entityManager(await orm)
-      .persist(unitCargo)
-      .flush()
+  await entityManager(await orm).persistAndFlush(unitCargo)
 
-    return unitCargo
-  }
+  return unitCargo
+}
+export async function createCsarCargo(
+  newCargo: NewCsarCargo
+): Promise<CsarCargo> {
+  const csarCargo = new CsarCargo(newCargo)
 
-  throw new Error('attempted to create an unknown cargo superType')
+  await entityManager(await orm).persistAndFlush(csarCargo)
+
+  return csarCargo
 }
 
 /**
@@ -45,7 +53,7 @@ export async function createCargo(newCargo: NewCargo): Promise<Cargo> {
 export async function loadCargo(unit: Unit, cargo: Cargo): Promise<void> {
   const em = entityManager(await orm)
 
-  unit.cargos.add(wrap(cargo).toReference())
+  unit.cargos.add(cargo)
 
   await em.persistAndFlush(unit)
 
@@ -63,7 +71,15 @@ export async function loadCargo(unit: Unit, cargo: Cargo): Promise<void> {
 export async function unloadCargo(unit: Unit, cargo: Cargo): Promise<void> {
   const em = entityManager(await orm)
 
-  await em.removeAndFlush(cargo)
+  await unit.cargos.loadItems()
+
+  // mark the cargo as removed from the unit
+  unit.cargos.remove(cargo)
+  // destroy the cargo itself
+  em.remove(cargo)
+
+  // flush the changes
+  em.persistAndFlush([unit, cargo])
 
   // set unit weight in dcs
   await setUnitInternalCargoMass(unit, 0)

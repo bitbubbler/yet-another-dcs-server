@@ -470,23 +470,26 @@ function matchCommand(input: string): CommandType {
   if ('defgroup' === lowerInput || 'definegroup' === lowerInput) {
     return CommandType.DefineSpawnGroup
   }
-  if ('spawngroup' === lowerInput) {
-    return CommandType.SpawnGroup
-  }
-  if ('spawnbase' === lowerInput) {
-    return CommandType.SpawnBase
-  }
-  if ('smoke' === lowerInput) {
-    return CommandType.Smoke
-  }
   if ('flare' === lowerInput) {
     return CommandType.Flare
+  }
+  if ('identify' === lowerInput) {
+    return CommandType.Identify
   }
   if ('illum' === lowerInput || 'illumination' === lowerInput) {
     return CommandType.Illumination
   }
+  if ('smoke' === lowerInput) {
+    return CommandType.Smoke
+  }
+  if ('spawnbase' === lowerInput) {
+    return CommandType.SpawnBase
+  }
   if ('spawner' === lowerInput) {
     return CommandType.CreateSpawner
+  }
+  if ('spawngroup' === lowerInput) {
+    return CommandType.SpawnGroup
   }
 
   return CommandType.Unknown
