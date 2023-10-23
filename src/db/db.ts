@@ -1,8 +1,8 @@
 import { MikroORM } from '@mikro-orm/core'
-import { EntityManager, BetterSqliteDriver } from '@mikro-orm/better-sqlite'
+import { EntityManager, SqliteDriver } from '@mikro-orm/sqlite'
 import options from '../mikro-orm.config'
 
-export const orm = MikroORM.init<BetterSqliteDriver>(options)
+export const orm = MikroORM.init<SqliteDriver>(options)
   .then(async orm => {
     // we need to setup the database connection before we allow it to be used
     await orm.em.getConnection().execute('PRAGMA journal_mode = WAL')
@@ -18,8 +18,6 @@ export const orm = MikroORM.init<BetterSqliteDriver>(options)
     process.exit(1)
   })
 
-export function entityManager(
-  orm: MikroORM<BetterSqliteDriver>
-): EntityManager {
+export function entityManager(orm: MikroORM<SqliteDriver>): EntityManager {
   return orm.em.fork()
 }

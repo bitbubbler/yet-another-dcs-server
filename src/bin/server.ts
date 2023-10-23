@@ -20,7 +20,6 @@ import { visualMarkersMain } from '../visualMarkers'
 import { autoRespawnMain, spawnersMenu } from '../autoRespawn'
 import { logisticsMain, internalCargoMenu } from '../logistics'
 import { csarMenu, searchAndRescueMain } from '../searchAndRescue'
-import { TacticsEngine } from '../tacticsEngine'
 
 // NOTE: The order of menus in this array determines their order on the client
 const missionMenus: MissionMenu[] = [spawnersMenu, restartMissionMenu]
@@ -54,9 +53,6 @@ async function main(): Promise<void> {
     const teardownLogisticsMain = await logisticsMain()
     const teardownSearchAndRescueMain = await searchAndRescueMain()
 
-    // create the tactics engine
-    const tacticsEngine = new TacticsEngine()
-
     /**
      * Startup Tasks
      */
@@ -64,11 +60,8 @@ async function main(): Promise<void> {
     const teardownMenus = await menusMain(missionMenus, groupMenus)
     // spawn the persisted units
     await trySpawnUnits()
-    // start the tactics engine
-    await tacticsEngine.start()
 
     return async function teardown() {
-      await tacticsEngine.teardown()
       await teardownPingpong()
       await teardownSpawnUnits()
       await teardownPersistence()

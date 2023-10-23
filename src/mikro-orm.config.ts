@@ -30,9 +30,9 @@ import {
   Player,
   CsarCargo,
 } from './db'
-import { BetterSqliteDriver } from '@mikro-orm/better-sqlite'
+import { SqliteDriver } from '@mikro-orm/sqlite'
 
-const config: Options<BetterSqliteDriver> = {
+const config: Options<SqliteDriver> = {
   dbName: '../dev.sqlite',
   debug: false, // TODO: put this on a config from cli.ts
   entities: [
@@ -68,7 +68,7 @@ const config: Options<BetterSqliteDriver> = {
     tableName: 'migrations',
   },
   namingStrategy: EntityCaseNamingStrategy,
-  type: 'better-sqlite',
+  type: 'sqlite',
 }
 
 export default config
