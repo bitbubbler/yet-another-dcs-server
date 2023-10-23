@@ -4,13 +4,13 @@ import { illumination, removeMapMark, signalFlare, smoke } from '../trigger'
 import { getMarkById } from '../custom'
 import { CommandType as EventCommandType } from '../commands/types'
 import { randomAngleDeg } from '../common'
-import { _dcs_trigger_v0_SmokeRequest_SmokeColor as SmokeColor } from '../../generated/dcs/trigger/v0/SmokeRequest'
-import { _dcs_trigger_v0_SignalFlareRequest_FlareColor as FlareColor } from '../../generated/dcs/trigger/v0/SignalFlareRequest'
+import { _dcs_trigger_v0_SmokeRequest_SmokeColor as SmokeColor } from '../__generated__/dcs/trigger/v0/SmokeRequest'
+import { _dcs_trigger_v0_SignalFlareRequest_FlareColor as FlareColor } from '../__generated__/dcs/trigger/v0/SignalFlareRequest'
 
 // defines available colors
 const colors: string[] = ['green', 'red', 'white', 'orange', 'blue', 'yellow']
 
-type Color = typeof colors[number]
+type Color = (typeof colors)[number]
 
 export async function visualMarkersMain(): Promise<() => Promise<void>> {
   const subscription = Events.subscribe(async event => {

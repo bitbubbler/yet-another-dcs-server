@@ -7,14 +7,16 @@ import { Restarts } from '../signals'
 import { outText } from '../trigger'
 import { MemoryReader, parse, stringify, Table } from '../lua'
 import { Mission } from './types'
-import { allBases } from '../db'
-import { baseTemplateFrom, BaseType, baseTypeDisplayNameShort } from '../base'
+import { baseTemplateFrom, baseTypeDisplayNameShort } from '../base'
+import { emFork } from '../db/connection'
+import { Base, BaseType } from '../db'
 import { LatLon } from '../geo'
 import { vector2DFrom } from '../coord'
 import { unitTemplateFrom } from '../unit-templates'
 import { loadMissionFile } from '../net'
 import { options } from '../cli'
 import { HelicopterUnit, Point } from './types'
+import { waitForTime } from '../common'
 
 export async function restartMissionMain(): Promise<() => Promise<void>> {
   const subscription = Events.subscribe(async event => {
@@ -104,19 +106,11 @@ async function handleMissionCommand(event: MissionCommandEvent): Promise<void> {
     await loadMissionFile(newMissionFileName)
 
     // wait ???? why do we wait here?
-    await waitForTimeout(1000)
+    await waitForTime(1000)
 
     // Tell the rest of the application we restarted
     Restarts.next()
   }
-}
-
-async function waitForTimeout(ms?: number | undefined): Promise<void> {
-  return new Promise(resolve => {
-    // TODO: timeouts can be canceled/cleared. Right now this has potential for a memory leak
-    // if this timeout is canceled/cleared this promise chain will be left unresolve and unrejected.
-    setTimeout(() => resolve(), ms)
-  })
 }
 
 async function zipEntryDataFrom(zipEntry: IZipEntry): Promise<Buffer> {
@@ -144,13 +138,20 @@ function fileTimestamp(): string {
 }
 
 async function patchMission(mission: Mission): Promise<Mission> {
+  const em = await emFork()
+  const baseRepository = em.getRepository(Base)
+  // first, we set some basics
+
+  // this allows pilots (of helis/planes) to control ground units from f10
+  mission.mission.groundControl.isPilotControlVehicles = true
+
   // we start our group numbering here to try and ensure uniqueness
   let groupIdCounter = 10000
 
   // look at the bases in the db, filter down to the ones with spawn slots
-  const basesWithSpawnSlots = (await allBases()).filter(base =>
-    [BaseType.FOB, BaseType.MOB].includes(base.type)
-  )
+  const basesWithSpawnSlots = await baseRepository.find({
+    type: [BaseType.FOB, BaseType.MOB],
+  })
 
   if (mission.mission.coalition.blue.country.length < 1) {
     mission.mission.coalition.blue.country.push({
@@ -163,10 +164,8 @@ async function patchMission(mission: Mission): Promise<Mission> {
   }
 
   // for each base found
-
-  for await (const base of basesWithSpawnSlots) {
+  for (const base of basesWithSpawnSlots) {
     // TODO: define these in the databse
-
     const template = baseTemplateFrom(base)
 
     for (const slot of template.slots) {
@@ -205,7 +204,7 @@ async function patchMission(mission: Mission): Promise<Mission> {
 
       const point: Point = {
         alt: 500,
-        action: 'From Ground Area',
+        action: 'From Ground Area Hot',
         alt_type: 'BARO',
         speed: 44.444444444444,
         task: {
@@ -214,7 +213,7 @@ async function patchMission(mission: Mission): Promise<Mission> {
             tasks: {},
           },
         },
-        type: 'TakeOffGround',
+        type: 'TakeOffGroundHot',
         ETA: 0,
         ETA_locked: true,
         y,

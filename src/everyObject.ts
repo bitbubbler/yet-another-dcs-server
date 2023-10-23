@@ -1,4 +1,4 @@
-import everyObject from '../everyobject.json'
+import everyObject from './everyobject.json'
 
 export interface EveryObject {
   weapons?: { desc: unknown }[]

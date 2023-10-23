@@ -1,7 +1,7 @@
-import { Group__Output } from '../generated/dcs/common/v0/Group'
+import { Group__Output } from './__generated__/dcs/common/v0/Group'
 import { services } from './services'
 import { PositionLL } from './common'
-import { GameUnit, unitFrom } from './unit'
+import { GameUnit, gameUnitFrom } from './unit'
 
 const { coalition, custom, group } = services
 
@@ -44,7 +44,7 @@ export async function getUnits(groupName: string): Promise<GameUnit[]> {
           return reject(new Error('expected units on result'))
         }
 
-        resolve(result.units.map(unit => unitFrom(unit)))
+        resolve(result.units.map(unit => gameUnitFrom(unit)))
       }
     )
   })
@@ -77,7 +77,6 @@ export async function driveGroundGroup(
   const points: Point[] = []
 
   points.push([position, onroad])
-
   points.push(...options.points.map<Point>(point => [point, onroad]))
   points.push([destination, onroad])
 
@@ -149,11 +148,13 @@ export async function groupFromGroupId(
   return group as Group & Required<Pick<Group, 'id'>>
 }
 
-export async function groupFromGroupName(groupName: string): Promise<Group> {
+export async function groupFromGroupName(
+  groupName: string
+): Promise<Group | undefined> {
   const group = (await groups()).find(group => group.name === groupName)
 
   if (!group) {
-    throw new Error('expected to find group in groups with given name')
+    return undefined
   }
 
   return group

@@ -1,11 +1,11 @@
 import { Subject } from 'rxjs'
 
-import { GroupCategory } from '../generated/dcs/common/v0/GroupCategory'
-import { StreamUnitsResponse__Output } from '../generated/dcs/mission/v0/StreamUnitsResponse'
+import { GroupCategory } from './__generated__/dcs/common/v0/GroupCategory'
+import { StreamUnitsResponse__Output } from './__generated__/dcs/mission/v0/StreamUnitsResponse'
 
 import { services } from './services'
 import { Restarts } from './signals'
-import { GameUnit, unitFrom } from './unit'
+import { GameUnit, gameUnitFrom } from './unit'
 
 const { mission } = services
 
@@ -65,7 +65,7 @@ async function handleUnitEvent(
     try {
       return UnitEvents.next({
         type: UnitEventType.Update,
-        unit: unitFrom(event.unit),
+        unit: gameUnitFrom(event.unit),
       })
     } catch (error) {
       console.log('failed to handle unit event', event)

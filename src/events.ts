@@ -1,17 +1,17 @@
 import { Subject } from 'rxjs'
 
-import { Coalition } from '../generated/dcs/common/v0/Coalition'
-import { StreamEventsResponse__Output } from '../generated/dcs/mission/v0/StreamEventsResponse'
-import { Struct } from '../generated/google/protobuf/Struct'
-import { Value } from '../generated/google/protobuf/Value'
-import { Airbase__Output } from '../generated/dcs/common/v0/Airbase'
+import { Coalition } from './__generated__/dcs/common/v0/Coalition'
+import { StreamEventsResponse__Output } from './__generated__/dcs/mission/v0/StreamEventsResponse'
+import { Struct } from './__generated__/google/protobuf/Struct'
+import { Value } from './__generated__/google/protobuf/Value'
+import { Airbase__Output } from './__generated__/dcs/common/v0/Airbase'
 
 import { services } from './services'
 import { Command } from './commands/types'
 import { parse, reader } from './commands'
 import { Restarts } from './signals'
 import { Group } from './group'
-import { GameUnit, unitFrom } from './unit'
+import { GameUnit, gameUnitFrom } from './unit'
 
 const { mission } = services
 
@@ -22,6 +22,9 @@ export enum EventType {
   MissionCommand,
   Birth,
   PlayerSendChat,
+  PilotDead,
+  Land,
+  Takeoff,
 }
 
 export interface EventShape {
@@ -81,6 +84,20 @@ export interface PlayerSendChatEvent extends EventShape {
   command?: Command
 }
 
+export interface PilotDeadEvent extends EventShape {
+  type: EventType.PilotDead
+  unit: GameUnit
+}
+
+export interface LandEvent extends EventShape {
+  type: EventType.Land
+  unit: GameUnit
+}
+export interface TakeoffEvent extends EventShape {
+  type: EventType.Takeoff
+  unit: GameUnit
+}
+
 export type Event =
   | MarkAddEvent
   | MarkChangeEvent
@@ -88,6 +105,9 @@ export type Event =
   | MissionCommandEvent
   | BirthEvent
   | PlayerSendChatEvent
+  | PilotDeadEvent
+  | LandEvent
+  | TakeoffEvent
 
 export const Events = new Subject<Event>()
 
@@ -132,7 +152,7 @@ async function handleEvent(data: StreamEventsResponse__Output): Promise<void> {
     const { id, coalition, text } = markAdd
 
     const initiator = markAdd.initiator?.unit
-      ? { unit: unitFrom(markAdd.initiator.unit) }
+      ? { unit: gameUnitFrom(markAdd.initiator.unit) }
       : {}
 
     if (text) {
@@ -173,7 +193,7 @@ async function handleEvent(data: StreamEventsResponse__Output): Promise<void> {
     const { id, coalition, text } = markChange
 
     const initiator = markChange.initiator?.unit
-      ? { unit: unitFrom(markChange.initiator.unit) }
+      ? { unit: gameUnitFrom(markChange.initiator.unit) }
       : {}
 
     if (text) {
@@ -283,7 +303,7 @@ async function handleEvent(data: StreamEventsResponse__Output): Promise<void> {
     const { place } = birth
 
     const initiator = birth.initiator?.unit
-      ? { unit: unitFrom(birth.initiator.unit) }
+      ? { unit: gameUnitFrom(birth.initiator.unit) }
       : {}
 
     if (!initiator.unit) {
@@ -337,6 +357,52 @@ async function handleEvent(data: StreamEventsResponse__Output): Promise<void> {
 
     return Events.next(event)
   }
+  if ('pilotDead' in data) {
+    const { pilotDead } = data
+
+    const { initiator } = pilotDead
+
+    if (!initiator) {
+      return
+    }
+
+    const { unit } = initiator
+
+    if (!unit) {
+      return
+    }
+
+    const event: PilotDeadEvent = {
+      type: EventType.PilotDead,
+      unit: gameUnitFrom(unit),
+    }
+
+    return Events.next(event)
+  }
+  if ('land' in data) {
+    const { land } = data
+
+    const { initiator } = land
+
+    if (!initiator) {
+      return
+    }
+
+    const { unit } = initiator
+
+    if (!unit) {
+      return
+    }
+
+    const event: LandEvent = {
+      type: EventType.Land,
+      unit: gameUnitFrom(unit),
+    }
+
+    return Events.next(event)
+  }
+
+  console.log('An untyped event:', JSON.stringify(data, null, 2))
 
   // no-op
 }

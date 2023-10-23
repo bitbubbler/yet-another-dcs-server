@@ -1,58 +1,19 @@
-import { v4 as uuidV4 } from 'uuid'
-import { PositionLL } from './common'
 import { services } from './services'
-import { Country } from '../generated/dcs/common/v0/Country'
-import { deleteStaticObject, insertStaticObject } from './db/staticObjects'
+import { emFork } from './db/connection'
+import { NewStaticObject, StaticObject } from './db'
 
 const { custom } = services
-
-export enum StaticObjectTypeName {
-  TowerCrane = 'Tower Crane',
-  FarpTent = 'FARP Tent',
-  CommsTowerM = 'Comms tower M',
-  M1126StrykerICV = 'M1126 Stryker ICV',
-  Hummer = 'Hummer',
-  PatriotAMG = 'Patriot AMG',
-  ContainerCargo = 'container_cargo',
-  GeneratorF = 'GeneratorF',
-  FarpAmmoDumpCoating = 'FARP Ammo Dump Coating',
-  Windsock = 'Windsock',
-  FarpFuelDepot = 'FARP Fuel Depot',
-  ShelterB = 'Shelter B',
-  MLRSFDDM = 'MLRS FDDM',
-  House2Arm = 'house2arm',
-  FBarCargo = 'f_bar_cargo',
-  SoldierM4 = 'Soldier M4',
-  AmmoCargo = 'ammo_cargo',
-  UH1HCargo = 'uh1h_cargo',
-  HangerA = 'Hangar A',
-}
-
-export type NewStaticObject = Pick<
-  StaticObject,
-  'country' | 'heading' | 'position' | 'typeName'
->
-
-export interface StaticObject {
-  country: Country
-  heading: number
-  position: Pick<PositionLL, 'lat' | 'lon'>
-  staticObjectId: number
-  typeName: StaticObjectTypeName
-  uuid: string
-}
 
 export async function createStaticObject(
   newStaticObject: NewStaticObject
 ): Promise<StaticObject> {
-  const uuid = uuidV4()
+  const staticObject = new StaticObject(newStaticObject)
 
-  const staticobject = await insertStaticObject({
-    uuid,
-    ...newStaticObject,
-  })
+  const em = await emFork()
+  em.persist(staticObject)
+  await em.flush()
 
-  return staticobject
+  return staticObject
 }
 
 export async function despawnStaticObject(
@@ -72,10 +33,12 @@ export async function despawnStaticObject(
   )
 }
 
-export async function destroyStaticObject({
-  staticObjectId,
-}: StaticObject): Promise<void> {
-  return deleteStaticObject(staticObjectId)
+export async function destroyStaticObject(
+  staticObject: StaticObject
+): Promise<void> {
+  const em = await emFork()
+  em.remove(staticObject)
+  await em.flush()
 }
 
 /**
@@ -86,10 +49,10 @@ export async function spawnStaticObject(
   staticObject: StaticObject
 ): Promise<void> {
   const name = staticObjectNameFrom(staticObject)
-  const { country, heading, position, typeName } = staticObject
-  const { lat, lon } = position
+  const { country, position, typeName } = staticObject
+  const { lat, lon, heading } = position
 
-  console.log('trying to spawn static', staticObject)
+  console.log(`attempting to spawn staticObject of type ${typeName}`)
 
   const lua = `
   local vec3 = coord.LLtoLO(${lat}, ${lon}, 0)
@@ -101,6 +64,7 @@ export async function spawnStaticObject(
     ["y"] = vec3.z,
     ["x"] = vec3.x,
     ["dead"] = false,
+    ["hidden"] = true,
   }
 
   return coalition.addStaticObject(${country - 1}, staticObj)

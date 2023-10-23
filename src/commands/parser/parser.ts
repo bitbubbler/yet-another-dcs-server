@@ -7,9 +7,9 @@ import {
 import { Reader } from '../reader'
 import { lexer as Lexer, TokenKind } from '../lexer'
 import { ParserUnexpectedTokenError, ParserUnknownTokenError } from './errors'
-import { Coalition } from '../../../generated/dcs/common/v0/Coalition'
-import { SpawnerType } from '../../spawner'
-import { BaseType } from '../../base'
+import { Coalition } from '../../__generated__/dcs/common/v0/Coalition'
+import { SpawnerType } from '../../db'
+import { BaseType } from '../../db'
 
 export type Value = string | number | (string | number)[] | Command
 
@@ -470,23 +470,26 @@ function matchCommand(input: string): CommandType {
   if ('defgroup' === lowerInput || 'definegroup' === lowerInput) {
     return CommandType.DefineSpawnGroup
   }
-  if ('spawngroup' === lowerInput) {
-    return CommandType.SpawnGroup
-  }
-  if ('spawnbase' === lowerInput) {
-    return CommandType.SpawnBase
-  }
-  if ('smoke' === lowerInput) {
-    return CommandType.Smoke
-  }
   if ('flare' === lowerInput) {
     return CommandType.Flare
+  }
+  if ('identify' === lowerInput) {
+    return CommandType.Identify
   }
   if ('illum' === lowerInput || 'illumination' === lowerInput) {
     return CommandType.Illumination
   }
+  if ('smoke' === lowerInput) {
+    return CommandType.Smoke
+  }
+  if ('spawnbase' === lowerInput) {
+    return CommandType.SpawnBase
+  }
   if ('spawner' === lowerInput) {
     return CommandType.CreateSpawner
+  }
+  if ('spawngroup' === lowerInput) {
+    return CommandType.SpawnGroup
   }
 
   return CommandType.Unknown

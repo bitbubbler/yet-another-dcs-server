@@ -1,12 +1,18 @@
+// db must be the first import
+import { orm } from '../db/connection'
+
+// just hold a reference here (i promise, this fixes a bug)
+const db = orm
+
+import { Position, StaticObjectTypeName, Unit, UnitTypeName } from '../db'
+
 import assert from 'assert'
 import { PositionLL } from '../common'
 
 import { LatLon } from '../geo'
 import { Mission } from '../restartMission/types'
 import { services } from '../services'
-import { StaticObjectTypeName } from '../staticObject'
 import { Template } from '../base-templates/types'
-import { Unit, UnitTypeName } from '../unit'
 import { positionLatLonFrom } from '../coord'
 
 const { custom, hook } = services
@@ -27,8 +33,10 @@ async function main(): Promise<void> {
   console.log(serialize(template))
 }
 
-interface UnitPartial extends Pick<Unit, 'typeName' | 'heading'> {
-  position: Pick<PositionLL, 'lat' | 'lon'>
+interface UnitPartial
+  extends Pick<Unit, 'typeName'>,
+    Pick<Position, 'heading'> {
+  position: Pick<Position, 'lat' | 'lon'>
 }
 
 interface StaticObject {
@@ -75,8 +83,9 @@ function templateFrom(
   units: UnitPartial[],
   slots: UnitPartial[]
 ): Template {
+  // use the geographical center of all template items as the origin
   const origin = LatLon.meanOf(
-    staticObjects.map(
+    [...slots, ...staticObjects, ...units].map(
       object => new LatLon(object.position.lat, object.position.lon)
     )
   )
@@ -150,27 +159,6 @@ function templateFrom(
   return template
 }
 
-function UnitTypeNameFrom(maybeTypeName: string): UnitTypeName {
-  if (maybeTypeName === UnitTypeName.AH64D) {
-    return UnitTypeName.AH64D
-  }
-  if (maybeTypeName === UnitTypeName.UH1H) {
-    return UnitTypeName.UH1H
-  }
-  if (maybeTypeName === UnitTypeName.UH60) {
-    return UnitTypeName.UH60
-  }
-  if (maybeTypeName === UnitTypeName.MI24) {
-    return UnitTypeName.MI24
-  }
-  if (maybeTypeName === UnitTypeName.MI8) {
-    return UnitTypeName.MI8
-  }
-
-  debugger
-
-  throw new Error('unknown unit typeName')
-}
 function unitTypeNameStringFrom(maybeTypeName: string): string {
   if (maybeTypeName === UnitTypeName.AH64D) {
     return `UnitTypeName.AH64D`
@@ -275,6 +263,27 @@ function staticObjectTypeNameStringFrom(maybeTypeName: string): string {
   if (maybeTypeName === StaticObjectTypeName.HangerA) {
     return `StaticObjectTypeName.HangerA`
   }
+  if (maybeTypeName === StaticObjectTypeName.CV59NS60) {
+    return `StaticObjectTypeName.CV59NS60`
+  }
+  if (maybeTypeName === StaticObjectTypeName.SoldierM4GRG) {
+    return `StaticObjectTypeName.SoldierM4GRG`
+  }
+  if (maybeTypeName === StaticObjectTypeName.TACANBeacon) {
+    return `StaticObjectTypeName.TACANBeacon`
+  }
+  if (maybeTypeName === StaticObjectTypeName.ISOContainer) {
+    return `StaticObjectTypeName.ISOContainer`
+  }
+  if (maybeTypeName === StaticObjectTypeName.PatriotEPP) {
+    return `StaticObjectTypeName.PatriotEPP`
+  }
+  if (maybeTypeName === StaticObjectTypeName.PatriotEPP) {
+    return `StaticObjectTypeName.PatriotEPP`
+  }
+  if (maybeTypeName === StaticObjectTypeName.M818) {
+    return `StaticObjectTypeName.M818`
+  }
 
   debugger
 
@@ -296,7 +305,7 @@ async function getSlots(): Promise<UnitPartial[]> {
             slots.push({
               heading: unit.heading,
               position,
-              typeName: unit.type,
+              typeName: unit.type as UnitTypeName,
             })
           }
         }

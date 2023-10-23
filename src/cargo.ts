@@ -1,75 +1,47 @@
-import { v4 as uuidV4 } from 'uuid'
-import { Base } from './base'
-import { PositionLL } from './common'
-import { deleteCargo, insertCargo } from './db'
-import { deleteUnitCargo, insertUnitCargo } from './db/unitCargos'
+import {
+  BaseCargo,
+  Cargo,
+  CargoSuperType,
+  CsarCargo,
+  NewBaseCargo,
+  NewCsarCargo,
+  NewUnitCargo,
+  Unit,
+  UnitCargo,
+} from './db'
+import { setUnitInternalCargoMass } from './unit'
+import { emFork } from './db/connection'
 
-import { setUnitInternalCargoMass, Unit, UnitTypeName } from './unit'
+export async function createBaseCargo(
+  newCargo: NewBaseCargo
+): Promise<BaseCargo> {
+  const baseCargo = new BaseCargo(newCargo)
 
-export enum CargoType {
-  /** For creating bases */
-  BaseCreate,
-  /** For upgrading bases */
-  BaseUpgrade,
-  /** For creating units */
-  UnitCreate,
+  const em = await emFork()
+  await em.persistAndFlush(baseCargo)
+
+  return baseCargo
 }
 
-/**
- * IMPORTANT: The values this enum must be the EXACT typeName used by DCS internally for this cargo type
- */
-export enum CargoTypeName {
-  UH1HCargo = 'uh1h_cargo',
+export async function createUnitCargo(
+  newCargo: NewUnitCargo
+): Promise<UnitCargo> {
+  const unitCargo = new UnitCargo(newCargo)
+
+  const em = await emFork()
+  await em.persistAndFlush(unitCargo)
+
+  return unitCargo
 }
+export async function createCsarCargo(
+  newCargo: NewCsarCargo
+): Promise<CsarCargo> {
+  const csarCargo = new CsarCargo(newCargo)
 
-export type NewCargoProperties =
-  | 'displayName'
-  | 'internal'
-  | 'mass'
-  | 'originBaseId'
-  | 'position'
-  | 'type'
-  | 'typeName'
+  const em = await emFork()
+  await em.persistAndFlush(csarCargo)
 
-export type NewBaseCargo = Pick<BaseCargo, NewCargoProperties>
-
-export type NewUnitCargo = Pick<UnitCargo, NewCargoProperties | 'unitTypeName'>
-
-export type NewCargo = NewBaseCargo | NewUnitCargo
-
-export interface CargoBase {
-  displayName: string
-  cargoId: number
-  internal: boolean
-  mass: number
-  originBaseId: number
-  position: PositionLL
-  type: CargoType
-  typeName: CargoTypeName
-  uuid: string
-}
-
-export interface BaseCargo extends CargoBase {
-  type: CargoType.BaseCreate | CargoType.BaseUpgrade
-  // TODO: add something like this to solve bases being upgraded with their own crate
-  // takenFrom: Base['baseId']
-}
-export interface UnitCargo extends CargoBase {
-  type: CargoType.UnitCreate
-  unitTypeName: UnitTypeName
-}
-
-export type Cargo = BaseCargo | UnitCargo
-
-export async function createCargo(newCargo: NewCargo): Promise<Cargo> {
-  const uuid = uuidV4()
-
-  const cargo = await insertCargo({
-    uuid,
-    ...newCargo,
-  })
-
-  return cargo
+  return csarCargo
 }
 
 /**
@@ -80,8 +52,11 @@ export async function createCargo(newCargo: NewCargo): Promise<Cargo> {
  * @param cargo the cargo to be loaded
  */
 export async function loadCargo(unit: Unit, cargo: Cargo): Promise<void> {
-  // mark cargo in db as loaded for this unit
-  await insertUnitCargo(unit, cargo)
+  const em = await emFork()
+
+  unit.cargos.add(cargo)
+
+  await em.persistAndFlush(unit)
 
   // set unit weight in dcs
   await setUnitInternalCargoMass(unit, cargo.mass)
@@ -95,37 +70,32 @@ export async function loadCargo(unit: Unit, cargo: Cargo): Promise<void> {
  * @param cargo the cargo to be unloaded
  */
 export async function unloadCargo(unit: Unit, cargo: Cargo): Promise<void> {
-  // destroy the cargo
-  await destroyCargo(unit, cargo)
+  const em = await emFork()
+
+  await unit.cargos.loadItems()
+
+  // mark the cargo as removed from the unit
+  unit.cargos.remove(cargo)
+  // destroy the cargo itself
+  em.remove(cargo)
+
+  // flush the changes
+  em.persistAndFlush([unit, cargo])
 
   // set unit weight in dcs
   await setUnitInternalCargoMass(unit, 0)
 }
 
-export async function destroyCargo(unit: Unit, cargo: Cargo): Promise<void> {
-  await deleteUnitCargo(unit, cargo)
-
-  await deleteCargo(cargo)
+export async function destroyCargo(cargo: Cargo): Promise<void> {
+  const em = await emFork()
+  em.remove(cargo)
+  await em.flush()
 }
 
 export function isBaseCargo(cargo: Cargo): cargo is BaseCargo {
-  return isBaseCargoType(cargo.type)
-}
-
-export function isBaseCargoType(
-  cargoType: Cargo['type']
-): cargoType is BaseCargo['type'] {
-  return (
-    CargoType.BaseCreate === cargoType || CargoType.BaseUpgrade === cargoType
-  )
+  return cargo.superType === CargoSuperType.Base
 }
 
 export function isUnitCargo(cargo: Cargo): cargo is UnitCargo {
-  return isUnitCargoType(cargo.type)
-}
-
-export function isUnitCargoType(
-  cargoType: Cargo['type']
-): cargoType is UnitCargo['type'] {
-  return CargoType.UnitCreate === cargoType
+  return cargo.superType === CargoSuperType.Unit
 }

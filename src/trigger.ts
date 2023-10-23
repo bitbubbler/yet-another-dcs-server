@@ -1,8 +1,9 @@
 import { services } from './services'
 import { PositionLL } from './common'
-import { _dcs_trigger_v0_SmokeRequest_SmokeColor as SmokeColor } from '../generated/dcs/trigger/v0/SmokeRequest'
-import { _dcs_trigger_v0_SignalFlareRequest_FlareColor as FlareColor } from '../generated/dcs/trigger/v0/SignalFlareRequest'
-import { Coalition } from '../generated/dcs/common/v0/Coalition'
+import { _dcs_trigger_v0_SmokeRequest_SmokeColor as SmokeColor } from './__generated__/dcs/trigger/v0/SmokeRequest'
+import { _dcs_trigger_v0_SignalFlareRequest_FlareColor as FlareColor } from './__generated__/dcs/trigger/v0/SignalFlareRequest'
+import { Coalition } from './__generated__/dcs/common/v0/Coalition'
+import { Color__Output } from './__generated__/dcs/trigger/v0/Color'
 
 const { trigger, net } = services
 
@@ -85,6 +86,64 @@ export async function outText(text: string, displayTime = 10) {
       }
     )
   )
+}
+
+type Color = Required<Color__Output>
+
+/**
+ *
+ * @param options.unieqId A unique id used as a seed for the marker id
+ * @returns The marker id, can be used for removal
+ */
+export async function markupTextToAll(options: {
+  coalition: Coalition
+  position: PositionLL
+  lineColor: Color
+  fillColor: Color
+  fontSize: number
+  readonly: boolean
+  text: string
+  uniqueId: number
+}): Promise<number> {
+  const {
+    coalition,
+    position,
+    lineColor,
+    fillColor,
+    fontSize,
+    readonly,
+    text,
+    uniqueId,
+  } = options
+
+  const lua = `
+  local markId = ${uniqueId}
+  local point = coord.LLtoLO(${position.lat}, ${position.lon}, ${position.alt})
+  trigger.action.textToAll(${coalition - 1}, markId, point, { ${
+    lineColor.red
+  }, ${lineColor.green}, ${lineColor.blue}, ${lineColor.alpha} }, { ${
+    fillColor.red
+  }, ${fillColor.green}, ${fillColor.blue}, ${
+    fillColor.alpha
+  } }, ${fontSize}, ${readonly}, [[${text}]])
+
+  return markId
+
+`
+
+  return new Promise((resolve, reject) => {
+    services.custom.eval({ lua }, (error, result) => {
+      if (error) {
+        reject(error)
+      }
+      if (!result || !result.json) {
+        reject(Error('missing result json'))
+        return
+      }
+
+      resolve(JSON.parse(result.json))
+    })
+  })
 }
 
 export async function markToAll(options: {

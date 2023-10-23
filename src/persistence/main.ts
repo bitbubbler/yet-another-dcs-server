@@ -1,51 +1,77 @@
-import { findUnit, knex, unitFrom as unitFromDbUnit, unitGone } from '../db'
-import { isPlayerUnit, spawnGroundUnit } from '../unit'
+import { emFork } from '../db/connection'
+import { Csar, Player, Position, Unit, UnitTypeName } from '../db'
+import { BirthEvent, Events, EventType } from '../events'
+import { netPlayerFrom } from '../player'
+import { createUnit, isPlayerUnit, spawnGroundUnit } from '../unit'
 import { UnitEventType, UnitEvents } from '../unitEvents'
-import { updateUnitPosition, Position, Unit as UnitTable } from '../db'
 
 export async function persistenceMain(): Promise<() => Promise<void>> {
-  await trySpawnUnits()
+  const eventsSubscription = Events.subscribe(async event => {
+    if (EventType.Birth === event.type) {
+      return handleBirth(event)
+    }
+  })
 
   // handle unit updates
-  const subscription = UnitEvents.subscribe(async event => {
-    /**
-     * IMPORTANT: Player controlled units MAY NOT be persisted using this module.
-     * Attempting to use the this persistence for player controlled units
-     * will result in a bad time.
-     *
-     * Player controlled units are "slotted" into, and then a unit is spawned
-     * for that player at the location of that slot in the mission file.
-     * While having the location of the player is useful, that responsibility
-     * does not belong to the persistence module, and should be done elsewhere.
-     * Player controlled units are not gone forever, which persistence assumes.
-     * Furthermore, two players can even re-use the same unit by re-slotting
-     * as described above
-     */
-    if (UnitEventType.Update === event.type) {
-      const { unit } = event
+  const unitEventsSubscription = UnitEvents.subscribe(async event => {
+    const em = await emFork()
+    const csarRepository = em.getRepository(Csar)
+    const unitRepository = em.getRepository(Unit)
 
-      try {
-        await updateUnitPosition(unit)
-      } catch (error) {
-        // surpress failed position updates if a unit doesn't exist in the db
-        if (/No known unit/.test((error as Error).message)) {
-          return
-        }
-        throw error
+    if (UnitEventType.Update === event.type) {
+      const { heading, position } = event.unit
+      const { lat, lon, alt } = position
+
+      // TODO: get unit heading (new dcs-grpc update gives us this)
+      const newPosition = new Position({ lat, lon, alt, heading })
+
+      const unit = await unitRepository.findOne({
+        name: event.unit.name,
+      })
+
+      if (!unit) {
+        return
       }
+
+      // NOTE: this leaves a dangling position in the db, which is fine.
+      // we should use these positions in the future to keep position history for debugging
+      unit.position = newPosition
+
+      // flush the changes to the db
+      await em.flush()
     }
     if (UnitEventType.Gone === event.type) {
       const name = event.unit.name
-      const unit = await findUnit(name)
+      const unit = await unitRepository.findOne({ name })
 
-      if (typeof unit === 'undefined') {
-        throw new Error(`MissingUnit: no unit found in db with name ${name}`)
+      if (!unit) {
+        return
       }
 
       // do not record gone events for player units
       // see the giant comment block above for details
       if (isPlayerUnit(unit) === false) {
-        await unitGone(unit)
+        unit.gone()
+
+        // if the unit is a csar unit, mark the csar gone as well
+        const csar = await csarRepository.findOne({
+          unit: { unitId: unit.unitId },
+        })
+
+        if (csar) {
+          // remove the marker
+          if (csar.marker) {
+            em.remove(csar.marker)
+          }
+          // remove the unit
+          if (csar.unit) {
+            em.remove(csar.unit)
+          }
+          // mark the csar as gone
+          csar.gone()
+        }
+
+        em.flush()
       }
     }
   })
@@ -64,53 +90,69 @@ export async function persistenceMain(): Promise<() => Promise<void>> {
    */
 
   return async () => {
-    subscription.unsubscribe()
+    eventsSubscription.unsubscribe()
+    unitEventsSubscription.unsubscribe()
+  }
+}
+
+async function handleBirth(event: BirthEvent) {
+  if (!event.initiator.unit) {
+    // no-op
+    return
+  }
+
+  const { country, name, playerName, typeName } = event.initiator.unit
+
+  if (playerName && playerName.length > 0) {
+    // create a player and a unit for the players slot, if it doesn't yet exist`
+    try {
+      const em = await emFork()
+      const { ucid } = await netPlayerFrom(playerName)
+      // player
+      const player = new Player({
+        name: playerName,
+        ucid,
+      })
+      // unit (player slot)
+      const position = new Position({
+        ...event.initiator.unit.position,
+        heading: 0,
+      })
+
+      await Promise.all([
+        em.persistAndFlush(player),
+        createUnit({
+          country,
+          hidden: false,
+          name,
+          isPlayerSlot: true,
+          position,
+          typeName: typeName as UnitTypeName,
+        }),
+      ])
+    } catch (err) {
+      // silently ignore these
+    }
   }
 }
 
 /**
  * try to spawn units from the database (called on mission start and mission restart)
  */
-async function trySpawnUnits() {
+export async function trySpawnUnits() {
   // on startup, we need to attempt to syncronize mission state with database state
   // we can get more sophisticated, but for now we assume the database is the source of truth
   // this means that on restart, even if the mission hasn't reset, we'll reset the all units
   // to the position we have for each in the database
 
-  // get the units in the db
-  const unitsToSpawn = await knex('units')
-    .leftOuterJoin('positions', function () {
-      this.on('units.positionId', '=', 'positions.positionId')
-    })
-    .whereNull('goneAt')
-    .whereNull('destroyedAt')
-    .select<
-      Array<
-        Pick<
-          UnitTable,
-          'country' | 'isPlayerSlot' | 'name' | 'typeName' | 'unitId'
-        > &
-          Pick<Position, 'alt' | 'heading' | 'lat' | 'lon'>
-      >
-    >([
-      'alt',
-      'country',
-      'heading',
-      'isPlayerSlot',
-      'lat',
-      'lon',
-      'name',
-      'typeName',
-      'units.unitId',
-    ])
+  const em = await emFork()
+  const unitRepository = em.getRepository(Unit)
+  const unitsToSpawn = await unitRepository.find({ isPlayerSlot: false })
 
   // spawn the missing units
   await Promise.all(
-    unitsToSpawn
-      .map(unit => unitFromDbUnit(unit))
-      .filter(unit => unit.isPlayerSlot === false)
-      .map(async unit => {
-        await spawnGroundUnit(unit)
-      })
+    unitsToSpawn.map(async unit => {
+      await spawnGroundUnit(unit)
+    })
   )
 }

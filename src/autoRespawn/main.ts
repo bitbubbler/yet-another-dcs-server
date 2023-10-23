@@ -7,30 +7,24 @@ import {
   MissionCommandEvent,
 } from '../events'
 import { markToAll, outText, removeMapMark } from '../trigger'
-
 import { getMarkById, getMarkPanels, MarkPanel } from '../custom'
 import { CommandType, ToDestroy } from '../commands'
-import { allSpawners, insertSpawner, spawnerDestroyed } from '../db/spawners'
-import { Spawner, SpawnerType } from '../spawner'
-import { randomBetween } from '../common'
-import {
-  findUnit,
-  knex,
-  Position,
-  SpawnerQueue,
-  Spawner as DBSpawner,
-  unitDestroyed,
-  unitFrom,
-} from '../db'
-import { PositionLL } from '../common'
-import { isPlayerUnit, spawnGroundUnitsInCircle, Unit } from '../unit'
-import { insertSpawnerQueue, spawnerQueueDone } from '../db/spawnerQueues'
+import { emFork } from '../db/connection'
+import { Position, Spawner, SpawnerQueuedUnit, SpawnerType, Unit } from '../db'
+import { distanceFrom, PositionLL, randomBetween } from '../common'
+import { createGroundUnitsInCircle, spawnGroundUnit } from '../unit'
 import { UnitEvents, UnitEventType, UnitGoneEvent } from '../unitEvents'
 import { closestPointOnRoads, findPathOnRoads, RoadType } from '../land'
 import { driveGroundGroup } from '../group'
-import { distanceFrom } from '../common'
-import { nearbySpawners } from '../spawner'
+import {
+  allSpawners,
+  createSpawner,
+  findNearbySpawners,
+  spawnerDestroyed,
+} from '../spawner'
 import { coalitionFrom } from '../coalition'
+import { wrap } from '@mikro-orm/core'
+import { LatLon } from '../geo'
 
 const UNIT_MAXIMUM_DISPLACEMENT_TO_SPAWNER_METERS = 100000
 const SPAWNER_MINIMUM_DISPLACEMENT_METERS = 250
@@ -115,151 +109,105 @@ function respawnQueue(): () => void {
    * Respawn units (used when the queue timeout pops)
    */
   const respawnUnits = async (): Promise<void> => {
-    // get the spawnerId of waiting queues
-    const spawnersQueued = await knex('spawnerQueues')
-      .leftJoin('spawners', 'spawnerQueues.spawnerId', 'spawners.spawnerId')
-      .leftJoin('positions', 'spawners.positionId', 'positions.positionId')
-      .select(['spawners.spawnerId', 'unitId', 'alt', 'lat', 'lon'])
-      .count<
-        Array<
-          Pick<
-            Spawner & SpawnerQueue & Position,
-            'spawnerId' | 'alt' | 'lat' | 'lon'
-          > & { depth: number }
-        >
-      >('unitId as depth')
-      .whereNull('doneAt')
-      .whereNull('spawners.capturedAt')
-      .whereNull('spawners.goneAt')
-      .groupBy('spawners.spawnerId')
-      .orderBy('spawnerQueues.createdAt', 'asc')
+    const em = await emFork()
+    const spawnerRepository = em.getRepository(Spawner)
 
-    // lookup and spawn units for all spawners concurrently
-    await Promise.all(
-      spawnersQueued.map(async spawner => {
-        const { spawnerId, depth } = spawner
+    const spawners = await spawnerRepository.findAll()
 
-        const spawnerPosition: PositionLL = {
-          alt: spawner.alt,
-          lat: spawner.lat,
-          lon: spawner.lon,
-        }
-
-        console.log(
-          `Attempting to spawn ${SPAWNER_MAXIMUM_UNITS_PER_CYCLE} units for spawner ${spawnerId}. Spawner has a queue depth of ${depth}`
-        )
-
-        const dbUnitsToSpawn = await knex('units')
-          .leftOuterJoin('positions', function () {
-            this.on('units.positionId', '=', 'positions.positionId')
-          })
-          .leftOuterJoin('spawnerQueues', function () {
-            this.on('units.unitId', '=', 'spawnerQueues.unitId')
-          })
-          .select<
-            Pick<
-              Unit & Position & SpawnerQueue,
-              | 'spawnerId'
-              | 'unitId'
-              | 'country'
-              | 'typeName'
-              | 'lat'
-              | 'lon'
-              | 'alt'
-              | 'heading'
-              | 'isPlayerSlot'
-              | 'name'
-            >[]
-          >([
-            'spawnerId',
-            'units.unitId as unitId',
-            'typeName',
-            'country',
-            'lat',
-            'lon',
-            'alt',
-            'heading',
-            'isPlayerSlot',
-            'name',
-          ])
-          .where({ spawnerId })
-          .whereNull('spawnerQueues.doneAt')
-          .limit(SPAWNER_MAXIMUM_UNITS_PER_CYCLE)
-
-        const unitsToSpawn = dbUnitsToSpawn.map(unit => {
-          const { spawnerId } = unit
-          return {
-            ...unitFrom(unit),
-            spawnerId,
-          }
-        })
-
-        const randomUnit =
-          unitsToSpawn[randomBetween(1, unitsToSpawn.length) - 1]
-
-        if (!randomUnit) {
-          throw new Error('Attempt to randomly pick a unit failed')
-        }
-
-        // use the position of one of the units randomly
-        const { country, position: unitDeathPosition } = randomUnit
-
-        const [firstOnRoadPosition, lastOnRoadPosition]: [
-          PositionLL,
-          PositionLL
-        ] = await Promise.all([
-          closestPointOnRoads(RoadType.Roads, spawnerPosition),
-          closestPointOnRoads(RoadType.Roads, unitDeathPosition),
-        ])
-
-        // MUST remove them from the db first, to avoid issues with concurrently spawning being marked gone
-        // mark the spawnerQueue items for these units as done
-        await Promise.all(
-          unitsToSpawn.map(async unit => {
-            const { unitId, spawnerId } = unit
-
-            await spawnerQueueDone(spawnerId, unitId)
-          })
-        )
-
-        const path = await findPathOnRoads(
-          RoadType.Roads,
-          firstOnRoadPosition,
-          lastOnRoadPosition
-        )
-
-        // spawn the units in a circle on the position
-        const groups = await spawnGroundUnitsInCircle(
-          country,
-          spawnerPosition,
-          SPAWNER_UNIT_RANDOM_FOCUS_RADIUS,
-          unitsToSpawn
-        )
-
-        // we have to wait a short delay after spawning a unit before giving it tasks
-        await new Promise(resolve => setTimeout(resolve, 100))
-
-        // drive the spawned group(s) to the death position
-        await Promise.all(
-          groups.map(async ({ groupName }) => {
-            await driveGroundGroup({
-              groupName,
-              position: spawnerPosition,
-              // TODO: improve points logic here to make pathing of spawned units less.. dumb
-              // use path if it has points, otherwise use the first and last onroad points
-              points:
-                path.length > 0
-                  ? path
-                  : [firstOnRoadPosition, lastOnRoadPosition],
-              destination: unitDeathPosition,
-              onroad: false,
-            })
-          })
-        )
-
-        // TODO: if the above errors, null out the doneAt value again to give it an attempt to respawn
+    for (const spawner of spawners) {
+      const queuedUnits = await spawner.queuedUnits.matching({
+        populate: ['unit'],
+        limit: SPAWNER_MAXIMUM_UNITS_PER_CYCLE,
       })
-    )
+
+      const randomQueuedUnit =
+        queuedUnits[randomBetween(1, queuedUnits.length) - 1].getProperty(
+          'unit'
+        )
+
+      // use the position of one of the units randomly
+
+      const { country, position: randomUnitDeathPosition } = randomQueuedUnit
+
+      const [firstOnRoadPosition, lastOnRoadPosition]: [
+        PositionLL,
+        PositionLL,
+      ] = await Promise.all([
+        closestPointOnRoads(RoadType.Roads, spawner.position),
+        closestPointOnRoads(RoadType.Roads, randomUnitDeathPosition),
+      ])
+
+      // MUST remove them from the db first, to avoid issues with concurrently spawning being marked gone
+      // mark the spawnerQueue items for these units as done
+      for (const queuedUnit of queuedUnits) {
+        queuedUnit.unwrap().done()
+      }
+
+      // make sure the changes are flushed
+      await em.flush()
+
+      const path = await findPathOnRoads(
+        RoadType.Roads,
+        firstOnRoadPosition,
+        lastOnRoadPosition
+      )
+
+      // TODO: fix this, it fails to create units
+
+      // spawn the units in a circle on the position
+      const units = await createGroundUnitsInCircle({
+        country,
+        focus: spawner.position,
+        hidden: false,
+        radius: SPAWNER_UNIT_RANDOM_FOCUS_RADIUS,
+        units: queuedUnits.map(queued => {
+          const unit = queued.getProperty('unit')
+          const { typeName, position } = unit
+          const { heading } = position
+
+          return {
+            heading,
+            typeName,
+          }
+        }),
+      })
+
+      const groups = await Promise.all(units.map(unit => spawnGroundUnit(unit)))
+
+      // we have to wait a short delay after spawning a unit before giving it tasks
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      // drive the spawned group(s) to the death position
+      await Promise.all(
+        groups.map(async ({ groupName }) => {
+          // Find a  pseudo random destination position for this unit to drive to
+          const { lat, lon } = new LatLon(
+            randomUnitDeathPosition.lat,
+            randomUnitDeathPosition.lon
+          ).destinationPoint(
+            randomBetween(50, 2000), // random distance
+            randomBetween(0, 360) // random heading
+          )
+
+          const position = { lat, lon, alt: 0 }
+
+          await driveGroundGroup({
+            groupName,
+            position: spawner.position,
+            // TODO: improve points logic here to make pathing of spawned units less.. dumb
+            // use path if it has points, otherwise use the first and last onroad points
+            points:
+              path.length > 0
+                ? path
+                : [firstOnRoadPosition, lastOnRoadPosition],
+            destination: position,
+            onroad: false,
+          })
+        })
+      )
+    }
+
+    // TODO: if the above errors, null out the doneAt value again to give it an attempt to respawn
   }
 
   /**
@@ -296,23 +244,31 @@ function randomQueueTime(): number {
 }
 
 async function handleUnitGoneEvent(event: UnitGoneEvent) {
-  const unit = await findUnit(event.unit.name)
+  const em = await emFork()
+  const unitRepository = em.getRepository(Unit)
+
+  const unit = await unitRepository.findOne({
+    name: event.unit.name,
+    canRespawn: true,
+    isPlayerSlot: false,
+  })
 
   if (!unit) {
-    // quietly ignore units not in the database (units can exist in missions that YADS doesn't manage)
-    return
-  }
-
-  if (isPlayerUnit(unit)) {
-    // quietly no-op on player slots
-    // player slots shouldn't auto respawn
+    /**
+     * We want to quietly ignore a few cases here:
+     * - player slots
+     * - units not in the database for whatever reason (that YADS did spawn)
+     * - units that can exist in mission file (that YADS doesn't manage)
+     * - units that shouldn't respawn (marked as `canRespawn=false` in the db)
+     */
+    // quietly ignore units not in the database, or units that can't respawn
     return
   }
 
   const { country, unitId, position, typeName } = unit
 
   // look for nearby spawners of matching coalition
-  const foundNearbyCoalitionSpawners = await nearbySpawners({
+  const foundNearbyCoalitionSpawners = await findNearbySpawners({
     position,
     accuracy: UNIT_MAXIMUM_DISPLACEMENT_TO_SPAWNER_METERS,
     coalition: coalitionFrom(country),
@@ -326,11 +282,16 @@ async function handleUnitGoneEvent(event: UnitGoneEvent) {
 
   const { spawnerId } = firstSpawner
 
-  // add unit to respawn queue if spawner nearby
-  await Promise.all([
-    unitDestroyed(unit),
-    insertSpawnerQueue(spawnerId, unitId),
-  ])
+  // mark the unit destroyed
+  unit.destroyed()
+
+  // add unit to respawn queue of closest spawner
+  firstSpawner.queuedUnits.add(
+    wrap(new SpawnerQueuedUnit({ spawner: firstSpawner, unit })).toReference()
+  )
+
+  // flush db changes
+  await em.flush()
 
   console.log(
     `unit ${unitId} of type ${typeName} queued to spawner ${spawnerId}`
@@ -353,9 +314,10 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
         throw new Error('expected addedMark')
       }
 
-      const { position } = addedMark
+      const { lat, lon } = addedMark.position
+      const position = new Position({ lat, lon, alt: 0, heading: 0 })
 
-      const spawnersNearby = await nearbySpawners({
+      const spawnersNearby = await findNearbySpawners({
         position,
         accuracy: SPAWNER_MINIMUM_DISPLACEMENT_METERS,
         coalition,
@@ -368,17 +330,15 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
         throw new Error('Too many nearby spawners')
       }
 
-      const spawner = {
+      const spawner = await createSpawner({
         coalition,
-        position: addedMark.position,
+        position,
         type: spawnerType,
-      }
-
-      const spawnerId = await insertSpawner(spawner)
+      })
 
       await removeMapMark(addedMark.id)
-      await addMarkerForSpawner({ ...spawner, spawnerId })
-      await outText(`Spawner ${spawnerId} created`)
+      await addMarkerForSpawner(spawner)
+      await outText(`Spawner ${spawner.spawnerId} created`)
     }
     if (CommandType.Destroy === command.type) {
       if (
@@ -397,7 +357,7 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
       const markPosition = addedMark.position
       const { coalition = addedMark.coalition } = command
 
-      const foundSpawners = await nearbySpawners({
+      const foundSpawners = await findNearbySpawners({
         position: markPosition,
         accuracy: command.radius || DESTROY_SINGLE_UNIT_SEARCH_RANGE,
         coalition: coalition,
@@ -415,15 +375,14 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
       }
 
       await Promise.all(
-        foundSpawners.map(async element => {
-          const { lat, lon, alt } = element
-          const spawnerPosition = { lat, lon, alt }
+        foundSpawners.map(async spawner => {
           if (
-            distanceFrom(markPosition, spawnerPosition) <=
+            distanceFrom(markPosition, spawner.position) <=
             (command.radius || DESTROY_SINGLE_UNIT_SEARCH_RANGE)
           ) {
-            const { spawnerId } = element
-            await spawnerDestroyed(spawnerId) // destroy
+            const { spawnerId } = spawner
+
+            await spawnerDestroyed(spawner) // destroy
 
             // remove existing spawner marker
             const existingMarker = await findSpawnerMarker(spawnerId)
@@ -554,7 +513,7 @@ function textIsSpawnerMarker(text: string): boolean {
 }
 
 function spawnerMarkerDescription(
-  spawner: Pick<Spawner & DBSpawner, 'type' | 'coalition' | 'spawnerId'>
+  spawner: Pick<Spawner, 'type' | 'coalition' | 'spawnerId'>
 ): string {
   const { coalition, spawnerId, type } = spawner
   return `

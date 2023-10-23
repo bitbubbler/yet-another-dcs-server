@@ -1,7 +1,7 @@
 **To run this repo:**
 
 - make an empty mission (any map)
-- modify your dcs to run [dcs-grpc](https://github.com/DCS-gRPC/rust-server)
+- modify your dcs to run [dcs-grpc](https://github.com/DCS-gRPC/rust-server) (NOTE: We currently only support v0.6.0. We will be updating soon)
 - clone this repo
 - install deps with `npm install`
 - create generated code with `npm run codegen`

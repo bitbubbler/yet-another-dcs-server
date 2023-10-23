@@ -1,5 +1,5 @@
-import { _dcs_net_v0_GetPlayersResponse_GetPlayerInfo__Output as GetPlayerInfo } from '../generated/dcs/net/v0/GetPlayersResponse'
-import { NetServiceClient as NetService } from '../generated/dcs/net/v0/NetService'
+import { _dcs_net_v0_GetPlayersResponse_GetPlayerInfo__Output as GetPlayerInfo } from './__generated__/dcs/net/v0/GetPlayersResponse'
+import { NetServiceClient as NetService } from './__generated__/dcs/net/v0/NetService'
 import { services } from './services'
 import { options } from './cli'
 

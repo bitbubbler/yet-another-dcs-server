@@ -1,72 +1,36 @@
-import { Position } from '../../generated/dcs/common/v0/Position'
 import {
-  BirthEvent,
   Events,
   EventType,
   GroupCommandEvent,
-  MarkAddEvent,
   MarkChangeEvent,
   PlayerSendChatEvent,
 } from '../events'
 import { outGroupText, outUnitText, removeMapMark } from '../trigger'
 
-import { getMarkById, getMarkPanels, MarkPanel } from '../custom'
-import { MarkPanelsMissingError } from '../errors'
-import { groupFromGroupName } from '../group'
+import { getMarkById } from '../custom'
 import { countryFrom } from '../country'
 import { searchUnits } from './searchUnits'
 import {
-  createUnit,
-  despawnUnit,
-  destroyUnit,
   spawnGroundUnit,
-  spawnGroundUnitsInCircle,
-  spawnGroundUnitsOnCircle,
-  Unit,
+  createGroundUnitsInCircle,
+  findNearbyUnits,
+  despawnGroundUnit,
 } from '../unit'
 import {
   CommandType,
   CommandType as EventCommandType,
   ToDestroy,
 } from '../commands/types'
-import { nearbyUnits, unitGone } from '../db'
-import { distanceFrom, positionLLFrom, rad } from '../common'
-import {
-  findSpawnGroupBy,
-  insertOrUpdateSpawnGroup,
-  typeNamesFrom,
-} from '../db/spawnGroups'
+import { distanceFrom } from '../common'
+import { emFork } from '../db/connection'
+import { SpawnGroup, UnitTypeName } from '../db'
 
 const DESTROY_SINGLE_UNIT_SEARCH_RANGE = 250
-
-type GroupID = number
-
-const groupSpawnSelection = new Map<
-  GroupID,
-  {
-    typeName: string // unit typeName to spawn
-    createdAt: Date // date selection was create at (for gc)
-  }
->()
-const groupSpawnLocation = new Map<
-  GroupID,
-  {
-    markerId: number
-    position: Position
-    createdAt: Date // date location was created at
-  }
->()
 
 export async function spawnUnitsMain(): Promise<() => Promise<void>> {
   const subscription = Events.subscribe(async event => {
     if (EventType.GroupCommand === event.type) {
       return handleGroupCommand(event)
-    }
-    if (EventType.Birth === event.type) {
-      return handleBirth(event)
-    }
-    if (EventType.MarkAdd === event.type) {
-      return handleMarkAddEvent(event)
     }
     if (EventType.MarkChange === event.type) {
       return handleMarkChangeEvent(event)
@@ -91,7 +55,13 @@ async function handlePlayerSendChatEvent(event: PlayerSendChatEvent) {
         .map(({ fuzzyUnitName }) => searchUnits(fuzzyUnitName).desc?.typeName)
         .filter((a): a is string => typeof a === 'string')
 
-      await insertOrUpdateSpawnGroup(groupName, typeNames)
+      const spawnGroup = new SpawnGroup({
+        name: groupName,
+        typeNames,
+      })
+
+      const em = await emFork()
+      await em.upsert(spawnGroup)
 
       await outUnitText(
         playerId,
@@ -102,7 +72,9 @@ async function handlePlayerSendChatEvent(event: PlayerSendChatEvent) {
 }
 
 async function handleMarkChangeEvent(event: MarkChangeEvent) {
-  const { id, initiator, command } = event
+  const em = await emFork()
+  const spawnGroupRepository = em.getRepository(SpawnGroup)
+  const { id, command } = event
 
   // attempt to handle command(s) from markers
   if (command) {
@@ -127,7 +99,7 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
           }
 
           const unit = {
-            typeName: unitToSpawn.desc.typeName,
+            typeName: unitToSpawn.desc.typeName as UnitTypeName,
             heading,
           }
 
@@ -138,42 +110,24 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
           return unit
         })
         .flat(2)
-        .filter((a): a is { typeName: string; heading: number } => Boolean(a))
+        .filter(<T>(a: T): a is Exclude<T, undefined> => Boolean(a))
 
       const country = countryFrom(coalition)
-      const units: Unit[] = []
 
-      // create the units first
-      for (const unitToSpawn of unitsToSpawn) {
-        const { heading, typeName } = unitToSpawn
-        const unit = await createUnit({
-          country,
-          heading: rad(heading),
-          isPlayerSlot: false,
-          position,
-          typeName,
-        })
+      // create the units in a circle
+      const units = await createGroundUnitsInCircle({
+        country,
+        focus: position,
+        hidden: false,
+        radius: 100, // TODO: handle radius here
+        units: unitsToSpawn,
+      })
 
-        units.push(unit)
-      }
+      // spawn the units
+      await Promise.all(units.map(unit => spawnGroundUnit(unit)))
 
-      // then spawn them (in a circle or as a single unit)
-      if (units.length > 0) {
-        if (unitsToSpawn.length > 1) {
-          // multiple units
-          await spawnGroundUnitsInCircle(
-            country,
-            position,
-            100, // TODO: handle radius here
-            units
-          )
-        } else {
-          // single unit
-          await spawnGroundUnit(units[0])
-        }
-        // remove the map marker
-        await removeMapMark(id)
-      }
+      // remove the map marker
+      await removeMapMark(id)
 
       return
     }
@@ -196,7 +150,7 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
       const markPosition = addedMark.position
       const { coalition = addedMark.coalition } = command
 
-      const foundUnits = await nearbyUnits({
+      const foundUnits = await findNearbyUnits({
         position: markPosition,
         accuracy: command.radius || DESTROY_SINGLE_UNIT_SEARCH_RANGE,
         coalition: coalition,
@@ -213,13 +167,18 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
 
       await Promise.all(
         foundUnits.map(async unit => {
-          const { name, position } = unit
           if (
-            distanceFrom(markPosition, position) <=
+            distanceFrom(markPosition, unit.position) <=
             (command.radius || DESTROY_SINGLE_UNIT_SEARCH_RANGE)
           ) {
-            await despawnUnit(unit)
-            await unitGone({ name })
+            // despawn the unit.
+            await despawnGroundUnit(unit)
+
+            // mark it as gone
+            unit.gone()
+
+            // flush the changes
+            await em.persistAndFlush(unit)
           }
         })
       )
@@ -235,7 +194,7 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
 
       const { groupName } = command
 
-      const spawnGroup = await findSpawnGroupBy(groupName)
+      const spawnGroup = await spawnGroupRepository.findOne({ name: groupName })
 
       if (!spawnGroup) {
         throw new Error('could not find spawn group with given name')
@@ -247,174 +206,28 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
         radius = command.radius
       }
 
-      const unitsToSpawn = typeNamesFrom(spawnGroup.typeNamesJson).map(
-        typeName => {
-          return {
-            // TODO: support heading when spawning groups
-            heading: 0,
-            typeName,
-          }
+      const unitsToSpawn = spawnGroup.typeNames.map(typeName => {
+        return {
+          // TODO: support heading when spawning groups
+          heading: 0,
+          typeName: typeName as UnitTypeName,
         }
-      )
+      })
 
-      await spawnGroundUnitsOnCircle(
-        countryFrom(addedMark.coalition),
-        addedMark.position,
+      // create the ground units
+      const units = await createGroundUnitsInCircle({
+        country: countryFrom(addedMark.coalition),
+        focus: addedMark.position,
         radius,
-        unitsToSpawn
-      )
+        hidden: false,
+        units: unitsToSpawn,
+      })
+
+      // spawn the ground units
+      await Promise.all(units.map(unit => spawnGroundUnit(unit)))
 
       // remove the map marker
       await removeMapMark(id)
-      return
-    }
-  }
-
-  // TODO: put below in fn(s)
-  // if a mark is changed after being added it should no longer be considered a valid spawn location
-  // we have to maintain it
-  const { unit } = initiator
-
-  if (typeof unit === 'undefined') {
-    // user is probably in a jtac/game master/tac commander slot
-    // because we can't get a groupId from the mark initiator, we don't continue here
-    return
-  }
-
-  const { groupName } = unit
-
-  if (!groupName) {
-    throw new Error('expected groupName on marker initiator')
-  }
-
-  const group = await groupFromGroupName(groupName)
-
-  if (!group.id) {
-    throw new Error('expected id on group')
-  }
-
-  // if the player already has a pending spawn location
-  if (groupSpawnLocation.has(group.id)) {
-    // remove the location
-    groupSpawnLocation.delete(group.id)
-  }
-}
-
-async function handleMarkAddEvent(event: MarkAddEvent) {
-  const { id, initiator } = event
-
-  if (!id) {
-    throw new Error('expected id on payload')
-  }
-
-  // payload is missing initiator when client is in jtac/tac command/game master slots
-  // we only get initiator when the client is in an airplane or helo slot
-  // because of this, for now, we only handle events with an initiator
-  if (!initiator) {
-    // no-op
-    return
-  }
-
-  let markPanels: MarkPanel[]
-  try {
-    markPanels = await getMarkPanels()
-  } catch (error) {
-    if (error instanceof MarkPanelsMissingError) {
-      // no-op
-      return
-    }
-    throw error
-  }
-
-  const addedMark = markPanels.find(mark => mark.id === id)
-
-  if (!addedMark) {
-    throw new Error('mark missing from markPanels')
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const position = addedMark.position!
-  // TODO: put below in fn(s)
-  // if a mark is changed after being added it should no longer be considered a valid spawn location
-  // we have to maintain it
-  const { unit } = initiator
-
-  if (typeof unit === 'undefined') {
-    // user is probably in a jtac/game master/tac commander slot
-    // because we can't get a groupId from the mark initiator, we don't continue here
-    return
-  }
-
-  const { country, groupName } = unit
-
-  if (!country) {
-    throw new Error('expected country on marker initiator')
-  }
-  if (!groupName) {
-    throw new Error('expected groupName on marker initiator')
-  }
-
-  const group = await groupFromGroupName(groupName)
-
-  if (!group.id) {
-    throw new Error('expected id on group')
-  }
-
-  // if the player already has a pending spawn selection
-  if (groupSpawnSelection.has(group.id)) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const typeName = groupSpawnSelection.get(group.id)!.typeName
-
-    const unit = await createUnit({
-      country,
-      // TODO: choose a heading to spawn the unit at
-      heading: 0,
-      isPlayerSlot: false,
-      position,
-      typeName,
-    })
-
-    // use it to spawn a unit on the new marker
-    await spawnGroundUnit(unit)
-
-    // remove the selection
-    groupSpawnSelection.delete(group.id)
-
-    // remove the map marker
-    await removeMapMark(id)
-
-    return
-  }
-
-  // otherwise update the player marker
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  groupSpawnLocation.set(group.id!, {
-    markerId: id,
-    position,
-    createdAt: new Date(),
-  })
-}
-
-async function handleBirth(event: BirthEvent) {
-  if (!event.initiator.unit) {
-    // no-op
-    return
-  }
-  const { country, name, playerName, position, typeName } = event.initiator.unit
-
-  if (playerName && playerName.length > 0) {
-    // create a player unit if it doesn't exist`
-    try {
-      await createUnit({
-        country,
-        heading: 0,
-        name,
-        isPlayerSlot: true,
-        position,
-        typeName,
-      })
-    } catch (err) {
-      // silently ignore these
     }
   }
 }
@@ -428,34 +241,6 @@ async function handleGroupCommand(event: GroupCommandEvent) {
     if (!typeName || typeof typeName !== 'string') {
       throw new Error('expected typeName of type string on details')
     }
-
-    if (groupSpawnLocation.has(group.id)) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const { markerId, position } = groupSpawnLocation.get(group.id)!
-
-      const unit = await createUnit({
-        country: countryFrom(group.coalition),
-        heading: 0,
-        isPlayerSlot: false,
-        position: positionLLFrom(position),
-        typeName,
-      })
-      // we have a location, spawn something here
-      await spawnGroundUnit(unit)
-
-      // remove the map marker
-      await removeMapMark(markerId)
-
-      // remove the selection
-      groupSpawnLocation.delete(group.id)
-      return
-    }
-
-    // // otherise store this typeName for this player for when a map marker is added
-    groupSpawnSelection.set(group.id, {
-      typeName,
-      createdAt: new Date(),
-    })
 
     // // send a message
     await outGroupText(
