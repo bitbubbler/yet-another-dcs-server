@@ -54,5 +54,8 @@
       "./src/mikro-orm.config.ts",
       "./build/mikro-orm.config.js"
     ]
+  },
+  "engines": {
+    "node" : ">=18.0.0 <=20.0.0"
   }
 }
