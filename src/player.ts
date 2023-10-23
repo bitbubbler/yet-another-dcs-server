@@ -1,5 +1,6 @@
 import { PositionLL } from './common'
-import { entityManager, NewPlayer, orm, Player } from './db'
+import { NewPlayer, Player } from './db'
+import { entityManager, orm } from './db/connection.mjs'
 import { services } from './services'
 
 /**

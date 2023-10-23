@@ -28,9 +28,8 @@ import {
   vec3AreEqual,
 } from '../coord'
 import { getMarkById } from '../custom'
+import { entityManager, orm } from '../db/connection.mjs'
 import {
-  entityManager,
-  orm,
   BaseType,
   BaseCargoType,
   CargoSuperType,
@@ -70,9 +69,7 @@ const DESTROY_SINGLE_BASE_SEARCH_RANGE_METERS = 100
 
 export async function logisticsMain(): Promise<() => Promise<void>> {
   await Promise.all(
-    (
-      await allBases()
-    ).map(async base => {
+    (await allBases()).map(async base => {
       await spawnBase(base)
     })
   )
@@ -236,18 +233,21 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
     async function waitForRandomTime(): Promise<void> {
       return new Promise((resolve, reject) => {
         // TODO: timeout if player has moved and show a message. Player should have to try again
-        setTimeout(async () => {
-          // if the player has moved while the random timer counted down, halt
-          const [{ p: currentVec3 }] = await getPositionVelocity(unit.name)
+        setTimeout(
+          async () => {
+            // if the player has moved while the random timer counted down, halt
+            const [{ p: currentVec3 }] = await getPositionVelocity(unit.name)
 
-          if (vec3AreEqual(startingVec3, currentVec3) === false) {
-            await outGroupText(group.id, `Unpacking failed: You moved!`)
-            return reject(new Error('player moved'))
-          }
+            if (vec3AreEqual(startingVec3, currentVec3) === false) {
+              await outGroupText(group.id, `Unpacking failed: You moved!`)
+              return reject(new Error('player moved'))
+            }
 
-          // othewise we let things continue
-          resolve()
-        }, randomBetween(CARGO_UNPACK_DELAY_MS_MIN, CARGO_UNPACK_DELAY_MS_MAX))
+            // othewise we let things continue
+            resolve()
+          },
+          randomBetween(CARGO_UNPACK_DELAY_MS_MIN, CARGO_UNPACK_DELAY_MS_MAX)
+        )
       })
     }
 

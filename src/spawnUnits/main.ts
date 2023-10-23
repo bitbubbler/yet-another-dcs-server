@@ -22,7 +22,8 @@ import {
   ToDestroy,
 } from '../commands/types'
 import { distanceFrom } from '../common'
-import { entityManager, orm, SpawnGroup, UnitTypeName } from '../db'
+import { entityManager, orm } from '../db/connection.mjs'
+import { SpawnGroup, UnitTypeName } from '../db'
 
 const DESTROY_SINGLE_UNIT_SEARCH_RANGE = 250
 

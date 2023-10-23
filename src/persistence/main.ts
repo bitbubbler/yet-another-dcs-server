@@ -1,12 +1,5 @@
-import {
-  Csar,
-  entityManager,
-  orm,
-  Player,
-  Position,
-  Unit,
-  UnitTypeName,
-} from '../db'
+import { entityManager, orm } from '../db/connection.mjs'
+import { Csar, Player, Position, Unit, UnitTypeName } from '../db'
 import { BirthEvent, Events, EventType } from '../events'
 import { netPlayerFrom } from '../player'
 import { createUnit, isPlayerUnit, spawnGroundUnit } from '../unit'

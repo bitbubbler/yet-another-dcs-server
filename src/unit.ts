@@ -16,8 +16,8 @@ import {
   vec3From,
 } from './common'
 import { Position3, PositionLL, Velocity } from './common'
+import { entityManager, orm } from './db/connection.mjs'
 import { NewUnit, Position, Unit, UnitTypeName } from './db'
-import { entityManager, orm } from './db/db'
 import { GetTransformResponse__Output } from './__generated__/dcs/unit/v0/GetTransformResponse'
 import { countryFrom } from './country'
 import { createPosition } from './position'

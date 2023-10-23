@@ -1,4 +1,4 @@
-import { entityManager, orm } from './db'
+import { entityManager, orm } from './db/connection.mjs'
 import { NewPosition, Position } from './db'
 
 export async function createPosition(

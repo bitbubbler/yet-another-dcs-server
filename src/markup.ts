@@ -1,7 +1,7 @@
-import { entityManager, NewCircleMarkup, NewTextMarkup, orm } from './db'
+import { NewCircleMarkup, NewTextMarkup } from './db'
+import { entityManager, orm } from './db/connection.mjs'
 import { markupTextToAll } from './trigger'
 import { CircleMarkup, Markup, MarkupType, TextMarkup } from './db'
-import { wrap } from '@mikro-orm/core'
 
 export async function createCircleMarkup(
   newMarkup: NewCircleMarkup

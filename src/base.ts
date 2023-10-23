@@ -13,7 +13,7 @@ import {
 import assert from 'assert'
 import { createUnit, despawnGroundUnit, spawnGroundUnit } from './unit'
 import { despawnFarp, spawnFarp } from './farp'
-import { entityManager, orm } from './db/db'
+import { entityManager, orm } from './db/connection.mjs'
 import {
   Base,
   BaseType,

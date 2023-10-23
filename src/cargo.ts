@@ -4,15 +4,13 @@ import {
   CargoSuperType,
   CsarCargo,
   NewBaseCargo,
-  NewCargo,
   NewCsarCargo,
   NewUnitCargo,
   Unit,
   UnitCargo,
 } from './db'
 import { setUnitInternalCargoMass } from './unit'
-import { entityManager, orm } from './db'
-import { wrap } from '@mikro-orm/core'
+import { entityManager, orm } from './db/connection.mjs'
 
 export async function createBaseCargo(
   newCargo: NewBaseCargo

@@ -3,15 +3,14 @@ import {
   CargoSuperType,
   CargoTypeName,
   Csar,
-  entityManager,
   NewCsar,
-  orm,
   Position,
   StaticObject,
   StaticObjectTypeName,
   Unit,
   UnitTypeName,
 } from './db'
+import { entityManager, orm } from './db/connection.mjs'
 import { outCoalitionText, outGroupText, smoke } from './trigger'
 import { despawnGroundUnit, spawnGroundUnit } from './unit'
 import { distanceFrom, metersToDegree, SmokeColor, waitForTime } from './common'

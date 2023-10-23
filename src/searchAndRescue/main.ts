@@ -1,5 +1,5 @@
 import { coalitionFrom } from '../coalition'
-import { entityManager, orm } from '../db/db'
+import { entityManager, orm } from '../db/connection.mjs'
 import { CargoSuperType, Csar, CsarCargo, Player, Position, Unit } from '../db'
 import {
   Events,
@@ -52,9 +52,7 @@ export async function searchAndRescueMain(): Promise<() => Promise<void>> {
 
   // TODO: ensure csar are spawned on backend start
   await Promise.all(
-    (
-      await allCsars()
-    ).map(async csar => {
+    (await allCsars()).map(async csar => {
       await spawnCsar(csar)
     })
   )

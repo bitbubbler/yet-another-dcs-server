@@ -9,14 +9,10 @@ import {
 import { markToAll, outText, removeMapMark } from '../trigger'
 import { getMarkById, getMarkPanels, MarkPanel } from '../custom'
 import { CommandType, ToDestroy } from '../commands'
-import { entityManager, orm } from '../db/db'
+import { entityManager, orm } from '../db/connection.mjs'
 import { Position, Spawner, SpawnerQueuedUnit, SpawnerType, Unit } from '../db'
 import { distanceFrom, PositionLL, randomBetween } from '../common'
-import {
-  createGroundUnitsInCircle,
-  isPlayerUnit,
-  spawnGroundUnit,
-} from '../unit'
+import { createGroundUnitsInCircle, spawnGroundUnit } from '../unit'
 import { UnitEvents, UnitEventType, UnitGoneEvent } from '../unitEvents'
 import { closestPointOnRoads, findPathOnRoads, RoadType } from '../land'
 import { driveGroundGroup } from '../group'

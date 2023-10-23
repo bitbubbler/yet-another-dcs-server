@@ -1,6 +1,6 @@
 import { services } from './services'
+import { orm } from './db/connection.mjs'
 import { NewStaticObject, StaticObject } from './db'
-import { entityManager, orm } from './db'
 
 const { custom } = services
 
@@ -9,10 +9,11 @@ export async function createStaticObject(
 ): Promise<StaticObject> {
   const staticObject = new StaticObject(newStaticObject)
 
-  await entityManager(await orm)
-    .getRepository(StaticObject)
-    .persist(staticObject)
-    .flush()
+  const em = orm.em.fork()
+
+  em.persist(staticObject)
+
+  await em.flush()
 
   return staticObject
 }
@@ -37,9 +38,11 @@ export async function despawnStaticObject(
 export async function destroyStaticObject(
   staticObject: StaticObject
 ): Promise<void> {
-  await entityManager(await orm)
-    .remove(staticObject)
-    .flush()
+  const em = await emFork()
+
+  em.remove(staticObject)
+
+  await em.flush()
 }
 
 /**
