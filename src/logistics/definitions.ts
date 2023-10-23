@@ -539,12 +539,12 @@ export const moradUnitsCargoDefinitions = [
  */
 function createCargoDefinitionsArray<
   T extends readonly CargoDefinition[] & Array<{ id: V }>,
-  V extends string
+  V extends string,
 >(...args: T) {
   return args
 }
 
-export type CargoDefinitionID = typeof allCargoDefinitions[number]['id']
+export type CargoDefinitionID = (typeof allCargoDefinitions)[number]['id']
 
 export function cargoDefinitionFrom(id: CargoDefinitionID): CargoDefinition {
   const cargoDefinition = allCargoDefinitions.find(

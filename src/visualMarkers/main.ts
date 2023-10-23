@@ -10,7 +10,7 @@ import { _dcs_trigger_v0_SignalFlareRequest_FlareColor as FlareColor } from '../
 // defines available colors
 const colors: string[] = ['green', 'red', 'white', 'orange', 'blue', 'yellow']
 
-type Color = typeof colors[number]
+type Color = (typeof colors)[number]
 
 export async function visualMarkersMain(): Promise<() => Promise<void>> {
   const subscription = Events.subscribe(async event => {

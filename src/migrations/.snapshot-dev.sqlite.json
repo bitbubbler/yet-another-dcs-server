@@ -53,9 +53,7 @@
       "indexes": [
         {
           "keyName": "primary",
-          "columnNames": [
-            "colorId"
-          ],
+          "columnNames": ["colorId"],
           "composite": false,
           "primary": true,
           "unique": true
@@ -117,9 +115,7 @@
       "name": "players",
       "indexes": [
         {
-          "columnNames": [
-            "ucid"
-          ],
+          "columnNames": ["ucid"],
           "composite": false,
           "keyName": "players_ucid_unique",
           "primary": false,
@@ -127,9 +123,7 @@
         },
         {
           "keyName": "primary",
-          "columnNames": [
-            "playerId"
-          ],
+          "columnNames": ["playerId"],
           "composite": false,
           "primary": true,
           "unique": true
@@ -191,9 +185,7 @@
       "name": "playerIps",
       "indexes": [
         {
-          "columnNames": [
-            "playerId"
-          ],
+          "columnNames": ["playerId"],
           "composite": false,
           "keyName": "playerIps_playerId_index",
           "primary": false,
@@ -201,19 +193,14 @@
         },
         {
           "keyName": "playerIps_playerId_ip_unique",
-          "columnNames": [
-            "playerId",
-            "ip"
-          ],
+          "columnNames": ["playerId", "ip"],
           "composite": true,
           "primary": false,
           "unique": true
         },
         {
           "keyName": "primary",
-          "columnNames": [
-            "playerIpId"
-          ],
+          "columnNames": ["playerIpId"],
           "composite": false,
           "primary": true,
           "unique": true
@@ -223,13 +210,9 @@
       "foreignKeys": {
         "playerIps_playerId_foreign": {
           "constraintName": "playerIps_playerId_foreign",
-          "columnNames": [
-            "playerId"
-          ],
+          "columnNames": ["playerId"],
           "localTableName": "playerIps",
-          "referencedColumnNames": [
-            "playerId"
-          ],
+          "referencedColumnNames": ["playerId"],
           "referencedTableName": "players",
           "updateRule": "cascade"
         }
@@ -307,9 +290,7 @@
       "indexes": [
         {
           "keyName": "primary",
-          "columnNames": [
-            "positionId"
-          ],
+          "columnNames": ["positionId"],
           "composite": false,
           "primary": true,
           "unique": true
@@ -383,10 +364,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "enumItems": [
-            "0",
-            "1"
-          ],
+          "enumItems": ["0", "1"],
           "mappedType": "integer"
         },
         "readonly": {
@@ -447,36 +425,28 @@
       "name": "markups",
       "indexes": [
         {
-          "columnNames": [
-            "fillColorId"
-          ],
+          "columnNames": ["fillColorId"],
           "composite": false,
           "keyName": "markups_fillColorId_index",
           "primary": false,
           "unique": false
         },
         {
-          "columnNames": [
-            "lineColorId"
-          ],
+          "columnNames": ["lineColorId"],
           "composite": false,
           "keyName": "markups_lineColorId_index",
           "primary": false,
           "unique": false
         },
         {
-          "columnNames": [
-            "positionId"
-          ],
+          "columnNames": ["positionId"],
           "composite": false,
           "keyName": "markups_positionId_unique",
           "primary": false,
           "unique": true
         },
         {
-          "columnNames": [
-            "type"
-          ],
+          "columnNames": ["type"],
           "composite": false,
           "keyName": "markups_type_index",
           "primary": false,
@@ -484,9 +454,7 @@
         },
         {
           "keyName": "primary",
-          "columnNames": [
-            "markupId"
-          ],
+          "columnNames": ["markupId"],
           "composite": false,
           "primary": true,
           "unique": true
@@ -496,37 +464,25 @@
       "foreignKeys": {
         "markups_fillColorId_foreign": {
           "constraintName": "markups_fillColorId_foreign",
-          "columnNames": [
-            "fillColorId"
-          ],
+          "columnNames": ["fillColorId"],
           "localTableName": "markups",
-          "referencedColumnNames": [
-            "colorId"
-          ],
+          "referencedColumnNames": ["colorId"],
           "referencedTableName": "colors",
           "updateRule": "cascade"
         },
         "markups_lineColorId_foreign": {
           "constraintName": "markups_lineColorId_foreign",
-          "columnNames": [
-            "lineColorId"
-          ],
+          "columnNames": ["lineColorId"],
           "localTableName": "markups",
-          "referencedColumnNames": [
-            "colorId"
-          ],
+          "referencedColumnNames": ["colorId"],
           "referencedTableName": "colors",
           "updateRule": "cascade"
         },
         "markups_positionId_foreign": {
           "constraintName": "markups_positionId_foreign",
-          "columnNames": [
-            "positionId"
-          ],
+          "columnNames": ["positionId"],
           "localTableName": "markups",
-          "referencedColumnNames": [
-            "positionId"
-          ],
+          "referencedColumnNames": ["positionId"],
           "referencedTableName": "positions",
           "updateRule": "cascade"
         }
@@ -565,18 +521,14 @@
       "name": "markupPoints",
       "indexes": [
         {
-          "columnNames": [
-            "markupId"
-          ],
+          "columnNames": ["markupId"],
           "composite": false,
           "keyName": "markupPoints_markupId_index",
           "primary": false,
           "unique": false
         },
         {
-          "columnNames": [
-            "positionId"
-          ],
+          "columnNames": ["positionId"],
           "composite": false,
           "keyName": "markupPoints_positionId_unique",
           "primary": false,
@@ -584,10 +536,7 @@
         },
         {
           "keyName": "primary",
-          "columnNames": [
-            "markupId",
-            "positionId"
-          ],
+          "columnNames": ["markupId", "positionId"],
           "composite": true,
           "primary": true,
           "unique": true
@@ -597,25 +546,17 @@
       "foreignKeys": {
         "markupPoints_markupId_foreign": {
           "constraintName": "markupPoints_markupId_foreign",
-          "columnNames": [
-            "markupId"
-          ],
+          "columnNames": ["markupId"],
           "localTableName": "markupPoints",
-          "referencedColumnNames": [
-            "markupId"
-          ],
+          "referencedColumnNames": ["markupId"],
           "referencedTableName": "markups",
           "updateRule": "cascade"
         },
         "markupPoints_positionId_foreign": {
           "constraintName": "markupPoints_positionId_foreign",
-          "columnNames": [
-            "positionId"
-          ],
+          "columnNames": ["positionId"],
           "localTableName": "markupPoints",
-          "referencedColumnNames": [
-            "positionId"
-          ],
+          "referencedColumnNames": ["positionId"],
           "referencedTableName": "positions",
           "updateRule": "cascade"
         }
@@ -711,18 +652,14 @@
       "name": "bases",
       "indexes": [
         {
-          "columnNames": [
-            "labelMarkupId"
-          ],
+          "columnNames": ["labelMarkupId"],
           "composite": false,
           "keyName": "bases_labelMarkupId_unique",
           "primary": false,
           "unique": true
         },
         {
-          "columnNames": [
-            "positionId"
-          ],
+          "columnNames": ["positionId"],
           "composite": false,
           "keyName": "bases_positionId_unique",
           "primary": false,
@@ -730,9 +667,7 @@
         },
         {
           "keyName": "primary",
-          "columnNames": [
-            "baseId"
-          ],
+          "columnNames": ["baseId"],
           "composite": false,
           "primary": true,
           "unique": true
@@ -742,25 +677,17 @@
       "foreignKeys": {
         "bases_labelMarkupId_foreign": {
           "constraintName": "bases_labelMarkupId_foreign",
-          "columnNames": [
-            "labelMarkupId"
-          ],
+          "columnNames": ["labelMarkupId"],
           "localTableName": "bases",
-          "referencedColumnNames": [
-            "markupId"
-          ],
+          "referencedColumnNames": ["markupId"],
           "referencedTableName": "markups",
           "updateRule": "cascade"
         },
         "bases_positionId_foreign": {
           "constraintName": "bases_positionId_foreign",
-          "columnNames": [
-            "positionId"
-          ],
+          "columnNames": ["positionId"],
           "localTableName": "bases",
-          "referencedColumnNames": [
-            "positionId"
-          ],
+          "referencedColumnNames": ["positionId"],
           "referencedTableName": "positions",
           "updateRule": "cascade"
         }
@@ -858,9 +785,7 @@
       "name": "Spawner",
       "indexes": [
         {
-          "columnNames": [
-            "positionId"
-          ],
+          "columnNames": ["positionId"],
           "composite": false,
           "keyName": "Spawner_positionId_unique",
           "primary": false,
@@ -868,9 +793,7 @@
         },
         {
           "keyName": "primary",
-          "columnNames": [
-            "spawnerId"
-          ],
+          "columnNames": ["spawnerId"],
           "composite": false,
           "primary": true,
           "unique": true
@@ -880,13 +803,9 @@
       "foreignKeys": {
         "Spawner_positionId_foreign": {
           "constraintName": "Spawner_positionId_foreign",
-          "columnNames": [
-            "positionId"
-          ],
+          "columnNames": ["positionId"],
           "localTableName": "Spawner",
-          "referencedColumnNames": [
-            "positionId"
-          ],
+          "referencedColumnNames": ["positionId"],
           "referencedTableName": "positions",
           "updateRule": "cascade"
         }
@@ -945,9 +864,7 @@
       "name": "spawnGroups",
       "indexes": [
         {
-          "columnNames": [
-            "name"
-          ],
+          "columnNames": ["name"],
           "composite": false,
           "keyName": "spawnGroups_name_unique",
           "primary": false,
@@ -955,9 +872,7 @@
         },
         {
           "keyName": "primary",
-          "columnNames": [
-            "spawnGroupId"
-          ],
+          "columnNames": ["spawnGroupId"],
           "composite": false,
           "primary": true,
           "unique": true
@@ -1037,9 +952,7 @@
       "name": "staticObjects",
       "indexes": [
         {
-          "columnNames": [
-            "positionId"
-          ],
+          "columnNames": ["positionId"],
           "composite": false,
           "keyName": "staticObjects_positionId_unique",
           "primary": false,
@@ -1047,9 +960,7 @@
         },
         {
           "keyName": "primary",
-          "columnNames": [
-            "staticObjectId"
-          ],
+          "columnNames": ["staticObjectId"],
           "composite": false,
           "primary": true,
           "unique": true
@@ -1059,13 +970,9 @@
       "foreignKeys": {
         "staticObjects_positionId_foreign": {
           "constraintName": "staticObjects_positionId_foreign",
-          "columnNames": [
-            "positionId"
-          ],
+          "columnNames": ["positionId"],
           "localTableName": "staticObjects",
-          "referencedColumnNames": [
-            "positionId"
-          ],
+          "referencedColumnNames": ["positionId"],
           "referencedTableName": "positions",
           "updateRule": "cascade"
         }
@@ -1095,18 +1002,14 @@
       "name": "baseStaticObjects",
       "indexes": [
         {
-          "columnNames": [
-            "baseId"
-          ],
+          "columnNames": ["baseId"],
           "composite": false,
           "keyName": "baseStaticObjects_baseId_index",
           "primary": false,
           "unique": false
         },
         {
-          "columnNames": [
-            "staticObjectId"
-          ],
+          "columnNames": ["staticObjectId"],
           "composite": false,
           "keyName": "baseStaticObjects_staticObjectId_index",
           "primary": false,
@@ -1114,20 +1017,14 @@
         },
         {
           "keyName": "baseStaticObjects_baseId_staticObjectId_unique",
-          "columnNames": [
-            "baseId",
-            "staticObjectId"
-          ],
+          "columnNames": ["baseId", "staticObjectId"],
           "composite": true,
           "primary": false,
           "unique": true
         },
         {
           "keyName": "primary",
-          "columnNames": [
-            "baseId",
-            "staticObjectId"
-          ],
+          "columnNames": ["baseId", "staticObjectId"],
           "composite": true,
           "primary": true,
           "unique": true
@@ -1137,25 +1034,17 @@
       "foreignKeys": {
         "baseStaticObjects_baseId_foreign": {
           "constraintName": "baseStaticObjects_baseId_foreign",
-          "columnNames": [
-            "baseId"
-          ],
+          "columnNames": ["baseId"],
           "localTableName": "baseStaticObjects",
-          "referencedColumnNames": [
-            "baseId"
-          ],
+          "referencedColumnNames": ["baseId"],
           "referencedTableName": "bases",
           "updateRule": "cascade"
         },
         "baseStaticObjects_staticObjectId_foreign": {
           "constraintName": "baseStaticObjects_staticObjectId_foreign",
-          "columnNames": [
-            "staticObjectId"
-          ],
+          "columnNames": ["staticObjectId"],
           "localTableName": "baseStaticObjects",
-          "referencedColumnNames": [
-            "staticObjectId"
-          ],
+          "referencedColumnNames": ["staticObjectId"],
           "referencedTableName": "staticObjects",
           "updateRule": "cascade"
         }
@@ -1279,27 +1168,21 @@
       "name": "units",
       "indexes": [
         {
-          "columnNames": [
-            "name"
-          ],
+          "columnNames": ["name"],
           "composite": false,
           "keyName": "units_name_unique",
           "primary": false,
           "unique": true
         },
         {
-          "columnNames": [
-            "positionId"
-          ],
+          "columnNames": ["positionId"],
           "composite": false,
           "keyName": "units_positionId_unique",
           "primary": false,
           "unique": true
         },
         {
-          "columnNames": [
-            "hidden"
-          ],
+          "columnNames": ["hidden"],
           "composite": false,
           "keyName": "units_hidden_index",
           "primary": false,
@@ -1307,9 +1190,7 @@
         },
         {
           "keyName": "primary",
-          "columnNames": [
-            "unitId"
-          ],
+          "columnNames": ["unitId"],
           "composite": false,
           "primary": true,
           "unique": true
@@ -1319,13 +1200,9 @@
       "foreignKeys": {
         "units_positionId_foreign": {
           "constraintName": "units_positionId_foreign",
-          "columnNames": [
-            "positionId"
-          ],
+          "columnNames": ["positionId"],
           "localTableName": "units",
-          "referencedColumnNames": [
-            "positionId"
-          ],
+          "referencedColumnNames": ["positionId"],
           "referencedTableName": "positions",
           "updateRule": "cascade"
         }
@@ -1365,18 +1242,14 @@
       "name": "spawnerQueuedUnits",
       "indexes": [
         {
-          "columnNames": [
-            "spawnerId"
-          ],
+          "columnNames": ["spawnerId"],
           "composite": false,
           "keyName": "spawnerQueuedUnits_spawnerId_index",
           "primary": false,
           "unique": false
         },
         {
-          "columnNames": [
-            "unitId"
-          ],
+          "columnNames": ["unitId"],
           "composite": false,
           "keyName": "spawnerQueuedUnits_unitId_unique",
           "primary": false,
@@ -1384,20 +1257,14 @@
         },
         {
           "keyName": "spawnerQueuedUnits_spawnerId_unitId_unique",
-          "columnNames": [
-            "spawnerId",
-            "unitId"
-          ],
+          "columnNames": ["spawnerId", "unitId"],
           "composite": true,
           "primary": false,
           "unique": true
         },
         {
           "keyName": "primary",
-          "columnNames": [
-            "spawnerId",
-            "unitId"
-          ],
+          "columnNames": ["spawnerId", "unitId"],
           "composite": true,
           "primary": true,
           "unique": true
@@ -1407,25 +1274,17 @@
       "foreignKeys": {
         "spawnerQueuedUnits_spawnerId_foreign": {
           "constraintName": "spawnerQueuedUnits_spawnerId_foreign",
-          "columnNames": [
-            "spawnerId"
-          ],
+          "columnNames": ["spawnerId"],
           "localTableName": "spawnerQueuedUnits",
-          "referencedColumnNames": [
-            "spawnerId"
-          ],
+          "referencedColumnNames": ["spawnerId"],
           "referencedTableName": "Spawner",
           "updateRule": "cascade"
         },
         "spawnerQueuedUnits_unitId_foreign": {
           "constraintName": "spawnerQueuedUnits_unitId_foreign",
-          "columnNames": [
-            "unitId"
-          ],
+          "columnNames": ["unitId"],
           "localTableName": "spawnerQueuedUnits",
-          "referencedColumnNames": [
-            "unitId"
-          ],
+          "referencedColumnNames": ["unitId"],
           "referencedTableName": "units",
           "updateRule": "cascade"
         }
@@ -1550,36 +1409,28 @@
       "name": "csars",
       "indexes": [
         {
-          "columnNames": [
-            "playerId"
-          ],
+          "columnNames": ["playerId"],
           "composite": false,
           "keyName": "csars_playerId_index",
           "primary": false,
           "unique": false
         },
         {
-          "columnNames": [
-            "positionId"
-          ],
+          "columnNames": ["positionId"],
           "composite": false,
           "keyName": "csars_positionId_unique",
           "primary": false,
           "unique": true
         },
         {
-          "columnNames": [
-            "markerStaticObjectId"
-          ],
+          "columnNames": ["markerStaticObjectId"],
           "composite": false,
           "keyName": "csars_markerStaticObjectId_unique",
           "primary": false,
           "unique": true
         },
         {
-          "columnNames": [
-            "unitId"
-          ],
+          "columnNames": ["unitId"],
           "composite": false,
           "keyName": "csars_unitId_unique",
           "primary": false,
@@ -1587,9 +1438,7 @@
         },
         {
           "keyName": "primary",
-          "columnNames": [
-            "csarId"
-          ],
+          "columnNames": ["csarId"],
           "composite": false,
           "primary": true,
           "unique": true
@@ -1599,62 +1448,42 @@
       "foreignKeys": {
         "csars_playerId_foreign": {
           "constraintName": "csars_playerId_foreign",
-          "columnNames": [
-            "playerId"
-          ],
+          "columnNames": ["playerId"],
           "localTableName": "csars",
-          "referencedColumnNames": [
-            "playerId"
-          ],
+          "referencedColumnNames": ["playerId"],
           "referencedTableName": "players",
           "updateRule": "cascade"
         },
         "csars_positionId_foreign": {
           "constraintName": "csars_positionId_foreign",
-          "columnNames": [
-            "positionId"
-          ],
+          "columnNames": ["positionId"],
           "localTableName": "csars",
-          "referencedColumnNames": [
-            "positionId"
-          ],
+          "referencedColumnNames": ["positionId"],
           "referencedTableName": "positions",
           "updateRule": "cascade"
         },
         "csars_diedUnitId_foreign": {
           "constraintName": "csars_diedUnitId_foreign",
-          "columnNames": [
-            "diedUnitId"
-          ],
+          "columnNames": ["diedUnitId"],
           "localTableName": "csars",
-          "referencedColumnNames": [
-            "unitId"
-          ],
+          "referencedColumnNames": ["unitId"],
           "referencedTableName": "units",
           "updateRule": "cascade"
         },
         "csars_markerStaticObjectId_foreign": {
           "constraintName": "csars_markerStaticObjectId_foreign",
-          "columnNames": [
-            "markerStaticObjectId"
-          ],
+          "columnNames": ["markerStaticObjectId"],
           "localTableName": "csars",
-          "referencedColumnNames": [
-            "staticObjectId"
-          ],
+          "referencedColumnNames": ["staticObjectId"],
           "referencedTableName": "staticObjects",
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
         "csars_unitId_foreign": {
           "constraintName": "csars_unitId_foreign",
-          "columnNames": [
-            "unitId"
-          ],
+          "columnNames": ["unitId"],
           "localTableName": "csars",
-          "referencedColumnNames": [
-            "unitId"
-          ],
+          "referencedColumnNames": ["unitId"],
           "referencedTableName": "units",
           "deleteRule": "set null",
           "updateRule": "cascade"
@@ -1745,11 +1574,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "enumItems": [
-            "0",
-            "1",
-            "2"
-          ],
+          "enumItems": ["0", "1", "2"],
           "mappedType": "integer"
         },
         "typeName": {
@@ -1810,36 +1635,28 @@
       "name": "cargos",
       "indexes": [
         {
-          "columnNames": [
-            "positionId"
-          ],
+          "columnNames": ["positionId"],
           "composite": false,
           "keyName": "cargos_positionId_unique",
           "primary": false,
           "unique": true
         },
         {
-          "columnNames": [
-            "superType"
-          ],
+          "columnNames": ["superType"],
           "composite": false,
           "keyName": "cargos_superType_index",
           "primary": false,
           "unique": false
         },
         {
-          "columnNames": [
-            "originBaseId"
-          ],
+          "columnNames": ["originBaseId"],
           "composite": false,
           "keyName": "cargos_originBaseId_unique",
           "primary": false,
           "unique": true
         },
         {
-          "columnNames": [
-            "csarId"
-          ],
+          "columnNames": ["csarId"],
           "composite": false,
           "keyName": "cargos_csarId_unique",
           "primary": false,
@@ -1847,9 +1664,7 @@
         },
         {
           "keyName": "primary",
-          "columnNames": [
-            "cargoId"
-          ],
+          "columnNames": ["cargoId"],
           "composite": false,
           "primary": true,
           "unique": true
@@ -1859,38 +1674,26 @@
       "foreignKeys": {
         "cargos_positionId_foreign": {
           "constraintName": "cargos_positionId_foreign",
-          "columnNames": [
-            "positionId"
-          ],
+          "columnNames": ["positionId"],
           "localTableName": "cargos",
-          "referencedColumnNames": [
-            "positionId"
-          ],
+          "referencedColumnNames": ["positionId"],
           "referencedTableName": "positions",
           "updateRule": "cascade"
         },
         "cargos_originBaseId_foreign": {
           "constraintName": "cargos_originBaseId_foreign",
-          "columnNames": [
-            "originBaseId"
-          ],
+          "columnNames": ["originBaseId"],
           "localTableName": "cargos",
-          "referencedColumnNames": [
-            "baseId"
-          ],
+          "referencedColumnNames": ["baseId"],
           "referencedTableName": "bases",
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
         "cargos_csarId_foreign": {
           "constraintName": "cargos_csarId_foreign",
-          "columnNames": [
-            "csarId"
-          ],
+          "columnNames": ["csarId"],
           "localTableName": "cargos",
-          "referencedColumnNames": [
-            "csarId"
-          ],
+          "referencedColumnNames": ["csarId"],
           "referencedTableName": "csars",
           "deleteRule": "set null",
           "updateRule": "cascade"
@@ -1921,18 +1724,14 @@
       "name": "baseUnits",
       "indexes": [
         {
-          "columnNames": [
-            "baseId"
-          ],
+          "columnNames": ["baseId"],
           "composite": false,
           "keyName": "baseUnits_baseId_index",
           "primary": false,
           "unique": false
         },
         {
-          "columnNames": [
-            "unitId"
-          ],
+          "columnNames": ["unitId"],
           "composite": false,
           "keyName": "baseUnits_unitId_index",
           "primary": false,
@@ -1940,20 +1739,14 @@
         },
         {
           "keyName": "baseUnits_baseId_unitId_unique",
-          "columnNames": [
-            "baseId",
-            "unitId"
-          ],
+          "columnNames": ["baseId", "unitId"],
           "composite": true,
           "primary": false,
           "unique": true
         },
         {
           "keyName": "primary",
-          "columnNames": [
-            "baseId",
-            "unitId"
-          ],
+          "columnNames": ["baseId", "unitId"],
           "composite": true,
           "primary": true,
           "unique": true
@@ -1963,25 +1756,17 @@
       "foreignKeys": {
         "baseUnits_baseId_foreign": {
           "constraintName": "baseUnits_baseId_foreign",
-          "columnNames": [
-            "baseId"
-          ],
+          "columnNames": ["baseId"],
           "localTableName": "baseUnits",
-          "referencedColumnNames": [
-            "baseId"
-          ],
+          "referencedColumnNames": ["baseId"],
           "referencedTableName": "bases",
           "updateRule": "cascade"
         },
         "baseUnits_unitId_foreign": {
           "constraintName": "baseUnits_unitId_foreign",
-          "columnNames": [
-            "unitId"
-          ],
+          "columnNames": ["unitId"],
           "localTableName": "baseUnits",
-          "referencedColumnNames": [
-            "unitId"
-          ],
+          "referencedColumnNames": ["unitId"],
           "referencedTableName": "units",
           "updateRule": "cascade"
         }
@@ -2011,18 +1796,14 @@
       "name": "unitCargos",
       "indexes": [
         {
-          "columnNames": [
-            "unitId"
-          ],
+          "columnNames": ["unitId"],
           "composite": false,
           "keyName": "unitCargos_unitId_index",
           "primary": false,
           "unique": false
         },
         {
-          "columnNames": [
-            "cargoId"
-          ],
+          "columnNames": ["cargoId"],
           "composite": false,
           "keyName": "unitCargos_cargoId_index",
           "primary": false,
@@ -2030,20 +1811,14 @@
         },
         {
           "keyName": "unitCargos_cargoId_unitId_unique",
-          "columnNames": [
-            "cargoId",
-            "unitId"
-          ],
+          "columnNames": ["cargoId", "unitId"],
           "composite": true,
           "primary": false,
           "unique": true
         },
         {
           "keyName": "primary",
-          "columnNames": [
-            "unitId",
-            "cargoId"
-          ],
+          "columnNames": ["unitId", "cargoId"],
           "composite": true,
           "primary": true,
           "unique": true
@@ -2053,25 +1828,17 @@
       "foreignKeys": {
         "unitCargos_unitId_foreign": {
           "constraintName": "unitCargos_unitId_foreign",
-          "columnNames": [
-            "unitId"
-          ],
+          "columnNames": ["unitId"],
           "localTableName": "unitCargos",
-          "referencedColumnNames": [
-            "unitId"
-          ],
+          "referencedColumnNames": ["unitId"],
           "referencedTableName": "units",
           "updateRule": "cascade"
         },
         "unitCargos_cargoId_foreign": {
           "constraintName": "unitCargos_cargoId_foreign",
-          "columnNames": [
-            "cargoId"
-          ],
+          "columnNames": ["cargoId"],
           "localTableName": "unitCargos",
-          "referencedColumnNames": [
-            "cargoId"
-          ],
+          "referencedColumnNames": ["cargoId"],
           "referencedTableName": "cargos",
           "updateRule": "cascade"
         }
