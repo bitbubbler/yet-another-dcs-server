@@ -1,4 +1,4 @@
-import { orm } from '../db/db'
+import { orm } from '../db/connection'
 
 import { backOff } from 'exponential-backoff'
 

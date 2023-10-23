@@ -1,4 +1,4 @@
-import { entityManager, orm } from '../db/connection.mjs'
+import { emFork } from '../db/connection'
 import { Csar, Player, Position, Unit, UnitTypeName } from '../db'
 import { BirthEvent, Events, EventType } from '../events'
 import { netPlayerFrom } from '../player'
@@ -14,11 +14,10 @@ export async function persistenceMain(): Promise<() => Promise<void>> {
 
   // handle unit updates
   const unitEventsSubscription = UnitEvents.subscribe(async event => {
-    const em = entityManager(await orm)
-
+    const em = await emFork()
     const csarRepository = em.getRepository(Csar)
-
     const unitRepository = em.getRepository(Unit)
+
     if (UnitEventType.Update === event.type) {
       const { heading, position } = event.unit
       const { lat, lon, alt } = position
@@ -107,16 +106,13 @@ async function handleBirth(event: BirthEvent) {
   if (playerName && playerName.length > 0) {
     // create a player and a unit for the players slot, if it doesn't yet exist`
     try {
-      const em = entityManager(await orm)
-
+      const em = await emFork()
       const { ucid } = await netPlayerFrom(playerName)
-
       // player
       const player = new Player({
         name: playerName,
         ucid,
       })
-
       // unit (player slot)
       const position = new Position({
         ...event.initiator.unit.position,
@@ -149,10 +145,8 @@ export async function trySpawnUnits() {
   // this means that on restart, even if the mission hasn't reset, we'll reset the all units
   // to the position we have for each in the database
 
-  const em = entityManager(await orm)
-
+  const em = await emFork()
   const unitRepository = em.getRepository(Unit)
-
   const unitsToSpawn = await unitRepository.find({ isPlayerSlot: false })
 
   // spawn the missing units

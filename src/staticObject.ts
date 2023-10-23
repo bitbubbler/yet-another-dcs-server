@@ -1,5 +1,5 @@
 import { services } from './services'
-import { orm } from './db/connection.mjs'
+import { emFork } from './db/connection'
 import { NewStaticObject, StaticObject } from './db'
 
 const { custom } = services
@@ -9,10 +9,8 @@ export async function createStaticObject(
 ): Promise<StaticObject> {
   const staticObject = new StaticObject(newStaticObject)
 
-  const em = orm.em.fork()
-
+  const em = await emFork()
   em.persist(staticObject)
-
   await em.flush()
 
   return staticObject
@@ -39,9 +37,7 @@ export async function destroyStaticObject(
   staticObject: StaticObject
 ): Promise<void> {
   const em = await emFork()
-
   em.remove(staticObject)
-
   await em.flush()
 }
 

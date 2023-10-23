@@ -1,5 +1,5 @@
 // db must be the first import
-import { orm } from '../db/connection.mjs'
+import { orm } from '../db/connection'
 
 // just hold a reference here (i promise, this fixes a bug)
 const db = orm

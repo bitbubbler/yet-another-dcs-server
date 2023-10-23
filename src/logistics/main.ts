@@ -28,7 +28,7 @@ import {
   vec3AreEqual,
 } from '../coord'
 import { getMarkById } from '../custom'
-import { entityManager, orm } from '../db/connection.mjs'
+import { emFork } from '../db/connection'
 import {
   BaseType,
   BaseCargoType,
@@ -92,8 +92,7 @@ export async function logisticsMain(): Promise<() => Promise<void>> {
 }
 
 async function handleBirth(event: BirthEvent): Promise<void> {
-  const em = entityManager(await orm)
-
+  const em = await emFork()
   const unitRepository = em.getRepository(Unit)
 
   if (!event.initiator.unit) {
@@ -138,8 +137,7 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
   const { type } = command
 
   if (CommandType.LoadInternalCargo === type) {
-    const em = entityManager(await orm)
-
+    const em = await emFork()
     const unitRepository = em.getRepository(Unit)
     const units = await getUnits(group.name)
     const unit = await unitRepository.findOneOrFail({ name: units[0].name }) // assume cargo is carried by first unit in group.
@@ -202,8 +200,7 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
     await outGroupText(group.id, `Loaded ${displayName}`)
   }
   if (CommandType.UnpackInternalCargo === type) {
-    const em = entityManager(await orm)
-
+    const em = await emFork()
     const unitRepository = em.getRepository(Unit)
     const units = await getUnits(group.name)
     const unit = await unitRepository.findOneOrFail({ name: units[0].name }) // assume cargo is carried by first unit in group.
@@ -468,8 +465,7 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
     }
   }
   if (CommandType.CheckInternalCargo === type) {
-    const em = entityManager(await orm)
-
+    const em = await emFork()
     const unitRepository = em.getRepository(Unit)
     const units = await getUnits(group.name)
     const unit = await unitRepository.findOne({ name: units[0].name }) // assume cargo is carried by first unit in group.
@@ -490,8 +486,7 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
     await outGroupText(group.id, `You have a ${cargo.displayName} onboard.`)
   }
   if (CommandType.DestroyInternalCargo === type) {
-    const em = entityManager(await orm)
-
+    const em = await emFork()
     const unitRepository = em.getRepository(Unit)
     const units = await getUnits(group.name)
     const unit = await unitRepository.findOne({ name: units[0].name }) // assume cargo is carried by first unit in group.

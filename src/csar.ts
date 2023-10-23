@@ -10,7 +10,7 @@ import {
   Unit,
   UnitTypeName,
 } from './db'
-import { entityManager, orm } from './db/connection.mjs'
+import { emFork } from './db/connection'
 import { outCoalitionText, outGroupText, smoke } from './trigger'
 import { despawnGroundUnit, spawnGroundUnit } from './unit'
 import { distanceFrom, metersToDegree, SmokeColor, waitForTime } from './common'
@@ -24,8 +24,7 @@ import { coalitionFrom } from './coalition'
 export async function createCsar(
   newCsar: Omit<NewCsar, 'marker' | 'unit'>
 ): Promise<Csar> {
-  const em = entityManager(await orm)
-
+  const em = await emFork()
   const { coalition, diedUnit, player, position } = newCsar
   const country = countryFrom(coalition)
 
@@ -84,8 +83,7 @@ export async function despawnCsar(csar: Csar): Promise<void> {
 }
 
 export async function pickupCsar(group: Group, unit: Unit, csar: Csar) {
-  const em = entityManager(await orm)
-
+  const em = await emFork()
   // create a new cargo out of the csar
   const cargo = await createCsarCargo({
     csar,
@@ -114,7 +112,7 @@ export async function pickupCsar(group: Group, unit: Unit, csar: Csar) {
     em.remove(csar.marker)
   }
 
-  // make sure changes to the csar get persisted`=
+  // make sure changes to the csar get persisted
   em.persist(csar)
 
   // flush all of our changes
@@ -141,8 +139,7 @@ export async function smokeCsar(csar: Csar): Promise<void> {
 }
 
 export async function allCsars(): Promise<Csar[]> {
-  const em = entityManager(await orm)
-
+  const em = await emFork()
   const csarRepository = em.getRepository(Csar)
 
   const csars = await csarRepository.findAll()
@@ -161,8 +158,7 @@ export async function findNearbyCsars({
   coalition: Coalition
   where?: QBFilterQuery<Csar>
 }): Promise<Csar[]> {
-  const em = entityManager(await orm)
-
+  const em = await emFork()
   const csarRepository = em.getRepository(Csar)
 
   const { lat, lon } = position

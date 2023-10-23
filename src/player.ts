@@ -1,6 +1,6 @@
 import { PositionLL } from './common'
 import { NewPlayer, Player } from './db'
-import { entityManager, orm } from './db/connection.mjs'
+import { emFork } from './db/connection'
 import { services } from './services'
 
 /**
@@ -16,10 +16,9 @@ export type NetPlayer = Pick<Player, 'name' | 'ucid'>
 const { hook } = services
 
 export async function createPlayer(newPlayer: NewPlayer): Promise<Player> {
-  const em = entityManager(await orm)
-
   const player = new Player(newPlayer)
 
+  const em = await emFork()
   await em.persistAndFlush(player)
 
   return player

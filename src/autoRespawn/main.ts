@@ -9,7 +9,7 @@ import {
 import { markToAll, outText, removeMapMark } from '../trigger'
 import { getMarkById, getMarkPanels, MarkPanel } from '../custom'
 import { CommandType, ToDestroy } from '../commands'
-import { entityManager, orm } from '../db/connection.mjs'
+import { emFork } from '../db/connection'
 import { Position, Spawner, SpawnerQueuedUnit, SpawnerType, Unit } from '../db'
 import { distanceFrom, PositionLL, randomBetween } from '../common'
 import { createGroundUnitsInCircle, spawnGroundUnit } from '../unit'
@@ -109,8 +109,7 @@ function respawnQueue(): () => void {
    * Respawn units (used when the queue timeout pops)
    */
   const respawnUnits = async (): Promise<void> => {
-    const em = entityManager(await orm)
-
+    const em = await emFork()
     const spawnerRepository = em.getRepository(Spawner)
 
     const spawners = await spawnerRepository.findAll()
@@ -132,7 +131,7 @@ function respawnQueue(): () => void {
 
       const [firstOnRoadPosition, lastOnRoadPosition]: [
         PositionLL,
-        PositionLL
+        PositionLL,
       ] = await Promise.all([
         closestPointOnRoads(RoadType.Roads, spawner.position),
         closestPointOnRoads(RoadType.Roads, randomUnitDeathPosition),
@@ -245,8 +244,7 @@ function randomQueueTime(): number {
 }
 
 async function handleUnitGoneEvent(event: UnitGoneEvent) {
-  const em = entityManager(await orm)
-
+  const em = await emFork()
   const unitRepository = em.getRepository(Unit)
 
   const unit = await unitRepository.findOne({

@@ -10,14 +10,15 @@ import {
   UnitCargo,
 } from './db'
 import { setUnitInternalCargoMass } from './unit'
-import { entityManager, orm } from './db/connection.mjs'
+import { emFork } from './db/connection'
 
 export async function createBaseCargo(
   newCargo: NewBaseCargo
 ): Promise<BaseCargo> {
   const baseCargo = new BaseCargo(newCargo)
 
-  await entityManager(await orm).persistAndFlush(baseCargo)
+  const em = await emFork()
+  await em.persistAndFlush(baseCargo)
 
   return baseCargo
 }
@@ -27,7 +28,8 @@ export async function createUnitCargo(
 ): Promise<UnitCargo> {
   const unitCargo = new UnitCargo(newCargo)
 
-  await entityManager(await orm).persistAndFlush(unitCargo)
+  const em = await emFork()
+  await em.persistAndFlush(unitCargo)
 
   return unitCargo
 }
@@ -36,7 +38,8 @@ export async function createCsarCargo(
 ): Promise<CsarCargo> {
   const csarCargo = new CsarCargo(newCargo)
 
-  await entityManager(await orm).persistAndFlush(csarCargo)
+  const em = await emFork()
+  await em.persistAndFlush(csarCargo)
 
   return csarCargo
 }
@@ -49,7 +52,7 @@ export async function createCsarCargo(
  * @param cargo the cargo to be loaded
  */
 export async function loadCargo(unit: Unit, cargo: Cargo): Promise<void> {
-  const em = entityManager(await orm)
+  const em = await emFork()
 
   unit.cargos.add(cargo)
 
@@ -67,7 +70,7 @@ export async function loadCargo(unit: Unit, cargo: Cargo): Promise<void> {
  * @param cargo the cargo to be unloaded
  */
 export async function unloadCargo(unit: Unit, cargo: Cargo): Promise<void> {
-  const em = entityManager(await orm)
+  const em = await emFork()
 
   await unit.cargos.loadItems()
 
@@ -84,9 +87,9 @@ export async function unloadCargo(unit: Unit, cargo: Cargo): Promise<void> {
 }
 
 export async function destroyCargo(cargo: Cargo): Promise<void> {
-  await entityManager(await orm)
-    .remove(cargo)
-    .flush()
+  const em = await emFork()
+  em.remove(cargo)
+  await em.flush()
 }
 
 export function isBaseCargo(cargo: Cargo): cargo is BaseCargo {

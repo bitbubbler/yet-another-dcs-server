@@ -13,7 +13,7 @@ import {
 import assert from 'assert'
 import { createUnit, despawnGroundUnit, spawnGroundUnit } from './unit'
 import { despawnFarp, spawnFarp } from './farp'
-import { entityManager, orm } from './db/connection.mjs'
+import { emFork } from './db/connection'
 import {
   Base,
   BaseType,
@@ -70,9 +70,8 @@ Name: ${name}`.trim(), // use trim to remove leading and trailing whitespace/new
 
   const base = new Base({ ...newBase, labelMarkup, name })
 
-  await entityManager(await orm)
-    .persist(base)
-    .flush()
+  const em = await emFork()
+  await em.persistAndFlush(base)
 
   return base
 }
@@ -81,18 +80,18 @@ export async function baseGone(base: Base): Promise<void> {
   // set the base goneAt
   base.goneAt = new Date()
 
-  // flush the changes
-  await entityManager(await orm)
-    .persist(base)
-    .flush()
+  const em = await emFork()
+  await em.persistAndFlush(base)
 }
 
 export async function allBases(): Promise<Base[]> {
-  return entityManager(await orm).find(Base, {})
+  const em = await emFork()
+
+  return em.find(Base, {})
 }
 
 async function createBaseObjects(base: Base): Promise<void> {
-  const em = entityManager(await orm)
+  const em = await emFork()
   // use base level to determine template
   const template = baseTemplateFrom(base)
 
@@ -138,7 +137,7 @@ export function baseTemplateFrom(base: Base): Template {
 }
 
 export async function uniqueBaseName(): Promise<string> {
-  const em = entityManager(await orm)
+  const em = await emFork()
   const baseRepository = em.getRepository(Base)
 
   const name = baseNames[randomBetween(0, baseNames.length - 1)]
@@ -357,8 +356,7 @@ export function baseTypeDisplayName(baseType: BaseType): string {
 }
 
 async function createBaseUnits(base: Base): Promise<void> {
-  const em = entityManager(await orm)
-
+  const em = await emFork()
   // use base level to determine template
   const template = baseTemplateFrom(base)
 
@@ -466,7 +464,7 @@ export async function destroyAndDespawnBaseUnitsAndObject(
 }
 
 async function destroyBaseObjects(base: Base): Promise<void> {
-  const em = entityManager(await orm)
+  const em = await emFork()
 
   const staticObjects = await base.staticObjects.loadItems()
 
@@ -479,9 +477,10 @@ async function destroyBaseObjects(base: Base): Promise<void> {
 }
 
 async function destroyBaseUnits(base: Base): Promise<void> {
-  const em = entityManager(await orm)
+  const em = await emFork()
 
   const baseUnits = await base.units.loadItems()
+
   for (const unit of baseUnits) {
     // delete the unit
     await em.removeAndFlush(unit)
@@ -499,8 +498,7 @@ export async function findNearbyBases({
   accuracy: number
   coalition: Coalition
 }): Promise<Base[]> {
-  const em = entityManager(await orm)
-
+  const em = await emFork()
   const baseRepository = em.getRepository(Base)
 
   const { lat, lon } = position

@@ -1,4 +1,4 @@
-import { orm } from '../db/db'
+import { orm } from '../db/connection'
 
 jest.mock('../cli', () => ({
   options: {

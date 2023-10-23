@@ -1,4 +1,4 @@
-import { entityManager, orm } from './db/connection.mjs'
+import { emFork } from './db/connection'
 import { Position, NewSpawner, Spawner } from './db'
 import { distanceFrom, metersToDegree } from './common'
 import { Coalition } from './__generated__/dcs/common/v0/Coalition'
@@ -6,9 +6,8 @@ import { Coalition } from './__generated__/dcs/common/v0/Coalition'
 export async function createSpawner(newSpawner: NewSpawner): Promise<Spawner> {
   const spawner = new Spawner(newSpawner)
 
-  await entityManager(await orm)
-    .persist(spawner)
-    .flush()
+  const em = await emFork()
+  await em.persistAndFlush(spawner)
 
   return spawner
 }
@@ -22,10 +21,8 @@ export async function findNearbySpawners({
   accuracy: number
   coalition: Coalition
 }): Promise<Spawner[]> {
-  const em = entityManager(await orm)
-
+  const em = await emFork()
   const spawnerRepository = em.getRepository(Spawner)
-
   const { lat, lon } = position
 
   let query = spawnerRepository
@@ -57,13 +54,13 @@ export async function findNearbySpawners({
 }
 
 export async function allSpawners(): Promise<Spawner[]> {
-  return entityManager(await orm).find(Spawner, {})
+  const em = await emFork()
+  return em.find(Spawner, {})
 }
 
 export async function spawnerDestroyed(spawner: Spawner): Promise<void> {
-  const em = entityManager(await orm)
-
   spawner.destroyed()
 
-  await em.persist(spawner).flush()
+  const em = await emFork()
+  await em.persistAndFlush(spawner)
 }

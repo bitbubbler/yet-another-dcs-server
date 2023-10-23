@@ -22,7 +22,7 @@ import {
   ToDestroy,
 } from '../commands/types'
 import { distanceFrom } from '../common'
-import { entityManager, orm } from '../db/connection.mjs'
+import { emFork } from '../db/connection'
 import { SpawnGroup, UnitTypeName } from '../db'
 
 const DESTROY_SINGLE_UNIT_SEARCH_RANGE = 250
@@ -55,13 +55,12 @@ async function handlePlayerSendChatEvent(event: PlayerSendChatEvent) {
         .map(({ fuzzyUnitName }) => searchUnits(fuzzyUnitName).desc?.typeName)
         .filter((a): a is string => typeof a === 'string')
 
-      const em = entityManager(await orm)
-
       const spawnGroup = new SpawnGroup({
         name: groupName,
         typeNames,
       })
 
+      const em = await emFork()
       await em.upsert(spawnGroup)
 
       await outUnitText(
@@ -73,10 +72,8 @@ async function handlePlayerSendChatEvent(event: PlayerSendChatEvent) {
 }
 
 async function handleMarkChangeEvent(event: MarkChangeEvent) {
-  const em = entityManager(await orm)
-
+  const em = await emFork()
   const spawnGroupRepository = em.getRepository(SpawnGroup)
-
   const { id, command } = event
 
   // attempt to handle command(s) from markers

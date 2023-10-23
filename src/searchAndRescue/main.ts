@@ -1,5 +1,5 @@
 import { coalitionFrom } from '../coalition'
-import { entityManager, orm } from '../db/connection.mjs'
+import { emFork } from '../db/connection'
 import { CargoSuperType, Csar, CsarCargo, Player, Position, Unit } from '../db'
 import {
   Events,
@@ -25,7 +25,6 @@ import { unitInAir, unitIsAlive } from '../unit'
 import { driveGroundGroup, Group, groupFromGroupName } from '../group'
 import { unloadCargo } from '../cargo'
 import { baseTypeDisplayNameShort, findNearbyBases } from '../base'
-import { wrap } from '@mikro-orm/core'
 import { CommandType } from '../commands'
 
 /** The range a heilcopter can pickup a csar from, in meters */
@@ -46,8 +45,7 @@ type InRangeMessages = Map<Unit['unitId'], Set<Csar['csarId']>>
 type DownedPilotMoveTimes = Map<string, number>
 
 export async function searchAndRescueMain(): Promise<() => Promise<void>> {
-  const em = entityManager(await orm)
-
+  const em = await emFork()
   const unitRepository = em.getRepository(Unit)
 
   // TODO: ensure csar are spawned on backend start
@@ -224,12 +222,13 @@ function getHandleGroupCommand({ unitsOnDuty }: { unitsOnDuty: UnitsOnDuty }) {
   return async function handleGroupCommand(
     event: GroupCommandEvent
   ): Promise<void> {
+    // do NOT put `emFork()` up here!!
+    // We should not fork on every command, only on the commands that requires db interactions
     const { command, group } = event
     const { type } = command
 
     if (CommandType.CsarGoOnDuty === type) {
-      const em = entityManager(await orm)
-
+      const em = await emFork()
       const unitRepository = em.getRepository(Unit)
       const unit = await unitRepository.findOneOrFail({ name: group.name })
 
@@ -238,16 +237,14 @@ function getHandleGroupCommand({ unitsOnDuty }: { unitsOnDuty: UnitsOnDuty }) {
       outGroupText(group.id, ``)
     }
     if (CommandType.CsarGoOffDuty === type) {
-      const em = entityManager(await orm)
-
+      const em = await emFork()
       const unitRepository = em.getRepository(Unit)
       const unit = await unitRepository.findOneOrFail({ name: group.name })
 
       unitsOnDuty.delete(unit.unitId)
     }
     if (CommandType.CsarRequestSmoke === type) {
-      const em = entityManager(await orm)
-
+      const em = await emFork()
       const unitRepository = em.getRepository(Unit)
       const unit = await unitRepository.findOneOrFail({ name: group.name })
 
@@ -284,8 +281,7 @@ function getHandleGroupCommand({ unitsOnDuty }: { unitsOnDuty: UnitsOnDuty }) {
       )
     }
     if (CommandType.CsarCheckOnboard === type) {
-      const em = entityManager(await orm)
-
+      const em = await emFork()
       const unitRepository = em.getRepository(Unit)
       const unit = await unitRepository.findOneOrFail(
         { name: group.name },
@@ -314,10 +310,8 @@ Onboard Downed Pilots:${csarCargos.map(cargo => {
 }
 
 async function handleLand(event: LandEvent): Promise<void> {
-  const em = entityManager(await orm)
-
+  const em = await emFork()
   const unitRepository = em.getRepository(Unit)
-
   const { unit: gameUnit } = event
 
   if (gameUnit.playerName && gameUnit.playerName.length > 0) {
@@ -375,8 +369,7 @@ async function handlePilotDead(event: PilotDeadEvent): Promise<void> {
   const { unit: gameUnit } = event
 
   if (gameUnit.playerName && gameUnit.playerName.length > 0) {
-    const em = entityManager(await orm)
-
+    const em = await emFork()
     const unitRepository = em.getRepository(Unit)
     const playerRepository = em.getRepository(Player)
 

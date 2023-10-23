@@ -16,7 +16,7 @@ import {
   vec3From,
 } from './common'
 import { Position3, PositionLL, Velocity } from './common'
-import { entityManager, orm } from './db/connection.mjs'
+import { emFork, orm } from './db/connection'
 import { NewUnit, Position, Unit, UnitTypeName } from './db'
 import { GetTransformResponse__Output } from './__generated__/dcs/unit/v0/GetTransformResponse'
 import { countryFrom } from './country'
@@ -108,7 +108,9 @@ export async function createUnit(
 
   const unit = new Unit({ ...newUnit, name })
 
-  await entityManager(await orm).persistAndFlush(unit)
+  const em = await emFork()
+
+  await em.persistAndFlush(unit)
 
   return unit
 }
@@ -261,7 +263,7 @@ export async function getTransform(
 }
 
 export async function uniqueUnitName(): Promise<string> {
-  const em = entityManager(await orm)
+  const em = await emFork()
   const unitRepository = em.getRepository(Unit)
 
   const id = Math.floor(1000 + Math.random() * 9000)
@@ -368,7 +370,7 @@ export async function findNearbyUnits({
   accuracy: number
   coalition: Coalition
 }): Promise<Unit[]> {
-  const em = entityManager(await orm)
+  const em = await emFork()
 
   const unitRepository = em.getRepository(Unit)
 

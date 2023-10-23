@@ -1,4 +1,4 @@
-import { entityManager, orm } from './db/connection.mjs'
+import { emFork } from './db/connection'
 import { NewPosition, Position } from './db'
 
 export async function createPosition(
@@ -6,9 +6,8 @@ export async function createPosition(
 ): Promise<Position> {
   const position = new Position(newPosition)
 
-  await entityManager(await orm)
-    .persist(position)
-    .flush()
+  const em = await emFork()
+  await em.persistAndFlush(position)
 
   return position
 }

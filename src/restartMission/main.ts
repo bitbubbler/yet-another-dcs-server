@@ -8,7 +8,7 @@ import { outText } from '../trigger'
 import { MemoryReader, parse, stringify, Table } from '../lua'
 import { Mission } from './types'
 import { baseTemplateFrom, baseTypeDisplayNameShort } from '../base'
-import { entityManager, orm } from '../db/connection.mjs'
+import { emFork } from '../db/connection'
 import { Base, BaseType } from '../db'
 import { LatLon } from '../geo'
 import { vector2DFrom } from '../coord'
@@ -138,8 +138,7 @@ function fileTimestamp(): string {
 }
 
 async function patchMission(mission: Mission): Promise<Mission> {
-  const em = entityManager(await orm)
-
+  const em = await emFork()
   const baseRepository = em.getRepository(Base)
   // first, we set some basics
 

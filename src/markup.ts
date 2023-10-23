@@ -1,5 +1,5 @@
 import { NewCircleMarkup, NewTextMarkup } from './db'
-import { entityManager, orm } from './db/connection.mjs'
+import { emFork } from './db/connection'
 import { markupTextToAll } from './trigger'
 import { CircleMarkup, Markup, MarkupType, TextMarkup } from './db'
 
@@ -8,9 +8,8 @@ export async function createCircleMarkup(
 ): Promise<CircleMarkup> {
   const circleMarkup = new CircleMarkup(newMarkup)
 
-  await entityManager(await orm)
-    .persist(circleMarkup)
-    .flush()
+  const em = await emFork()
+  await em.persistAndFlush(circleMarkup)
 
   return circleMarkup
 }
@@ -20,9 +19,8 @@ export async function createTextMarkup(
 ): Promise<TextMarkup> {
   const textMarkup = new TextMarkup(newMarkup)
 
-  await entityManager(await orm)
-    .persist(textMarkup)
-    .flush()
+  const em = await emFork()
+  await em.persistAndFlush(textMarkup)
 
   return textMarkup
 }
@@ -50,7 +48,7 @@ export async function despawnMarkup(
 }
 
 export async function destroyMarkup(markup: Markup): Promise<void> {
-  await entityManager(await orm)
-    .remove(markup)
-    .flush()
+  const em = await emFork()
+  em.remove(markup)
+  await em.flush()
 }
