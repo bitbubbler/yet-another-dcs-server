@@ -7,7 +7,7 @@ import {
 import { Reader } from '../reader'
 import { lexer as Lexer, TokenKind } from '../lexer'
 import { ParserUnexpectedTokenError, ParserUnknownTokenError } from './errors'
-import { Coalition } from '../../generated/dcs/common/v0/Coalition'
+import { Coalition } from '../../__generated__/dcs/common/v0/Coalition'
 import { SpawnerType } from '../../db'
 import { BaseType } from '../../db'
 

@@ -1,4 +1,4 @@
-import { MarkPanel__Output as MarkPanel } from './generated/dcs/common/v0/MarkPanel'
+import { MarkPanel__Output as MarkPanel } from './__generated__/dcs/common/v0/MarkPanel'
 import { MarkPanelsMissingError } from './errors'
 import { services } from './services'
 

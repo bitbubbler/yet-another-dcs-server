@@ -10,7 +10,7 @@ import { Position } from './Position'
 import { BaseEntity } from './BaseEntity'
 import { Unit } from './Unit'
 import { Player } from './Player'
-import { Coalition } from '../../generated/dcs/common/v0/Coalition'
+import { Coalition } from '../../__generated__/dcs/common/v0/Coalition'
 import { StaticObject } from './StaticObject'
 
 export type NewCsar = Pick<

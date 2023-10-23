@@ -5,10 +5,10 @@ import {
   PrimaryKey,
   Property,
 } from '@mikro-orm/core'
-import { BaseEntity } from './BaseEntity'
+import { BaseEntity } from '../BaseEntity'
 import { CircleMarkup, NewCircleMarkup } from './CircleMarkup'
-import { Color } from './Color'
-import { Position } from './Position'
+import { Color } from '../Color'
+import { Position } from '../Position'
 import { NewTextMarkup, TextMarkup } from './TextMarkup'
 
 export enum MarkupType {

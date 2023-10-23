@@ -1,7 +1,7 @@
 import { Entity, Filter, OneToOne, PrimaryKey, Property } from '@mikro-orm/core'
 import { v4 } from 'uuid'
 import { UnitTypeName } from './Unit'
-import { Base } from './Base'
+import { Base } from './base/Base'
 import { BaseEntity } from './BaseEntity'
 import { Position } from './Position'
 import { Csar, NewCsar } from './Csar'

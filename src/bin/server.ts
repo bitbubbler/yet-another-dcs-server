@@ -14,12 +14,13 @@ import { startUnitEvents } from '../unitEvents'
 
 // // bigger things
 import { spawnUnitsMain } from '../spawnUnits'
-import { persistenceMain } from '../persistence'
+import { persistenceMain, trySpawnUnits } from '../persistence'
 import { restartMissionMain, restartMissionMenu } from '../restartMission'
 import { visualMarkersMain } from '../visualMarkers'
 import { autoRespawnMain, spawnersMenu } from '../autoRespawn'
 import { logisticsMain, internalCargoMenu } from '../logistics'
 import { csarMenu, searchAndRescueMain } from '../searchAndRescue'
+import { TacticsEngine } from '../tacticsEngine'
 
 // NOTE: The order of menus in this array determines their order on the client
 const missionMenus: MissionMenu[] = [spawnersMenu, restartMissionMenu]
@@ -34,15 +35,15 @@ async function main(): Promise<void> {
   async function setupMission(): Promise<() => Promise<void>> {
     await services.ready()
 
+    /**
+     * Bootstrap things
+     */
     // a pingpong for issue and latency detection
     const teardownPingpong = pingpong()
 
     // start streaming events
     startEvents()
     startUnitEvents()
-
-    // load the menus
-    const teardownMenus = await menusMain(missionMenus, groupMenus)
 
     // bootstrap our functional modules
     const teardownSpawnUnits = await spawnUnitsMain()
@@ -53,7 +54,21 @@ async function main(): Promise<void> {
     const teardownLogisticsMain = await logisticsMain()
     const teardownSearchAndRescueMain = await searchAndRescueMain()
 
-    return async () => {
+    // create the tactics engine
+    const tacticsEngine = new TacticsEngine()
+
+    /**
+     * Startup Tasks
+     */
+    // load the menus
+    const teardownMenus = await menusMain(missionMenus, groupMenus)
+    // spawn the persisted units
+    await trySpawnUnits()
+    // start the tactics engine
+    await tacticsEngine.start()
+
+    return async function teardown() {
+      await tacticsEngine.teardown()
       await teardownPingpong()
       await teardownSpawnUnits()
       await teardownPersistence()

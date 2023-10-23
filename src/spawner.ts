@@ -1,6 +1,6 @@
 import { entityManager, orm, Position, NewSpawner, Spawner } from './db'
 import { distanceFrom, metersToDegree } from './common'
-import { Coalition } from './generated/dcs/common/v0/Coalition'
+import { Coalition } from './__generated__/dcs/common/v0/Coalition'
 
 export async function createSpawner(newSpawner: NewSpawner): Promise<Spawner> {
   const spawner = new Spawner(newSpawner)

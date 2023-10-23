@@ -1,5 +1,5 @@
 import { Entity, Property } from '@mikro-orm/core'
-import { LineType } from '../../generated/dcs/trigger/v0/LineType'
+import { LineType } from '../../../__generated__/dcs/trigger/v0/LineType'
 
 import { MarkupBase, MarkupType, NewMarkupPropertyNames } from './Markup'
 

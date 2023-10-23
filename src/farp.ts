@@ -1,7 +1,7 @@
 import { services } from './services'
 
 import { PositionLL } from './common'
-import { Country } from './generated/dcs/common/v0/Country'
+import { Country } from './__generated__/dcs/common/v0/Country'
 
 const { custom } = services
 

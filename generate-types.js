@@ -4,7 +4,7 @@ const { resolve, join } = require('path')
 const util = require('util')
 const exec = util.promisify(require('child_process').exec)
 
-const generatedDir = resolve(join('src', 'generated'))
+const generatedDir = resolve(join('src', '__generated__'))
 
 async function main() {
   // delete existing generated files

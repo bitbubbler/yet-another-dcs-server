@@ -1,5 +1,5 @@
-import { Coalition } from './generated/dcs/common/v0/Coalition'
-import { Country } from './generated/dcs/common/v0/Country'
+import { Coalition } from './__generated__/dcs/common/v0/Coalition'
+import { Country } from './__generated__/dcs/common/v0/Country'
 
 export function countryFrom(coalition: Coalition): Country {
   if (coalition === Coalition.COALITION_BLUE) {

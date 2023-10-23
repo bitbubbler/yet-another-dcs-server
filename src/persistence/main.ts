@@ -13,8 +13,6 @@ import { createUnit, isPlayerUnit, spawnGroundUnit } from '../unit'
 import { UnitEventType, UnitEvents } from '../unitEvents'
 
 export async function persistenceMain(): Promise<() => Promise<void>> {
-  await trySpawnUnits()
-
   const eventsSubscription = Events.subscribe(async event => {
     if (EventType.Birth === event.type) {
       return handleBirth(event)
@@ -29,10 +27,11 @@ export async function persistenceMain(): Promise<() => Promise<void>> {
 
     const unitRepository = em.getRepository(Unit)
     if (UnitEventType.Update === event.type) {
-      const { lat, lon, alt } = event.unit.position
+      const { heading, position } = event.unit
+      const { lat, lon, alt } = position
 
       // TODO: get unit heading (new dcs-grpc update gives us this)
-      const newPosition = new Position({ lat, lon, alt, heading: 0 })
+      const newPosition = new Position({ lat, lon, alt, heading })
 
       const unit = await unitRepository.findOne({
         name: event.unit.name,
@@ -151,7 +150,7 @@ async function handleBirth(event: BirthEvent) {
 /**
  * try to spawn units from the database (called on mission start and mission restart)
  */
-async function trySpawnUnits() {
+export async function trySpawnUnits() {
   // on startup, we need to attempt to syncronize mission state with database state
   // we can get more sophisticated, but for now we assume the database is the source of truth
   // this means that on restart, even if the mission hasn't reset, we'll reset the all units

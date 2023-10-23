@@ -1,6 +1,6 @@
 import { Entity, ManyToOne, OneToOne, Property, Unique } from '@mikro-orm/core'
 import { Spawner } from './Spawner'
-import { Unit } from './Unit'
+import { Unit } from '../Unit'
 
 export type NewSpawnerQueuedUnit = Pick<SpawnerQueuedUnit, 'spawner' | 'unit'>
 

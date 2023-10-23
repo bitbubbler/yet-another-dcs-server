@@ -3,10 +3,10 @@ import { services } from './services'
 import {
   _dcs_coalition_v0_AddGroupRequest_GroundGroupTemplate as GroundGroupTemplate,
   _dcs_coalition_v0_AddGroupRequest_Skill as Skill,
-} from './generated/dcs/coalition/v0/AddGroupRequest'
-import { Country } from './generated/dcs/common/v0/Country'
-import { GroupCategory } from './generated/dcs/common/v0/GroupCategory'
-import { StreamUnitsResponse__Output } from './generated/dcs/mission/v0/StreamUnitsResponse'
+} from './__generated__/dcs/coalition/v0/AddGroupRequest'
+import { Country } from './__generated__/dcs/common/v0/Country'
+import { GroupCategory } from './__generated__/dcs/common/v0/GroupCategory'
+import { StreamUnitsResponse__Output } from './__generated__/dcs/mission/v0/StreamUnitsResponse'
 import {
   distanceFrom,
   metersToDegree,
@@ -18,10 +18,10 @@ import {
 import { Position3, PositionLL, Velocity } from './common'
 import { NewUnit, Position, Unit, UnitTypeName } from './db'
 import { entityManager, orm } from './db/db'
-import { GetTransformResponse__Output } from './generated/dcs/unit/v0/GetTransformResponse'
+import { GetTransformResponse__Output } from './__generated__/dcs/unit/v0/GetTransformResponse'
 import { countryFrom } from './country'
 import { createPosition } from './position'
-import { Coalition } from './generated/dcs/common/v0/Coalition'
+import { Coalition } from './__generated__/dcs/common/v0/Coalition'
 
 const { coalition, custom, unit } = services
 
@@ -33,6 +33,7 @@ const { coalition, custom, unit } = services
  */
 export type GameUnit = Pick<Unit, 'country' | 'name' | 'typeName'> & {
   position: PositionLL
+  heading: number
   groupName: string
   playerName: string | undefined
 }
@@ -405,7 +406,7 @@ export function gameUnitFrom(
   maybeUnit: Partial<
     Pick<
       Required<StreamUnitsResponse__Output>['unit'],
-      'coalition' | 'groupName' | 'name' | 'position' | 'type'
+      'coalition' | 'groupName' | 'heading' | 'name' | 'position' | 'type'
     >
   > &
     Pick<Required<StreamUnitsResponse__Output>['unit'], 'playerName'>
@@ -413,10 +414,14 @@ export function gameUnitFrom(
   if (!maybeUnit) {
     throw new Error('missing unit')
   }
-  const { coalition, groupName, name, playerName, position, type } = maybeUnit
+  const { coalition, groupName, heading, name, playerName, position, type } =
+    maybeUnit
 
   if (!coalition) {
     throw new Error('missing coalition on unit')
+  }
+  if (typeof heading !== 'number') {
+    throw new Error('missing heading on unit')
   }
   if (!groupName) {
     throw new Error('missing groupName on unit')
@@ -434,6 +439,7 @@ export function gameUnitFrom(
   return {
     country: countryFrom(coalition),
     groupName,
+    heading,
     name,
     playerName,
     position: positionLLFrom(position),

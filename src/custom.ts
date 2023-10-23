@@ -1,4 +1,4 @@
-import { Coalition } from './generated/dcs/common/v0/Coalition'
+import { Coalition } from './__generated__/dcs/common/v0/Coalition'
 import { positionLLFrom } from './common'
 import { MarkPanelsMissingError } from './errors'
 import { services } from './services'

@@ -1,9 +1,9 @@
 import { services } from './services'
 import { PositionLL } from './common'
-import { _dcs_trigger_v0_SmokeRequest_SmokeColor as SmokeColor } from './generated/dcs/trigger/v0/SmokeRequest'
-import { _dcs_trigger_v0_SignalFlareRequest_FlareColor as FlareColor } from './generated/dcs/trigger/v0/SignalFlareRequest'
-import { Coalition } from './generated/dcs/common/v0/Coalition'
-import { Color__Output } from './generated/dcs/trigger/v0/Color'
+import { _dcs_trigger_v0_SmokeRequest_SmokeColor as SmokeColor } from './__generated__/dcs/trigger/v0/SmokeRequest'
+import { _dcs_trigger_v0_SignalFlareRequest_FlareColor as FlareColor } from './__generated__/dcs/trigger/v0/SignalFlareRequest'
+import { Coalition } from './__generated__/dcs/common/v0/Coalition'
+import { Color__Output } from './__generated__/dcs/trigger/v0/Color'
 
 const { trigger, net } = services
 

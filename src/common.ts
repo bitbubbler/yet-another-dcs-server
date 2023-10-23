@@ -1,8 +1,8 @@
 import { equal } from 'assert'
-import { Position } from './generated/dcs/common/v0/Position'
-import { Position__Output } from './generated/dcs/common/v0/Position'
-import { Color__Output } from './generated/dcs/trigger/v0/Color'
-import { _dcs_trigger_v0_SmokeRequest_SmokeColor as SmokeColor } from './generated/dcs/trigger/v0/SmokeRequest'
+import { Position } from './__generated__/dcs/common/v0/Position'
+import { Position__Output } from './__generated__/dcs/common/v0/Position'
+import { Color__Output } from './__generated__/dcs/trigger/v0/Color'
+import { _dcs_trigger_v0_SmokeRequest_SmokeColor as SmokeColor } from './__generated__/dcs/trigger/v0/SmokeRequest'
 import { LatLon } from './geo'
 
 export { SmokeColor }

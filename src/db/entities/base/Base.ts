@@ -7,14 +7,14 @@ import {
   PrimaryKey,
   Property,
 } from '@mikro-orm/core'
-import { Coalition } from '../../generated/dcs/common/v0/Coalition'
+import { Coalition } from '../../../__generated__/dcs/common/v0/Coalition'
 import { BaseStaticObject } from './BaseStaticObject'
-import { BaseEntity } from './BaseEntity'
-import { Position } from './Position'
-import { StaticObject } from './StaticObject'
-import { Unit } from './Unit'
+import { BaseEntity } from '../BaseEntity'
+import { Position } from '../Position'
+import { StaticObject } from '../StaticObject'
+import { Unit } from '../Unit'
 import { BaseUnit } from './BaseUnit'
-import { TextMarkup } from './TextMarkup'
+import { TextMarkup } from '../markup/TextMarkup'
 
 export type NewBase = Pick<
   Base,

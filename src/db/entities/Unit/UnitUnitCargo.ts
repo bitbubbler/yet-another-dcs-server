@@ -1,6 +1,6 @@
 import { Entity, ManyToOne, Unique } from '@mikro-orm/core'
-import { CargoBase } from './Cargo'
-import { Unit } from './Unit'
+import { CargoBase } from '../Cargo'
+import { Unit } from '.'
 
 @Entity({ tableName: 'unitCargos' })
 @Unique({ properties: ['cargo', 'unit'] })

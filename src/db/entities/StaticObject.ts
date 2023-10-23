@@ -1,6 +1,6 @@
 import { Entity, OneToOne, PrimaryKey, Property } from '@mikro-orm/core'
 import { v4 } from 'uuid'
-import { Country } from '../../generated/dcs/common/v0/Country'
+import { Country } from '../../__generated__/dcs/common/v0/Country'
 import { BaseEntity } from './BaseEntity'
 import { Position } from './Position'
 

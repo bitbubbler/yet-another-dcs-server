@@ -1,6 +1,6 @@
 import { Entity, ManyToOne, Unique } from '@mikro-orm/core'
 import { Base } from './Base'
-import { StaticObject } from './StaticObject'
+import { StaticObject } from '../StaticObject'
 
 @Entity({ tableName: 'baseStaticObjects' })
 @Unique({ properties: ['base', 'staticObject'] })

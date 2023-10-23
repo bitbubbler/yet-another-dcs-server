@@ -36,7 +36,7 @@ jobs:
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
       - run: npm run codegen
         if: steps.cache-generated.outputs.cache-hit != 'true'
-      - run: npm run test
+      - run: npm run test -- --coverage
   lint:
     strategy:
       matrix:

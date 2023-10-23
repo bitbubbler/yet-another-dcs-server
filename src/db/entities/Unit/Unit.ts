@@ -12,7 +12,7 @@ import {
 } from '@mikro-orm/core'
 import { Position } from '../Position'
 import { BaseEntity } from '../BaseEntity'
-import { UnitUnitCargo } from '../UnitUnitCargo'
+import { UnitUnitCargo } from './UnitUnitCargo'
 import { BaseCargo, CargoBase, CsarCargo, UnitCargo } from '../Cargo'
 import { UnitTypeName } from './types'
 import { coalitionFrom } from '../../../coalition'

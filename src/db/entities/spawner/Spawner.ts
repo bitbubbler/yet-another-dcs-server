@@ -8,9 +8,9 @@ import {
   Property,
   Ref,
 } from '@mikro-orm/core'
-import { Coalition } from '../../generated/dcs/common/v0/Coalition'
-import { BaseEntity } from './BaseEntity'
-import { Position } from './Position'
+import { Coalition } from '../../../__generated__/dcs/common/v0/Coalition'
+import { BaseEntity } from '../BaseEntity'
+import { Position } from '../Position'
 import { SpawnerQueuedUnit } from './SpawnerQueuedUnit'
 
 /**

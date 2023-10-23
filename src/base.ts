@@ -23,7 +23,7 @@ import {
   TextMarkup,
   Color,
 } from './db'
-import { Coalition } from './generated/dcs/common/v0/Coalition'
+import { Coalition } from './__generated__/dcs/common/v0/Coalition'
 import { wrap } from '@mikro-orm/core'
 import { spawnMarkup } from './markup'
 

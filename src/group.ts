@@ -1,4 +1,4 @@
-import { Group__Output } from './generated/dcs/common/v0/Group'
+import { Group__Output } from './__generated__/dcs/common/v0/Group'
 import { services } from './services'
 import { PositionLL } from './common'
 import { GameUnit, gameUnitFrom } from './unit'
