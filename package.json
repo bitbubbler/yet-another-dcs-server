@@ -29,7 +29,7 @@
     "typecheck": "tsc --noEmit",
     "prettier": "npx prettier --check src/",
     "full-build": "npm run codegen && npm run build",
-    "build": "rm -rf build/ && tsc && cp -r src/proto/ build/ && cp -r package*.json build/",
+    "build": "rm -rf build/ && tsc && cp -r src/protos/ build/ && cp -r package*.json build/",
     "codegen": "node generate-types.js && mikro-orm cache:generate"
   },
   "dependencies": {

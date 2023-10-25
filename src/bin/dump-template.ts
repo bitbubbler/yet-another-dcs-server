@@ -4,16 +4,14 @@ import { orm } from '../db/connection'
 // just hold a reference here (i promise, this fixes a bug)
 const db = orm
 
-import { Position, StaticObjectTypeName, Unit, UnitTypeName } from '../db'
-
 import assert from 'assert'
-import { PositionLL } from '../common'
-
+import { Template } from '../base-templates/types'
+import { positionLatLonFrom } from '../coord'
+import { Position, StaticObjectTypeName, Unit, UnitTypeName } from '../db'
 import { LatLon } from '../geo'
 import { Mission } from '../restartMission/types'
 import { services } from '../services'
-import { Template } from '../base-templates/types'
-import { positionLatLonFrom } from '../coord'
+import { GamePositionLL } from '../types'
 
 const { custom, hook } = services
 
@@ -42,7 +40,7 @@ interface UnitPartial
 interface StaticObject {
   id: string
   typeName: string
-  position: Pick<PositionLL, 'lat' | 'lon'>
+  position: Pick<GamePositionLL, 'lat' | 'lon'>
   heading: number // in radians
 }
 

@@ -12,12 +12,12 @@ async function main() {
 
   const npmBin = resolve('node_modules', '.bin')
   const bin = resolve(npmBin, 'proto-loader-gen-types')
-  const protoDir = resolve('src', 'proto')
-  const dcsProtoFile = resolve(protoDir, 'dcs', 'dcs.proto')
+  const protosDir = resolve('src', 'protos')
+  const dcsProtoFile = resolve(protosDir, 'dcs', 'dcs.proto')
 
   const args = [
     '-I',
-    protoDir,
+    protosDir,
     '-O',
     generatedDir,
     '--oneofs',

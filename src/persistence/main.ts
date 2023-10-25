@@ -4,6 +4,7 @@ import { BirthEvent, Events, EventType } from '../events'
 import { netPlayerFrom } from '../player'
 import { createUnit, isPlayerUnit, spawnGroundUnit } from '../unit'
 import { UnitEventType, UnitEvents } from '../unitEvents'
+import { countryFrom } from '../convert'
 
 export async function persistenceMain(): Promise<() => Promise<void>> {
   const eventsSubscription = Events.subscribe(async event => {
@@ -14,12 +15,11 @@ export async function persistenceMain(): Promise<() => Promise<void>> {
 
   // handle unit updates
   const unitEventsSubscription = UnitEvents.subscribe(async event => {
-    const em = await emFork()
-    const csarRepository = em.getRepository(Csar)
-    const unitRepository = em.getRepository(Unit)
-
     if (UnitEventType.Update === event.type) {
-      const { heading, position } = event.unit
+      const em = await emFork()
+      const unitRepository = em.getRepository(Unit)
+      const { orientation, position } = event.unit
+      const { heading } = orientation
       const { lat, lon, alt } = position
 
       // TODO: get unit heading (new dcs-grpc update gives us this)
@@ -41,6 +41,9 @@ export async function persistenceMain(): Promise<() => Promise<void>> {
       await em.flush()
     }
     if (UnitEventType.Gone === event.type) {
+      const em = await emFork()
+      const unitRepository = em.getRepository(Unit)
+      const csarRepository = em.getRepository(Csar)
       const name = event.unit.name
       const unit = await unitRepository.findOne({ name })
 
@@ -101,7 +104,9 @@ async function handleBirth(event: BirthEvent) {
     return
   }
 
-  const { country, name, playerName, typeName } = event.initiator.unit
+  const { coalition, name, playerName, type } = event.initiator.unit
+  const country = countryFrom(coalition)
+  const typeName = type
 
   if (playerName && playerName.length > 0) {
     // create a player and a unit for the players slot, if it doesn't yet exist`

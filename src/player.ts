@@ -1,4 +1,4 @@
-import { PositionLL } from './common'
+import { GamePositionLL } from './types'
 import { NewPlayer, Player } from './db'
 import { emFork } from './db/connection'
 import { services } from './services'
@@ -7,7 +7,7 @@ import { services } from './services'
  * The player as represented by the game. Typically recieved from dcs-grpc or lua calls.
  */
 export type GamePlayer = Pick<Player, 'ucid'> & {
-  position: PositionLL
+  position: GamePositionLL
   playerName: string
 }
 

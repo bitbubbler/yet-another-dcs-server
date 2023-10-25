@@ -1,7 +1,8 @@
 import { Group__Output } from './__generated__/dcs/common/v0/Group'
+
+import { gameUnitFrom } from './convert'
 import { services } from './services'
-import { PositionLL } from './common'
-import { GameUnit, gameUnitFrom } from './unit'
+import { GamePositionLL, GameUnit } from './types'
 
 const { coalition, custom, group } = services
 
@@ -54,16 +55,16 @@ interface DriveGroundGroupOptions {
   /** groupName to drive */
   groupName: string
   /** the groups starting position (current position) */
-  position: PositionLL
+  position: GamePositionLL
   /** Array of zero or more points to drive to along the path (in order). Use to provide starting and ending road points (for one or more roads) */
-  points: PositionLL[]
+  points: GamePositionLL[]
   /** the groups destination position (ending position) */
-  destination: PositionLL
+  destination: GamePositionLL
   onroad: boolean
 }
 
 /** Tuple of [position, onroad]. Position is the point to drive to, onroad is whether the unit should stay on road while driving to the point (best if point is also on road) */
-type Point = [PositionLL, boolean]
+type Point = [GamePositionLL, boolean]
 
 /**
  *

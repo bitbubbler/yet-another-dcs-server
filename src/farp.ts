@@ -1,7 +1,6 @@
-import { services } from './services'
-
-import { PositionLL } from './common'
 import { Country } from './__generated__/dcs/common/v0/Country'
+import { services } from './services'
+import { GamePositionLL } from './types'
 
 const { custom } = services
 
@@ -9,7 +8,7 @@ export interface SpawnFarpOptions {
   name: string
   country: Country
   groupId: number
-  position: Pick<PositionLL, 'lat' | 'lon'>
+  position: Pick<GamePositionLL, 'lat' | 'lon'>
   type: 'Invisible FARP'
 }
 

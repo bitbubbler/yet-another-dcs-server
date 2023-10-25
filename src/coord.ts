@@ -1,13 +1,33 @@
-import { PositionLL, PositionMGRS, Vec2, Vec3 } from './common'
+import { GamePositionLL, GamePositionMGRS, GameVec2, GameVec3 } from './types'
 import { services } from './services'
 
 const { custom } = services
 
-export function vec3AreEqual(a: Vec3, b: Vec3): boolean {
+export function positionAreEqual(
+  a: GamePositionLL,
+  b: GamePositionLL
+): boolean {
   // a simple silce function. we're doing a basic equailty check so strings are fine (and faster)
   function slice(input: number): string {
     const str = input.toString()
 
+    // 4 decimals of precision
+    return str.slice(0, str.indexOf('.') + 4)
+  }
+
+  return (
+    slice(a.alt) === slice(b.alt) &&
+    slice(a.lat) === slice(b.lat) &&
+    slice(a.lon) === slice(b.lon)
+  )
+}
+
+export function gameVec3AreEqual(a: GameVec3, b: GameVec3): boolean {
+  // a simple silce function. we're doing a basic equailty check so strings are fine (and faster)
+  function slice(input: number): string {
+    const str = input.toString()
+
+    // 4 decimals of precision
     return str.slice(0, str.indexOf('.') + 4)
   }
 
@@ -19,8 +39,8 @@ export function vec3AreEqual(a: Vec3, b: Vec3): boolean {
 }
 
 export async function vector2DFrom(
-  position: Pick<PositionLL, 'lat' | 'lon'>
-): Promise<Vec2> {
+  position: Pick<GamePositionLL, 'lat' | 'lon'>
+): Promise<GameVec2> {
   const { lat, lon } = position
   const lua = `
     local vec3 = coord.LLtoLO(${lat}, ${lon}, 0)
@@ -45,7 +65,7 @@ export async function vector2DFrom(
   })
 }
 
-export function humanReadableGridSquare(position: PositionMGRS): string {
+export function humanReadableGridSquare(position: GamePositionMGRS): string {
   function firstDigit(num: number): string {
     return num.toString().slice(0, 1)
   }
@@ -58,8 +78,8 @@ export function humanReadableGridSquare(position: PositionMGRS): string {
 }
 
 export async function positionMGRSFrom(
-  position: PositionLL
-): Promise<PositionMGRS> {
+  position: GamePositionLL
+): Promise<GamePositionMGRS> {
   const { lat, lon, alt } = position
   const lua = `
     return coord.LLtoMGRS(${lat}, ${lon}, ${alt})
@@ -83,8 +103,8 @@ export async function positionMGRSFrom(
 }
 
 export async function positionLatLonFrom(
-  vec: Vec2
-): Promise<Pick<PositionLL, 'lat' | 'lon'>> {
+  vec: GameVec2
+): Promise<Pick<GamePositionLL, 'lat' | 'lon'>> {
   const { x, y } = vec
   const lua = `
 

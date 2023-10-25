@@ -1,42 +1,20 @@
-import { services } from './services'
-
 import {
   _dcs_coalition_v0_AddGroupRequest_GroundGroupTemplate as GroundGroupTemplate,
   _dcs_coalition_v0_AddGroupRequest_Skill as Skill,
 } from './__generated__/dcs/coalition/v0/AddGroupRequest'
+import { Coalition } from './__generated__/dcs/common/v0/Coalition'
 import { Country } from './__generated__/dcs/common/v0/Country'
 import { GroupCategory } from './__generated__/dcs/common/v0/GroupCategory'
-import { StreamUnitsResponse__Output } from './__generated__/dcs/mission/v0/StreamUnitsResponse'
-import {
-  distanceFrom,
-  metersToDegree,
-  position3From,
-  positionLLFrom,
-  randomPositionInCircle,
-  vec3From,
-} from './common'
-import { Position3, PositionLL, Velocity } from './common'
-import { emFork, orm } from './db/connection'
-import { NewUnit, Position, Unit, UnitTypeName } from './db'
-import { GetTransformResponse__Output } from './__generated__/dcs/unit/v0/GetTransformResponse'
-import { countryFrom } from './country'
+
+import { metersToDegree, randomPositionInCircle } from './common'
+import { distanceFrom } from './convert'
+import { NewUnit, Position, Unit } from './db'
+import { emFork } from './db/connection'
 import { createPosition } from './position'
-import { Coalition } from './__generated__/dcs/common/v0/Coalition'
+import { services } from './services'
+import { GamePositionLL } from './types'
 
-const { coalition, custom, unit } = services
-
-/**
- * The unit as represented by the game. Typically recieved from dcs-grpc or lua calls.
- *
- * NOTE: The `heading` returned by dcs-grpc is currently not the users real heading.
- * https://github.com/DCS-gRPC/rust-server/issues/159
- */
-export type GameUnit = Pick<Unit, 'country' | 'name' | 'typeName'> & {
-  position: PositionLL
-  heading: number
-  groupName: string
-  playerName: string | undefined
-}
+const { coalition, custom } = services
 
 export interface PlayerUnit extends Unit {
   isPlayerSlot: true
@@ -48,7 +26,7 @@ export function isPlayerUnit(unit: Unit): unit is PlayerUnit {
 
 interface CreateGroundUnitOptions {
   country: Country
-  focus: PositionLL
+  focus: GamePositionLL
   hidden: boolean
   radius: number
   unit: Pick<Unit, 'typeName'> & Pick<Position, 'heading'>
@@ -57,7 +35,7 @@ interface CreateGroundUnitOptions {
 interface CreateGroundUnitsOptions
   extends Omit<CreateGroundUnitOptions, 'unit'> {
   country: Country
-  focus: PositionLL
+  focus: GamePositionLL
   hidden: boolean
   radius: number
   units: CreateGroundUnitOptions['unit'][]
@@ -176,7 +154,7 @@ export async function spawnGroundUnit(
       debugger
     }
     const { heading, lat, lon, alt } = unit.position
-    const position: PositionLL = { lat, lon, alt }
+    const position: GamePositionLL = { lat, lon, alt }
 
     const groundTemplate: GroundGroupTemplate = {
       name,
@@ -214,52 +192,6 @@ export async function spawnGroundUnit(
       }
     )
   })
-}
-
-export async function getTransform(
-  unitName: string
-): Promise<Required<GetTransformResponse__Output>> {
-  return new Promise<Required<GetTransformResponse__Output>>(
-    (resolve, reject) =>
-      unit.getTransform(
-        {
-          name: unitName,
-        },
-        (error, result) => {
-          if (error) {
-            return reject(error)
-          }
-
-          if (!result) {
-            throw new Error('missing result from getTransform call')
-          }
-
-          if (!result.heading) {
-            throw new Error('missing heading from getTransform result')
-          }
-          if (!result.orientation) {
-            throw new Error('missing orientation from getTransform result')
-          }
-          if (!result.position) {
-            throw new Error('missing position from getTransform result')
-          }
-          if (!result.velocity) {
-            throw new Error('missing velocity from getTransform result')
-          }
-          if (!result.u) {
-            throw new Error('missing u from getTransform result')
-          }
-          if (!result.v) {
-            throw new Error('missing v from getTransform result')
-          }
-          if (!result.time) {
-            throw new Error('missing time from getTransform result')
-          }
-
-          resolve(result as Required<GetTransformResponse__Output>)
-        }
-      )
-  )
 }
 
 export async function uniqueUnitName(): Promise<string> {
@@ -305,7 +237,7 @@ export async function despawnGroundUnit({
   )
 }
 
-export async function getPositionLL(unitName: string): Promise<PositionLL> {
+export async function getPositionLL(unitName: string): Promise<GamePositionLL> {
   const lua = `
     local unit = Unit.getByName("${unitName}")
     local position = unit:getPosition()
@@ -315,7 +247,7 @@ export async function getPositionLL(unitName: string): Promise<PositionLL> {
     return { lat = lat, lon = lon, alt = alt }
 `
 
-  return new Promise<PositionLL>((resolve, reject) =>
+  return new Promise<GamePositionLL>((resolve, reject) =>
     services.custom.eval({ lua }, (error, result) => {
       if (error) {
         return reject(error)
@@ -326,37 +258,6 @@ export async function getPositionLL(unitName: string): Promise<PositionLL> {
       }
 
       resolve(JSON.parse(result.json))
-    })
-  )
-}
-
-export async function getPositionVelocity(
-  unitName: string
-): Promise<[Position3, Velocity]> {
-  const lua = `
-    local unit = Unit.getByName("${unitName}")
-    local position = unit:getPosition()
-    local velocity = unit:getVelocity()
-
-    return { position, velocity }
-`
-
-  return new Promise<[Position3, Velocity]>((resolve, reject) =>
-    services.custom.eval({ lua }, (error, result) => {
-      if (error) {
-        return reject(error)
-      }
-
-      if (!result || !result.json) {
-        throw new Error('missing results or results json')
-      }
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const [maybePosition3, maybeVelocity] = JSON.parse(result!.json!)
-
-      const position = position3From(maybePosition3)
-      const velocity = vec3From(maybeVelocity)
-
-      resolve([position, velocity])
     })
   )
 }
@@ -402,51 +303,6 @@ export async function findNearbyUnits({
     .filter(unit => unit.distance <= accuracy)
     .sort((a, b) => a.distance - b.distance)
     .map(unit => unit.unit)
-}
-
-export function gameUnitFrom(
-  maybeUnit: Partial<
-    Pick<
-      Required<StreamUnitsResponse__Output>['unit'],
-      'coalition' | 'groupName' | 'heading' | 'name' | 'position' | 'type'
-    >
-  > &
-    Pick<Required<StreamUnitsResponse__Output>['unit'], 'playerName'>
-): GameUnit {
-  if (!maybeUnit) {
-    throw new Error('missing unit')
-  }
-  const { coalition, groupName, heading, name, playerName, position, type } =
-    maybeUnit
-
-  if (!coalition) {
-    throw new Error('missing coalition on unit')
-  }
-  if (typeof heading !== 'number') {
-    throw new Error('missing heading on unit')
-  }
-  if (!groupName) {
-    throw new Error('missing groupName on unit')
-  }
-  if (!name) {
-    throw new Error('missing name on unit')
-  }
-  if (!position) {
-    throw new Error('missing position on unit')
-  }
-  if (!type) {
-    throw new Error('missing type on unit')
-  }
-
-  return {
-    country: countryFrom(coalition),
-    groupName,
-    heading,
-    name,
-    playerName,
-    position: positionLLFrom(position),
-    typeName: type as UnitTypeName,
-  }
 }
 
 export async function unitIsAlive(unit: Unit): Promise<boolean> {

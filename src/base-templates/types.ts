@@ -1,4 +1,4 @@
-import { PositionLL } from '../common'
+import { GamePositionLL } from '../types'
 import { StaticObjectTypeName, UnitTypeName } from '../db'
 
 interface TemplateObject<TTypeName> {
@@ -9,7 +9,7 @@ interface TemplateObject<TTypeName> {
 }
 
 export interface Template {
-  origin: Pick<PositionLL, 'lat' | 'lon'>
+  origin: Pick<GamePositionLL, 'lat' | 'lon'>
   /* slots that players can spawn into */
   slots: TemplateObject<UnitTypeName>[]
   /* Static objects (tents, barriers, decorative vehicles, etc) */

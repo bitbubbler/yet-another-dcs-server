@@ -1,6 +1,6 @@
 import { equal } from 'assert'
 import { services } from './services'
-import { PositionLL } from './common'
+import { GamePositionLL } from './types'
 
 const { custom } = services
 
@@ -11,8 +11,8 @@ export enum RoadType {
 
 export async function closestPointOnRoads(
   roadType: RoadType,
-  position: PositionLL
-): Promise<PositionLL> {
+  position: GamePositionLL
+): Promise<GamePositionLL> {
   const { alt, lat, lon } = position
   const lua = `
     local vec3 = coord.LLtoLO(${lat}, ${lon}, ${alt})
@@ -32,7 +32,7 @@ export async function closestPointOnRoads(
         throw new Error('missing json from result')
       }
 
-      const position = JSON.parse(result.json) as unknown as PositionLL
+      const position = JSON.parse(result.json) as unknown as GamePositionLL
 
       // confirm properties exist on json as a loose check
       equal('alt' in position, true)
@@ -46,9 +46,9 @@ export async function closestPointOnRoads(
 
 export async function findPathOnRoads(
   roadType: RoadType,
-  position: PositionLL, // the starting position
-  destination: PositionLL // the destination position
-): Promise<PositionLL[]> {
+  position: GamePositionLL, // the starting position
+  destination: GamePositionLL // the destination position
+): Promise<GamePositionLL[]> {
   const lua = `
     local position = coord.LLtoLO(${position.lat}, ${position.lon}, ${position.alt})
     local destination = coord.LLtoLO(${destination.lat}, ${destination.lon}, ${destination.alt})
@@ -93,7 +93,7 @@ export async function findPathOnRoads(
         return resolve([])
       }
 
-      const path = maybePath as PositionLL[]
+      const path = maybePath as GamePositionLL[]
 
       equal(Array.isArray(path), true)
 

@@ -1,17 +1,18 @@
 import { Subject } from 'rxjs'
 
+import { Airbase__Output } from './__generated__/dcs/common/v0/Airbase'
 import { Coalition } from './__generated__/dcs/common/v0/Coalition'
 import { StreamEventsResponse__Output } from './__generated__/dcs/mission/v0/StreamEventsResponse'
 import { Struct } from './__generated__/google/protobuf/Struct'
 import { Value } from './__generated__/google/protobuf/Value'
-import { Airbase__Output } from './__generated__/dcs/common/v0/Airbase'
 
-import { services } from './services'
-import { Command } from './commands/types'
 import { parse, reader } from './commands'
-import { Restarts } from './signals'
+import { Command } from './commands/types'
+import { gameUnitFrom } from './convert'
 import { Group } from './group'
-import { GameUnit, gameUnitFrom } from './unit'
+import { services } from './services'
+import { Restarts } from './signals'
+import { GameUnit } from './types'
 
 const { mission } = services
 
