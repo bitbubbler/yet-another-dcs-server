@@ -1,5 +1,5 @@
 import { services } from './services'
-import { PositionLL } from './common'
+import { GamePositionLL } from './types'
 import { _dcs_trigger_v0_SmokeRequest_SmokeColor as SmokeColor } from './__generated__/dcs/trigger/v0/SmokeRequest'
 import { _dcs_trigger_v0_SignalFlareRequest_FlareColor as FlareColor } from './__generated__/dcs/trigger/v0/SignalFlareRequest'
 import { Coalition } from './__generated__/dcs/common/v0/Coalition'
@@ -97,7 +97,7 @@ type Color = Required<Color__Output>
  */
 export async function markupTextToAll(options: {
   coalition: Coalition
-  position: PositionLL
+  position: GamePositionLL
   lineColor: Color
   fillColor: Color
   fontSize: number
@@ -147,7 +147,7 @@ export async function markupTextToAll(options: {
 }
 
 export async function markToAll(options: {
-  position: PositionLL
+  position: GamePositionLL
   text: string
   readonly?: boolean
 }): Promise<void> {
@@ -190,7 +190,7 @@ export async function removeMapMark(id: number): Promise<void> {
   )
 }
 
-export async function smoke(position: PositionLL, color: SmokeColor) {
+export async function smoke(position: GamePositionLL, color: SmokeColor) {
   return new Promise<void>((resolve, reject) => {
     trigger.smoke(
       {
@@ -210,7 +210,7 @@ export async function smoke(position: PositionLL, color: SmokeColor) {
 }
 
 export async function signalFlare(
-  position: PositionLL,
+  position: GamePositionLL,
   color: FlareColor,
   azimuth: number
 ) {
@@ -233,7 +233,7 @@ export async function signalFlare(
   })
 }
 
-export async function illumination(position: PositionLL) {
+export async function illumination(position: GamePositionLL) {
   position.alt = 500 //drop illum bomb 500m AGL
   const power = 1
 

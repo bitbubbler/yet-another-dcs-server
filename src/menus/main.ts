@@ -1,5 +1,5 @@
 import { BirthEvent, Events, EventType } from '../events'
-import { TeardownFn } from '../common'
+import { TeardownFn } from '../types'
 import { GroupMenu, MissionMenu } from './types'
 
 /**
@@ -58,16 +58,16 @@ export async function menusMain(
       // no-op
       return
     }
-    const { groupName } = event.initiator.unit
+    const { name } = event.initiator.unit.group
 
-    if (!groupName) {
-      throw new Error('expected player entering unit to have groupName')
+    if (!name) {
+      throw new Error('expected player entering unit to have group.name')
     }
 
     // remove all group menus concurrently
     await Promise.all(
       groupMenus.map(async menu => {
-        await menu.remove({ groupName })
+        await menu.remove({ groupName: name })
       })
     )
 
@@ -77,7 +77,7 @@ export async function menusMain(
     // then add each missions menu back, one by one to enforce our desired order
     for (const menu of groupMenus) {
       // then (re)create the menu
-      await menu.create({ groupName })
+      await menu.create({ groupName: name })
     }
   }
 

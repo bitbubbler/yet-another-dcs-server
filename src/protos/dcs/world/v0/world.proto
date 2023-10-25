@@ -1,0 +1,39 @@
+syntax = "proto3";
+package dcs.world.v0;
+import "dcs/common/v0/common.proto";
+option csharp_namespace = "RurouniJones.Dcs.Grpc.V0.World";
+option go_package = "github.com/DCS-gRPC/go-bindings/dcs/v0/world";
+
+// https://wiki.hoggitworld.com/view/DCS_singleton_world
+service WorldService {
+  // https://wiki.hoggitworld.com/view/DCS_func_getAirbases
+  rpc GetAirbases(GetAirbasesRequest) returns (GetAirbasesResponse) {}
+
+  // https://wiki.hoggitworld.com/view/DCS_func_getMarkPanels
+  rpc GetMarkPanels(GetMarkPanelsRequest) returns (GetMarkPanelsResponse) {}
+
+  // Returns the theatre (Map name) of the mission
+  rpc GetTheatre(GetTheatreRequest) returns (GetTheatreResponse) {}
+}
+
+message GetAirbasesRequest {
+  dcs.common.v0.Coalition coalition = 1;
+}
+
+message GetAirbasesResponse {
+  repeated dcs.common.v0.Airbase airbases = 1;
+}
+
+message GetMarkPanelsRequest {
+}
+
+message GetMarkPanelsResponse {
+  repeated dcs.common.v0.MarkPanel mark_panels = 1;
+}
+
+message GetTheatreRequest {
+}
+
+message GetTheatreResponse {
+  string theatre = 1;
+}

@@ -1,4 +1,13 @@
 import {
+  CommandType,
+  CommandType as EventCommandType,
+  ToDestroy,
+} from '../commands/types'
+import { countryFrom, distanceFrom } from '../convert'
+import { getMarkById } from '../custom'
+import { SpawnGroup, UnitTypeName } from '../db'
+import { emFork } from '../db/connection'
+import {
   Events,
   EventType,
   GroupCommandEvent,
@@ -6,24 +15,13 @@ import {
   PlayerSendChatEvent,
 } from '../events'
 import { outGroupText, outUnitText, removeMapMark } from '../trigger'
-
-import { getMarkById } from '../custom'
-import { countryFrom } from '../country'
-import { searchUnits } from './searchUnits'
 import {
-  spawnGroundUnit,
   createGroundUnitsInCircle,
-  findNearbyUnits,
   despawnGroundUnit,
+  findNearbyUnits,
+  spawnGroundUnit,
 } from '../unit'
-import {
-  CommandType,
-  CommandType as EventCommandType,
-  ToDestroy,
-} from '../commands/types'
-import { distanceFrom } from '../common'
-import { emFork } from '../db/connection'
-import { SpawnGroup, UnitTypeName } from '../db'
+import { searchUnits } from './searchUnits'
 
 const DESTROY_SINGLE_UNIT_SEARCH_RANGE = 250
 

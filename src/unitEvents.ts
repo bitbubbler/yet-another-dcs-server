@@ -5,7 +5,8 @@ import { StreamUnitsResponse__Output } from './__generated__/dcs/mission/v0/Stre
 
 import { services } from './services'
 import { Restarts } from './signals'
-import { GameUnit, gameUnitFrom } from './unit'
+import { GameUnit } from './types'
+import { gameUnitFrom } from './convert'
 
 const { mission } = services
 

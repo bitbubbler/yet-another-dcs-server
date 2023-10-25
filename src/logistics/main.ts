@@ -1,17 +1,17 @@
 import {
+  allBases,
   baseGone,
   baseTypeDisplayName,
-  createBase,
-  nextBaseTypeFrom,
-  validateBase,
-  destroyAndDespawnBaseUnitsAndObject,
-  despawnBase,
   createAndSpawnBaseUnitsAndObjects,
-  spawnBase,
+  createBase,
   createBaseUnitsAndObjects,
-  allBases,
+  despawnBase,
+  destroyAndDespawnBaseUnitsAndObject,
   findNearbyBases,
+  nextBaseTypeFrom,
+  spawnBase,
   upgradeBaseTypeTo,
+  validateBase,
 } from '../base'
 import {
   createBaseCargo,
@@ -25,22 +25,22 @@ import { deg, randomBetween } from '../common'
 import {
   humanReadableGridSquare,
   positionMGRSFrom,
-  vec3AreEqual,
+  positionAreEqual,
 } from '../coord'
 import { getMarkById } from '../custom'
-import { emFork } from '../db/connection'
 import {
-  BaseType,
   BaseCargoType,
+  BaseType,
   CargoSuperType,
   Position,
-  UnitCargoType,
   Unit,
+  UnitCargoType,
 } from '../db'
+import { emFork } from '../db/connection'
 import {
   BirthEvent,
-  Events,
   EventType,
+  Events,
   GroupCommandEvent,
   MarkChangeEvent,
 } from '../events'
@@ -48,7 +48,7 @@ import { LatLon } from '../geo'
 import { getUnits, groupFromGroupName } from '../group'
 import { createPosition } from '../position'
 import { outCoalitionText, outGroupText, removeMapMark } from '../trigger'
-import { createUnit, getPositionVelocity, spawnGroundUnit } from '../unit'
+import { createUnit, spawnGroundUnit } from '../unit'
 import { cargoDefinitionFrom } from './definitions'
 
 const oneSecondMs = 1000
@@ -118,7 +118,7 @@ async function handleBirth(event: BirthEvent): Promise<void> {
   await unloadCargo(unit, cargo)
 
   try {
-    const group = await groupFromGroupName(event.initiator.unit.groupName)
+    const group = await groupFromGroupName(event.initiator.unit.group.name)
 
     if (!group) {
       return
@@ -213,7 +213,8 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
     const coalition = coalitionFrom(country)
 
     const onboardCargo = await unit.cargos.matching({ limit: 1 })
-    const [{ p: startingVec3 }] = await getPositionVelocity(unit.name)
+    // TODO: replace this with db state
+    // const [{ p: startingVec3 }] = await getPositionVelocity(unit.name)
 
     if (onboardCargo.length < 1) {
       await outGroupText(group.id, `You have no internal cargo to unpack`)
@@ -227,15 +228,19 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
       `Unpacking ${cargo.displayName} at your 12 o'clock.. Hold still.`
     )
 
+    const startingPosition = unit.position
+
     async function waitForRandomTime(): Promise<void> {
       return new Promise((resolve, reject) => {
-        // TODO: timeout if player has moved and show a message. Player should have to try again
         setTimeout(
           async () => {
-            // if the player has moved while the random timer counted down, halt
-            const [{ p: currentVec3 }] = await getPositionVelocity(unit.name)
+            const currentPosition = (
+              await unitRepository.findOneOrFail({ name: units[0].name })
+            ).position
+            // Get the current position after timeout
 
-            if (vec3AreEqual(startingVec3, currentVec3) === false) {
+            // if the player has moved while the random timer counted down, halt
+            if (positionAreEqual(startingPosition, currentPosition) === false) {
               await outGroupText(group.id, `Unpacking failed: You moved!`)
               return reject(new Error('player moved'))
             }

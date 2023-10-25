@@ -1,13 +1,14 @@
 import { Coalition } from './__generated__/dcs/common/v0/Coalition'
-import { positionLLFrom } from './common'
+
+import { gamePositionLLFrom } from './convert'
 import { MarkPanelsMissingError } from './errors'
 import { services } from './services'
-import { PositionLL } from './common'
+import { GamePositionLL } from './types'
 
 export interface MarkPanel {
   id: number
   coalition: Coalition
-  position: PositionLL
+  position: GamePositionLL
   text?: string
   groupId: number
 }
@@ -67,6 +68,7 @@ export async function getMarkPanels(): Promise<MarkPanel[]> {
           if (typeof maybeMark !== 'object' || maybeMark === null) {
             return reject(new Error('expected mark to be an object'))
           }
+          // TODO: fix type safety consuming maybeMark here. Consider a `markPanelFrom` method
 
           const coalition: Coalition = coalitionFrom(maybeMark.coalition)
 
@@ -74,7 +76,7 @@ export async function getMarkPanels(): Promise<MarkPanel[]> {
             id: maybeMark.idx,
             groupId: maybeMark.groupID,
             coalition,
-            position: positionLLFrom(maybeMark.pos),
+            position: gamePositionLLFrom(maybeMark.pos),
             text: maybeMark.text,
           } as MarkPanel
 

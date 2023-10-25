@@ -1,4 +1,10 @@
-import { countryFrom } from './country'
+import { QBFilterQuery, wrap } from '@mikro-orm/core'
+
+import { Coalition } from './__generated__/dcs/common/v0/Coalition'
+import { createCsarCargo, loadCargo } from './cargo'
+import { coalitionFrom } from './coalition'
+import { metersToDegree, waitForTime } from './common'
+import { countryFrom, distanceFrom } from './convert'
 import {
   CargoSuperType,
   CargoTypeName,
@@ -11,15 +17,11 @@ import {
   UnitTypeName,
 } from './db'
 import { emFork } from './db/connection'
-import { outCoalitionText, outGroupText, smoke } from './trigger'
-import { despawnGroundUnit, spawnGroundUnit } from './unit'
-import { distanceFrom, metersToDegree, SmokeColor, waitForTime } from './common'
-import { despawnStaticObject, spawnStaticObject } from './staticObject'
-import { Coalition } from './__generated__/dcs/common/v0/Coalition'
-import { QBFilterQuery, wrap } from '@mikro-orm/core'
-import { createCsarCargo, loadCargo } from './cargo'
 import { Group } from './group'
-import { coalitionFrom } from './coalition'
+import { despawnStaticObject, spawnStaticObject } from './staticObject'
+import { outCoalitionText, outGroupText, smoke } from './trigger'
+import { GameSmokeColor } from './types'
+import { despawnGroundUnit, spawnGroundUnit } from './unit'
 
 export async function createCsar(
   newCsar: Omit<NewCsar, 'marker' | 'unit'>
@@ -135,7 +137,7 @@ export async function pickupCsar(group: Group, unit: Unit, csar: Csar) {
 }
 
 export async function smokeCsar(csar: Csar): Promise<void> {
-  await smoke(csar.position, SmokeColor.SMOKE_COLOR_BLUE)
+  await smoke(csar.position, GameSmokeColor.SMOKE_COLOR_BLUE)
 }
 
 export async function allCsars(): Promise<Csar[]> {

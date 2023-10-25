@@ -1,14 +1,10 @@
+import { baseTypeDisplayNameShort, findNearbyBases } from '../base'
+import { unloadCargo } from '../cargo'
 import { coalitionFrom } from '../coalition'
-import { emFork } from '../db/connection'
-import { CargoSuperType, Csar, CsarCargo, Player, Position, Unit } from '../db'
-import {
-  Events,
-  EventType,
-  GroupCommandEvent,
-  LandEvent,
-  PilotDeadEvent,
-} from '../events'
-import { netPlayerFrom } from '../player'
+import { CommandType } from '../commands'
+import { randomBetween, waitForTime } from '../common'
+import { distanceFrom } from '../convert'
+import { humanReadableGridSquare, positionMGRSFrom } from '../coord'
 import {
   allCsars,
   createCsar,
@@ -17,15 +13,20 @@ import {
   smokeCsar,
   spawnCsar,
 } from '../csar'
-import { outCoalitionText, outGroupText } from '../trigger'
-import { humanReadableGridSquare, positionMGRSFrom } from '../coord'
+import { CargoSuperType, Csar, CsarCargo, Player, Position, Unit } from '../db'
+import { emFork } from '../db/connection'
+import {
+  EventType,
+  Events,
+  GroupCommandEvent,
+  LandEvent,
+  PilotDeadEvent,
+} from '../events'
 import { LatLon } from '../geo'
-import { distanceFrom, randomBetween, waitForTime } from '../common'
+import { Group, driveGroundGroup, groupFromGroupName } from '../group'
+import { netPlayerFrom } from '../player'
+import { outCoalitionText, outGroupText } from '../trigger'
 import { unitInAir, unitIsAlive } from '../unit'
-import { driveGroundGroup, Group, groupFromGroupName } from '../group'
-import { unloadCargo } from '../cargo'
-import { baseTypeDisplayNameShort, findNearbyBases } from '../base'
-import { CommandType } from '../commands'
 
 /** The range a heilcopter can pickup a csar from, in meters */
 const CSAR_PICKUP_RANGE_METERS = 60
@@ -315,9 +316,9 @@ async function handleLand(event: LandEvent): Promise<void> {
   const { unit: gameUnit } = event
 
   if (gameUnit.playerName && gameUnit.playerName.length > 0) {
+    const { coalition, name, position } = gameUnit
     // if landed at a base, unload csar
-    const unit = await unitRepository.findOneOrFail({ name: gameUnit.name })
-    const coalition = coalitionFrom(gameUnit.country)
+    const unit = await unitRepository.findOneOrFail({ name })
 
     // populate unit cargos
     await unit.cargos.loadItems()
@@ -331,7 +332,7 @@ async function handleLand(event: LandEvent): Promise<void> {
       const nearbyBases = await findNearbyBases({
         accuracy: CSAR_DROP_OFF_RANGE_METERS,
         coalition,
-        position: gameUnit.position,
+        position,
       })
 
       // if we're not near a base, do nothing

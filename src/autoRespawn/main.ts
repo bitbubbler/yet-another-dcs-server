@@ -1,30 +1,32 @@
+import { wrap } from '@mikro-orm/core'
 import { equal } from 'assert'
 
+import { coalitionFrom } from '../coalition'
+import { CommandType, ToDestroy } from '../commands'
+import { randomBetween } from '../common'
+import { distanceFrom } from '../convert'
+import { MarkPanel, getMarkById, getMarkPanels } from '../custom'
+import { Position, Spawner, SpawnerQueuedUnit, SpawnerType, Unit } from '../db'
+import { emFork } from '../db/connection'
 import {
-  Events,
   EventType,
+  Events,
   MarkChangeEvent,
   MissionCommandEvent,
 } from '../events'
-import { markToAll, outText, removeMapMark } from '../trigger'
-import { getMarkById, getMarkPanels, MarkPanel } from '../custom'
-import { CommandType, ToDestroy } from '../commands'
-import { emFork } from '../db/connection'
-import { Position, Spawner, SpawnerQueuedUnit, SpawnerType, Unit } from '../db'
-import { distanceFrom, PositionLL, randomBetween } from '../common'
-import { createGroundUnitsInCircle, spawnGroundUnit } from '../unit'
-import { UnitEvents, UnitEventType, UnitGoneEvent } from '../unitEvents'
-import { closestPointOnRoads, findPathOnRoads, RoadType } from '../land'
+import { LatLon } from '../geo'
 import { driveGroundGroup } from '../group'
+import { RoadType, closestPointOnRoads, findPathOnRoads } from '../land'
 import {
   allSpawners,
   createSpawner,
   findNearbySpawners,
   spawnerDestroyed,
 } from '../spawner'
-import { coalitionFrom } from '../coalition'
-import { wrap } from '@mikro-orm/core'
-import { LatLon } from '../geo'
+import { markToAll, outText, removeMapMark } from '../trigger'
+import { GamePositionLL } from '../types'
+import { createGroundUnitsInCircle, spawnGroundUnit } from '../unit'
+import { UnitEventType, UnitEvents, UnitGoneEvent } from '../unitEvents'
 
 const UNIT_MAXIMUM_DISPLACEMENT_TO_SPAWNER_METERS = 100000
 const SPAWNER_MINIMUM_DISPLACEMENT_METERS = 250
@@ -130,8 +132,8 @@ function respawnQueue(): () => void {
       const { country, position: randomUnitDeathPosition } = randomQueuedUnit
 
       const [firstOnRoadPosition, lastOnRoadPosition]: [
-        PositionLL,
-        PositionLL,
+        GamePositionLL,
+        GamePositionLL,
       ] = await Promise.all([
         closestPointOnRoads(RoadType.Roads, spawner.position),
         closestPointOnRoads(RoadType.Roads, randomUnitDeathPosition),

@@ -31,7 +31,7 @@ export interface Services {
 export const address = options.address
 
 const PROTO_PATH = path.resolve(
-  path.join(__dirname, 'proto', 'dcs', 'dcs.proto')
+  path.join(__dirname, 'protos', 'dcs', 'dcs.proto')
 )
 
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
