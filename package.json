@@ -1,8 +1,8 @@
 {
   "devDependencies": {
-    "@grpc/grpc-js": "^1.9.7",
+    "@grpc/grpc-js": "^1.9.9",
     "@grpc/proto-loader": "^0.6.13",
-    "@mikro-orm/cli": "^5.8.10",
+    "@mikro-orm/cli": "^5.9.1",
     "@types/adm-zip": "^0.5.3",
     "@types/geodesy": "^2.2.6",
     "@types/jest": "^27.5.2",
@@ -12,7 +12,7 @@
     "@typescript-eslint/parser": "^5.62.0",
     "eslint": "^8.52.0",
     "eslint-config-prettier": "^8.10.0",
-    "eslint-plugin-import": "^2.28.1",
+    "eslint-plugin-import": "^2.29.0",
     "eslint-plugin-n": "^15.7.0",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-promise": "^6.1.1",
@@ -33,11 +33,11 @@
     "codegen": "node generate-types.js && mikro-orm cache:generate"
   },
   "dependencies": {
+    "@mikro-orm/better-sqlite": "^5.9.1",
     "@mikro-orm/core": "^5.8.10",
-    "@mikro-orm/migrations": "^5.8.10",
-    "@mikro-orm/reflection": "^5.8.10",
+    "@mikro-orm/migrations": "^5.9.1",
+    "@mikro-orm/reflection": "^5.9.1",
     "@mikro-orm/sql-highlighter": "^1.0.1",
-    "@mikro-orm/sqlite": "^5.8.10",
     "adm-zip": "^0.5.10",
     "commander": "^9.5.0",
     "exponential-backoff": "^3.1.1",

@@ -2,8 +2,9 @@ import { Coalition } from './__generated__/dcs/common/v0/Coalition'
 
 import { metersToDegree } from './common'
 import { distanceFrom } from './convert'
-import { NewSpawner, Position, Spawner } from './db'
+import { NewSpawner, Spawner } from './db'
 import { emFork } from './db/connection'
+import { GamePositionLL } from './types'
 
 export async function createSpawner(newSpawner: NewSpawner): Promise<Spawner> {
   const spawner = new Spawner(newSpawner)
@@ -19,7 +20,7 @@ export async function findNearbySpawners({
   accuracy,
   coalition,
 }: {
-  position: Pick<Position, 'lat' | 'lon'>
+  position: Pick<GamePositionLL, 'lat' | 'lon'>
   accuracy: number
   coalition: Coalition
 }): Promise<Spawner[]> {

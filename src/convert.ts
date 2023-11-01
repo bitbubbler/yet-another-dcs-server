@@ -126,7 +126,7 @@ export function gameUnitFrom(maybeUnit: Unit__Output): GameUnit {
     playerName,
     position: gamePositionFrom(position),
     type,
-    velocity: gameVelocityFrom(velocity),
+    velocity: {} as GameVelocity, //gameVelocityFrom(velocity),
   }
 }
 

@@ -1,19 +1,13 @@
 import {
   Collection,
   Entity,
-  Index,
-  ManyToMany,
-  ManyToOne,
   OneToMany,
-  OneToOne,
   PrimaryKey,
   Property,
   Ref,
   Unique,
 } from '@mikro-orm/core'
-import { Position } from './Position'
 import { BaseEntity } from './BaseEntity'
-import { Unit } from './Unit'
 import { Csar } from './Csar'
 import { PlayerIp } from './PlayerIp'
 

@@ -6,7 +6,7 @@ import { CommandType, ToDestroy } from '../commands'
 import { randomBetween } from '../common'
 import { distanceFrom } from '../convert'
 import { MarkPanel, getMarkById, getMarkPanels } from '../custom'
-import { Position, Spawner, SpawnerQueuedUnit, SpawnerType, Unit } from '../db'
+import { Spawner, SpawnerQueuedUnit, SpawnerType, Unit } from '../db'
 import { emFork } from '../db/connection'
 import {
   EventType,
@@ -164,8 +164,7 @@ function respawnQueue(): () => void {
         radius: SPAWNER_UNIT_RANDOM_FOCUS_RADIUS,
         units: queuedUnits.map(queued => {
           const unit = queued.getProperty('unit')
-          const { typeName, position } = unit
-          const { heading } = position
+          const { heading, typeName } = unit
 
           return {
             heading,
@@ -191,7 +190,7 @@ function respawnQueue(): () => void {
             randomBetween(0, 360) // random heading
           )
 
-          const position = { lat, lon, alt: 0 }
+          const position: GamePositionLL = { lat, lon, alt: 0 }
 
           await driveGroundGroup({
             groupName,
@@ -316,8 +315,7 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
         throw new Error('expected addedMark')
       }
 
-      const { lat, lon } = addedMark.position
-      const position = new Position({ lat, lon, alt: 0, heading: 0 })
+      const { position } = addedMark
 
       const spawnersNearby = await findNearbySpawners({
         position,
@@ -362,7 +360,7 @@ async function handleMarkChangeEvent(event: MarkChangeEvent) {
       const foundSpawners = await findNearbySpawners({
         position: markPosition,
         accuracy: command.radius || DESTROY_SINGLE_UNIT_SEARCH_RANGE,
-        coalition: coalition,
+        coalition,
       })
 
       equal(

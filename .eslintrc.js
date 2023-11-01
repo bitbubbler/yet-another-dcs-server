@@ -11,7 +11,8 @@ module.exports = {
   },
   plugins: ['@typescript-eslint', 'prettier'],
   rules: {
-    'quote-props': ['error', 'as-needed'],
     '@typescript-eslint/prefer-literal-enum-member': 'error',
+    'object-shorthand': ['error', 'always'],
+    'quote-props': ['error', 'as-needed'],
   },
 }

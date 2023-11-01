@@ -1,17 +1,16 @@
 import {
   Entity,
-  Filter,
   ManyToOne,
   OneToOne,
   PrimaryKey,
   Property,
 } from '@mikro-orm/core'
-import { Position } from './Position'
-import { BaseEntity } from './BaseEntity'
-import { Unit } from './Unit'
-import { Player } from './Player'
 import { Coalition } from '../../__generated__/dcs/common/v0/Coalition'
+import { GamePositionLL } from '../../types'
+import { BaseEntity } from './BaseEntity'
+import { Player } from './Player'
 import { StaticObject } from './StaticObject'
+import { Unit } from './Unit'
 
 export type NewCsar = Pick<
   Csar,
@@ -38,12 +37,11 @@ export class Csar extends BaseEntity {
   })
   player: Player
 
-  @OneToOne({
-    fieldName: 'positionId',
-    unique: true,
-    eager: true,
+  @Property({
+    type: 'json',
+    nullable: false,
   })
-  position: Position
+  position: GamePositionLL
 
   @Property()
   rescuedAt?: Date

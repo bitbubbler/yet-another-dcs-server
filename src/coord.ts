@@ -130,3 +130,42 @@ export async function positionLatLonFrom(
     })
   })
 }
+
+export function toRadians(degrees: number): number {
+  return (degrees * Math.PI) / 180
+}
+
+export function distanceBetween(
+  posA: GamePositionLL,
+  posB: GamePositionLL
+): number {
+  const earthRadius = 6371e3 // Earth radius in meters
+  const lat1Radians = toRadians(posA.lat)
+  const lat2Radians = toRadians(posB.lat)
+  const deltaLatRadians = toRadians(posB.lat - posA.lat)
+  const deltaLonRadians = toRadians(posB.lon - posA.lon)
+
+  const a =
+    Math.sin(deltaLatRadians / 2) * Math.sin(deltaLatRadians / 2) +
+    Math.cos(lat1Radians) *
+      Math.cos(lat2Radians) *
+      Math.sin(deltaLonRadians / 2) *
+      Math.sin(deltaLonRadians / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  const surfaceDistance = earthRadius * c // Surface distance in meters
+
+  const altitudeDifference = posB.alt - posA.alt
+  const totalDistance = Math.sqrt(
+    surfaceDistance * surfaceDistance + altitudeDifference * altitudeDifference
+  )
+
+  return totalDistance // Distance in meters
+}
+
+export function positionsEqual(a: GamePositionLL, b: GamePositionLL): boolean {
+  if (a.alt === b.alt && a.lat === b.lat && a.lon === b.lon) {
+    return true
+  }
+
+  return false
+}

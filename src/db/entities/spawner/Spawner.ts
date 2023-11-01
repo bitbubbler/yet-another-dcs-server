@@ -3,14 +3,13 @@ import {
   Entity,
   Filter,
   OneToMany,
-  OneToOne,
   PrimaryKey,
   Property,
   Ref,
 } from '@mikro-orm/core'
 import { Coalition } from '../../../__generated__/dcs/common/v0/Coalition'
+import { GamePositionLL } from '../../../types'
 import { BaseEntity } from '../BaseEntity'
-import { Position } from '../Position'
 import { SpawnerQueuedUnit } from './SpawnerQueuedUnit'
 
 /**
@@ -59,12 +58,11 @@ export class Spawner extends BaseEntity {
   @PrimaryKey()
   spawnerId!: number
 
-  @OneToOne({
-    fieldName: 'positionId',
-    unique: true,
-    eager: true,
+  @Property({
+    type: 'json',
+    nullable: false,
   })
-  position: Position
+  position: GamePositionLL
 
   @Property()
   capturedAt?: Date

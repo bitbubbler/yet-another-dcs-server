@@ -114,8 +114,8 @@ export function positionOnCirlce(
   const lon = focus.lon + metersToDegree(radius) * Math.sin(course)
 
   return {
-    lat: lat,
-    lon: lon,
+    lat,
+    lon,
   }
 }
 

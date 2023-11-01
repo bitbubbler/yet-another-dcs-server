@@ -12,21 +12,14 @@ import {
 import { baseNames } from './baseNames'
 import { metersToDegree, randomBetween } from './common'
 import { countryFrom, distanceFrom } from './convert'
-import {
-  Base,
-  BaseType,
-  Color,
-  NewBase,
-  Position,
-  StaticObject,
-  TextMarkup,
-} from './db'
+import { Base, BaseType, Color, NewBase, StaticObject, TextMarkup } from './db'
 import { emFork } from './db/connection'
 import { despawnFarp, spawnFarp } from './farp'
 import { LatLon } from './geo'
 import { spawnMarkup } from './markup'
 import { despawnStaticObject, spawnStaticObject } from './staticObject'
-import { createUnit, despawnGroundUnit, spawnGroundUnit } from './unit'
+import { createGroundUnit, despawnGroundUnit, spawnGroundUnit } from './unit'
+import { GamePositionLL } from './types'
 
 /** Min range between COP bases in meters */
 const BASE_COP_MIN_RANGE_METERS = 3500
@@ -54,14 +47,12 @@ export async function createBase(
     .destinationPoint(250, 90)
     .destinationPoint(100, 0)
 
-  const labelPosition = new Position({ lat, lon, alt: 0, heading: 0 })
-
   const labelMarkup = new TextMarkup({
     coalition,
     fillColor: new Color({ red: 0, green: 0, blue: 0, alpha: 0 }),
     fontSize: 16,
     lineColor: new Color({ red: 0, green: 0, blue: 0, alpha: 1 }),
-    position: labelPosition,
+    position: { lat, lon, alt: 0 },
     readonly: true,
     text: `
 Friendly Base:
@@ -105,10 +96,12 @@ async function createBaseObjects(base: Base): Promise<void> {
       base.position.lat,
       base.position.lon
     ).destinationPoint(distance, bearing)
-    const position = new Position({ lat, lon, heading, alt: 0 })
+    const position: GamePositionLL = { lat, lon, alt: 0 }
+
     // create the static object
     const staticObject = new StaticObject({
       country: countryFrom(base.coalition),
+      heading,
       position,
       typeName,
     })
@@ -371,19 +364,19 @@ async function createBaseUnits(base: Base): Promise<void> {
       base.position.lon
     ).destinationPoint(distance, bearing)
 
-    const position = new Position({
+    const position: GamePositionLL = {
       lat,
       lon,
       alt: 0,
-      heading,
-    })
+    }
 
     // create the unit
-    const unit = await createUnit({
+    const unit = await createGroundUnit({
       country: countryFrom(base.coalition),
+      heading,
       hidden: true,
       position,
-      typeName: typeName,
+      typeName,
       isPlayerSlot: false,
     })
 
@@ -400,7 +393,7 @@ export async function spawnBase(base: Base): Promise<void> {
     name: `${baseTypeDisplayName(type)} ${name}`,
     groupId: baseId,
     country: countryFrom(coalition),
-    position: position,
+    position,
     type: 'Invisible FARP',
   })
 
@@ -495,7 +488,7 @@ export async function findNearbyBases({
   accuracy,
   coalition,
 }: {
-  position: Pick<Position, 'lat' | 'lon'>
+  position: Pick<GamePositionLL, 'lat' | 'lon'>
   accuracy: number
   coalition: Coalition
 }): Promise<Base[]> {

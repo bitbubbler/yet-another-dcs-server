@@ -1,4 +1,4 @@
-import { orm } from '../db/connection'
+import { emFork, orm } from '../db/connection'
 
 import { backOff } from 'exponential-backoff'
 
@@ -20,6 +20,13 @@ import { visualMarkersMain } from '../visualMarkers'
 import { autoRespawnMain, spawnersMenu } from '../autoRespawn'
 import { logisticsMain, internalCargoMenu } from '../logistics'
 import { csarMenu, searchAndRescueMain } from '../searchAndRescue'
+import { aiMain } from '../ai'
+import { createGroundUnit, spawnGroundUnit } from '../unit'
+import { Base, BaseType, Unit, UnitTypeName } from '../db'
+import { countryFrom } from '../convert'
+import { Coalition } from '../__generated__/dcs/common/v0/Coalition'
+import { createBase } from '../base'
+import { GamePositionLL } from '../types'
 
 // NOTE: The order of menus in this array determines their order on the client
 const missionMenus: MissionMenu[] = [spawnersMenu, restartMissionMenu]
@@ -44,6 +51,7 @@ async function main(): Promise<void> {
     startEvents()
     startUnitEvents()
 
+    // TODO: this pattern sucks, replace it.
     // bootstrap our functional modules
     const teardownSpawnUnits = await spawnUnitsMain()
     const teardownPersistence = await persistenceMain()
@@ -61,6 +69,50 @@ async function main(): Promise<void> {
     // spawn the persisted units
     await trySpawnUnits()
 
+    // start the ai
+    const teardownAi = await aiMain()
+
+    // TESTING CODE
+
+    const em = await emFork()
+    const baseRepository = em.getRepository(Base)
+    const unitRepository = em.getRepository(Unit)
+
+    const [, unitCount] = await unitRepository.findAndCount({})
+
+    if (unitCount < 1) {
+      const unit = await createGroundUnit({
+        country: countryFrom(Coalition.COALITION_BLUE),
+        heading: 0,
+        hidden: false,
+        isPlayerSlot: false,
+        position: {
+          alt: 5,
+          lat: 42.743,
+          lon: 41.505,
+        },
+        typeName: UnitTypeName.HmmwvTow,
+      })
+      await spawnGroundUnit(unit)
+    }
+
+    const [, baseCount] = await baseRepository.findAndCount({})
+
+    if (baseCount < 1) {
+      await createBase({
+        coalition: Coalition.COALITION_RED,
+        heading: 0,
+        position: {
+          alt: 5,
+          lat: 42.243,
+          lon: 41.405,
+        },
+        type: BaseType.FARP,
+      })
+    }
+
+    // END TESTING CODE
+
     return async function teardown() {
       await teardownPingpong()
       await teardownSpawnUnits()
@@ -71,6 +123,7 @@ async function main(): Promise<void> {
       await teardownLogisticsMain()
       await teardownSearchAndRescueMain()
       await teardownMenus()
+      await teardownAi()
     }
   }
 

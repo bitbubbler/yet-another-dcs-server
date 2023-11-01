@@ -35,7 +35,7 @@ const PROTO_PATH = path.resolve(
 )
 
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
-  includeDirs: [path.resolve(path.join(__dirname, 'proto'))],
+  includeDirs: [path.resolve(path.join(__dirname, 'protos'))],
 })
 const proto = grpc.loadPackageDefinition(
   packageDefinition

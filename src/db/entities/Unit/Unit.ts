@@ -4,18 +4,16 @@ import {
   Filter,
   Index,
   ManyToMany,
-  OneToOne,
   PrimaryKey,
   Property,
-  Ref,
   Unique,
 } from '@mikro-orm/core'
-import { Position } from '../Position'
-import { BaseEntity } from '../BaseEntity'
-import { UnitUnitCargo } from './UnitUnitCargo'
-import { BaseCargo, CargoBase, CsarCargo, UnitCargo } from '../Cargo'
-import { UnitTypeName } from './types'
 import { coalitionFrom } from '../../../coalition'
+import { GamePositionLL } from '../../../types'
+import { BaseEntity } from '../BaseEntity'
+import { BaseCargo, CargoBase, CsarCargo, UnitCargo } from '../Cargo'
+import { UnitUnitCargo } from './UnitUnitCargo'
+import { UnitTypeName } from './types'
 
 /**
  * An array of unit types that can never respawn
@@ -41,7 +39,13 @@ const UNITS_THAT_CAN_NEVER_RESPAWN: UnitTypeName[] = [
 
 export type NewUnit = Pick<
   Unit,
-  'country' | 'hidden' | 'isPlayerSlot' | 'name' | 'position' | 'typeName'
+  | 'country'
+  | 'heading'
+  | 'hidden'
+  | 'isPlayerSlot'
+  | 'name'
+  | 'position'
+  | 'typeName'
 > &
   Partial<Pick<Unit, 'canRespawn'>>
 
@@ -84,12 +88,14 @@ export class Unit extends BaseEntity {
   @Property()
   isPlayerSlot: boolean
 
-  @OneToOne({
-    fieldName: 'positionId',
-    unique: true,
-    eager: true,
+  @Property()
+  heading: number
+
+  @Property({
+    type: 'json',
+    nullable: false,
   })
-  position: Position
+  position: GamePositionLL
 
   @Property()
   destroyedAt?: Date
@@ -104,12 +110,14 @@ export class Unit extends BaseEntity {
   constructor(newUnit: NewUnit) {
     super()
 
-    const { country, hidden, isPlayerSlot, name, position, typeName } = newUnit
+    const { country, heading, hidden, isPlayerSlot, name, position, typeName } =
+      newUnit
 
     this.canRespawn = UNITS_THAT_CAN_NEVER_RESPAWN.includes(typeName)
       ? false
       : newUnit.canRespawn || true
     this.country = country
+    this.heading = heading
     this.hidden = hidden
     this.isPlayerSlot = isPlayerSlot
     this.name = name

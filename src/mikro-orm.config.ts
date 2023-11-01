@@ -17,7 +17,6 @@ import {
   Csar,
   MarkupBase,
   MarkupPoint,
-  Position,
   PlayerIp,
   Spawner,
   SpawnerQueuedUnit,
@@ -30,9 +29,9 @@ import {
   Player,
   CsarCargo,
 } from './db'
-import { SqliteDriver } from '@mikro-orm/sqlite'
+import { BetterSqliteDriver } from '@mikro-orm/better-sqlite'
 
-const config: Options<SqliteDriver> = {
+const config: Options<BetterSqliteDriver> = {
   dbName: '../dev.sqlite',
   debug: false, // TODO: put this on a config from cli.ts
   entities: [
@@ -49,7 +48,6 @@ const config: Options<SqliteDriver> = {
     MarkupPoint,
     Player,
     PlayerIp,
-    Position,
     Spawner,
     SpawnerQueuedUnit,
     SpawnGroup,
@@ -68,7 +66,7 @@ const config: Options<SqliteDriver> = {
     tableName: 'migrations',
   },
   namingStrategy: EntityCaseNamingStrategy,
-  type: 'sqlite',
+  type: 'better-sqlite',
 }
 
 export default config

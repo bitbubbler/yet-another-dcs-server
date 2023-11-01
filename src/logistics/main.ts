@@ -32,7 +32,7 @@ import {
   BaseCargoType,
   BaseType,
   CargoSuperType,
-  Position,
+  NewBase,
   Unit,
   UnitCargoType,
 } from '../db'
@@ -46,9 +46,9 @@ import {
 } from '../events'
 import { LatLon } from '../geo'
 import { getUnits, groupFromGroupName } from '../group'
-import { createPosition } from '../position'
 import { outCoalitionText, outGroupText, removeMapMark } from '../trigger'
-import { createUnit, spawnGroundUnit } from '../unit'
+import { GamePositionLL } from '../types'
+import { createGroundUnit, spawnGroundUnit } from '../unit'
 import { cargoDefinitionFrom } from './definitions'
 
 const oneSecondMs = 1000
@@ -205,10 +205,7 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
     const units = await getUnits(group.name)
     const unit = await unitRepository.findOneOrFail({ name: units[0].name }) // assume cargo is carried by first unit in group.
 
-    const {
-      country,
-      position: { heading },
-    } = unit
+    const { country, heading } = unit
 
     const coalition = coalitionFrom(country)
 
@@ -282,7 +279,7 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
         unit.position.lat,
         unit.position.lon
       ).destinationPoint(CARGO_UNPACK_DISTANCE_FROM_UNIT_METERS, deg(heading))
-      const position = new Position({ lat, lon, alt: 0, heading })
+      const position: GamePositionLL = { lat, lon, alt: 0 }
 
       if (CargoSuperType.Base === cargo.superType) {
         if (BaseCargoType.BaseCreate === cargo.type) {
@@ -311,6 +308,7 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
           // create the new base
           const base = await createBase({
             coalition,
+            heading,
             position,
             type: BaseType.UnderConstruction,
           })
@@ -431,17 +429,16 @@ async function handleGroupCommand(event: GroupCommandEvent): Promise<void> {
             deg(heading)
           )
 
-          const position = await createPosition({ lat, lon, alt: 0, heading })
-
           // unload the cargo from the unit
           await unloadCargo(unit, cargo)
 
           // create the new unit
-          const newUnit = await createUnit({
+          const newUnit = await createGroundUnit({
             country,
+            heading,
             hidden: false,
             isPlayerSlot: false,
-            position,
+            position: { lat, lon, alt: 0 },
             typeName: unitTypeName,
           })
 
@@ -533,11 +530,10 @@ async function handleMarkChange(event: MarkChangeEvent) {
 
       const { lat, lon } = addedMark.position
 
-      const position = new Position({ lat, lon, alt: 0, heading: 0 })
-
       const newBase = {
         coalition,
-        position,
+        heading: 0,
+        position: { alt: 0, lat, lon },
         type: baseType,
       }
 

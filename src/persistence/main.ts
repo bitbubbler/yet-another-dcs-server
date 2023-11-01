@@ -1,10 +1,11 @@
 import { emFork } from '../db/connection'
-import { Csar, Player, Position, Unit, UnitTypeName } from '../db'
+import { Csar, Player, Unit, UnitTypeName } from '../db'
 import { BirthEvent, Events, EventType } from '../events'
 import { netPlayerFrom } from '../player'
-import { createUnit, isPlayerUnit, spawnGroundUnit } from '../unit'
+import { createGroundUnit, isPlayerUnit, spawnGroundUnit } from '../unit'
 import { UnitEventType, UnitEvents } from '../unitEvents'
 import { countryFrom } from '../convert'
+import { GamePositionLL } from '../types'
 
 export async function persistenceMain(): Promise<() => Promise<void>> {
   const eventsSubscription = Events.subscribe(async event => {
@@ -17,28 +18,18 @@ export async function persistenceMain(): Promise<() => Promise<void>> {
   const unitEventsSubscription = UnitEvents.subscribe(async event => {
     if (UnitEventType.Update === event.type) {
       const em = await emFork()
-      const unitRepository = em.getRepository(Unit)
-      const { orientation, position } = event.unit
+      const { orientation } = event.unit
       const { heading } = orientation
-      const { lat, lon, alt } = position
+      const { lat, lon, alt } = event.unit.position
+      const position: GamePositionLL = { lat, lon, alt }
 
-      // TODO: get unit heading (new dcs-grpc update gives us this)
-      const newPosition = new Position({ lat, lon, alt, heading })
-
-      const unit = await unitRepository.findOne({
-        name: event.unit.name,
-      })
-
-      if (!unit) {
-        return
-      }
+      const qb = em.createQueryBuilder(Unit)
+      qb.update({ heading, position }).where({ name: event.unit.name })
 
       // NOTE: this leaves a dangling position in the db, which is fine.
-      // we should use these positions in the future to keep position history for debugging
-      unit.position = newPosition
-
-      // flush the changes to the db
-      await em.flush()
+      // we should use these positions in the future to keep position history for debugging and replay
+      await qb.execute()
+      return
     }
     if (UnitEventType.Gone === event.type) {
       const em = await emFork()
@@ -76,6 +67,7 @@ export async function persistenceMain(): Promise<() => Promise<void>> {
 
         em.flush()
       }
+      return
     }
   })
 
@@ -118,16 +110,15 @@ async function handleBirth(event: BirthEvent) {
         name: playerName,
         ucid,
       })
+      const { alt, lat, lon } = event.initiator.unit.position
       // unit (player slot)
-      const position = new Position({
-        ...event.initiator.unit.position,
-        heading: 0,
-      })
+      const position: GamePositionLL = { alt, lat, lon }
 
       await Promise.all([
         em.persistAndFlush(player),
-        createUnit({
+        createGroundUnit({
           country,
+          heading: 0,
           hidden: false,
           name,
           isPlayerSlot: true,

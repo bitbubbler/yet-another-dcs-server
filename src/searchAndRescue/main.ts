@@ -13,7 +13,7 @@ import {
   smokeCsar,
   spawnCsar,
 } from '../csar'
-import { CargoSuperType, Csar, CsarCargo, Player, Position, Unit } from '../db'
+import { CargoSuperType, Csar, CsarCargo, Player, Unit } from '../db'
 import { emFork } from '../db/connection'
 import {
   EventType,
@@ -195,7 +195,8 @@ export async function searchAndRescueMain(): Promise<() => Promise<void>> {
   }
 
   // kick off the loop (this will run itself recursively)
-  checkCsar()
+  // TODO: implement this either as part of the tick loop shared with ai, or do it another way
+  // checkCsar()
 
   const subscription = Events.subscribe(async event => {
     const { type } = event
@@ -404,7 +405,7 @@ async function handlePilotDead(event: PilotDeadEvent): Promise<void> {
       randomBetween(0, 360) // random heading
     )
 
-    const position = new Position({ lat, lon, alt: 0, heading: 0 })
+    const position = { alt: 0, lat, lon }
 
     // create the csar
     const csar = await createCsar({

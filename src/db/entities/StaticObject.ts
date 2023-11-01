@@ -1,12 +1,12 @@
-import { Entity, OneToOne, PrimaryKey, Property } from '@mikro-orm/core'
+import { Entity, PrimaryKey, Property } from '@mikro-orm/core'
 import { v4 } from 'uuid'
 import { Country } from '../../__generated__/dcs/common/v0/Country'
 import { BaseEntity } from './BaseEntity'
-import { Position } from './Position'
+import { GamePositionLL } from '../../types'
 
 export type NewStaticObject = Pick<
   StaticObject,
-  'country' | 'position' | 'typeName'
+  'country' | 'heading' | 'position' | 'typeName'
 >
 
 @Entity({ tableName: 'staticObjects' })
@@ -14,12 +14,14 @@ export class StaticObject extends BaseEntity {
   @PrimaryKey()
   staticObjectId!: number
 
-  @OneToOne({
-    fieldName: 'positionId',
-    unique: true,
-    eager: true,
+  @Property()
+  heading: number
+
+  @Property({
+    type: 'json',
+    nullable: false,
   })
-  position: Position
+  position: GamePositionLL
 
   @Property()
   country: Country
@@ -32,10 +34,11 @@ export class StaticObject extends BaseEntity {
 
   constructor(newStaticObject: NewStaticObject) {
     super()
-    const { country, position, typeName } = newStaticObject
+    const { country, heading, position, typeName } = newStaticObject
 
-    this.position = position
+    this.heading = heading
     this.country = country
+    this.position = position
     this.typeName = typeName
   }
 }

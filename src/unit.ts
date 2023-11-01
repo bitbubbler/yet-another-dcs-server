@@ -8,9 +8,8 @@ import { GroupCategory } from './__generated__/dcs/common/v0/GroupCategory'
 
 import { metersToDegree, randomPositionInCircle } from './common'
 import { distanceFrom } from './convert'
-import { NewUnit, Position, Unit } from './db'
+import { NewUnit, Unit } from './db'
 import { emFork } from './db/connection'
-import { createPosition } from './position'
 import { services } from './services'
 import { GamePositionLL } from './types'
 
@@ -29,7 +28,7 @@ interface CreateGroundUnitOptions {
   focus: GamePositionLL
   hidden: boolean
   radius: number
-  unit: Pick<Unit, 'typeName'> & Pick<Position, 'heading'>
+  unit: Pick<Unit, 'typeName'> & Pick<Unit, 'heading'>
 }
 
 interface CreateGroundUnitsOptions
@@ -64,22 +63,22 @@ export async function createGroundUnitInCircle({
 }: CreateGroundUnitOptions): Promise<Unit> {
   const { heading, typeName } = newUnit
 
-  const position = await createPosition({
+  const position: GamePositionLL = {
     ...randomPositionInCircle(focus, radius),
     alt: 0,
-    heading,
-  })
+  }
 
-  return createUnit({
+  return createGroundUnit({
     country,
-    position,
+    heading,
     hidden,
     isPlayerSlot: false,
+    position,
     typeName,
   })
 }
 
-export async function createUnit(
+export async function createGroundUnit(
   newUnit: Omit<NewUnit, 'name'> & Partial<Pick<NewUnit, 'name'>>
 ): Promise<Unit> {
   const name = newUnit.name || (await uniqueUnitName())
@@ -139,7 +138,7 @@ export async function setUnitInternalCargoMass(
 export async function spawnGroundUnit(
   unit: Unit
 ): Promise<{ groupName: string }> {
-  const { country, hidden, name, typeName } = unit
+  const { country, heading, hidden, name, typeName } = unit
 
   console.log(`attempting to spawn gruondUnit of type ${typeName}`)
 
@@ -150,10 +149,7 @@ export async function spawnGroundUnit(
   }
 
   return new Promise(async (resolve, reject) => {
-    if (!unit.position) {
-      debugger
-    }
-    const { heading, lat, lon, alt } = unit.position
+    const { lat, lon, alt } = unit.position
     const position: GamePositionLL = { lat, lon, alt }
 
     const groundTemplate: GroundGroupTemplate = {
@@ -267,7 +263,7 @@ export async function findNearbyUnits({
   accuracy,
   coalition,
 }: {
-  position: Pick<Position, 'lat' | 'lon'>
+  position: Pick<GamePositionLL, 'lat' | 'lon'>
   accuracy: number
   coalition: Coalition
 }): Promise<Unit[]> {

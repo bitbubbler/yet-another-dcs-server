@@ -49,8 +49,8 @@ export async function spawnStaticObject(
   staticObject: StaticObject
 ): Promise<void> {
   const name = staticObjectNameFrom(staticObject)
-  const { country, position, typeName } = staticObject
-  const { lat, lon, heading } = position
+  const { country, heading, position, typeName } = staticObject
+  const { lat, lon } = position
 
   console.log(`attempting to spawn staticObject of type ${typeName}`)
 

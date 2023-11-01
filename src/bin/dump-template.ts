@@ -1,13 +1,14 @@
 // db must be the first import
 import { orm } from '../db/connection'
 
-// just hold a reference here (i promise, this fixes a bug)
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars -- 
+   just hold a reference here (i promise, this fixes a bug) */
 const db = orm
 
 import assert from 'assert'
 import { Template } from '../base-templates/types'
 import { positionLatLonFrom } from '../coord'
-import { Position, StaticObjectTypeName, Unit, UnitTypeName } from '../db'
+import { StaticObjectTypeName, Unit, UnitTypeName } from '../db'
 import { LatLon } from '../geo'
 import { Mission } from '../restartMission/types'
 import { services } from '../services'
@@ -31,10 +32,8 @@ async function main(): Promise<void> {
   console.log(serialize(template))
 }
 
-interface UnitPartial
-  extends Pick<Unit, 'typeName'>,
-    Pick<Position, 'heading'> {
-  position: Pick<Position, 'lat' | 'lon'>
+interface UnitPartial extends Pick<Unit, 'heading' | 'typeName'> {
+  position: Pick<GamePositionLL, 'lat' | 'lon'>
 }
 
 interface StaticObject {
@@ -198,8 +197,6 @@ function unitTypeNameStringFrom(maybeTypeName: string): string {
     return `UnitTypeName.SA342Mistral`
   }
 
-  debugger
-
   throw new Error('unknown unit typeName')
 }
 
@@ -282,8 +279,6 @@ function staticObjectTypeNameStringFrom(maybeTypeName: string): string {
   if (maybeTypeName === StaticObjectTypeName.M818) {
     return `StaticObjectTypeName.M818`
   }
-
-  debugger
 
   throw new Error('unknown typeName')
 }

@@ -10,7 +10,6 @@ import {
   CargoTypeName,
   Csar,
   NewCsar,
-  Position,
   StaticObject,
   StaticObjectTypeName,
   Unit,
@@ -20,7 +19,7 @@ import { emFork } from './db/connection'
 import { Group } from './group'
 import { despawnStaticObject, spawnStaticObject } from './staticObject'
 import { outCoalitionText, outGroupText, smoke } from './trigger'
-import { GameSmokeColor } from './types'
+import { GamePositionLL, GameSmokeColor } from './types'
 import { despawnGroundUnit, spawnGroundUnit } from './unit'
 
 export async function createCsar(
@@ -32,6 +31,7 @@ export async function createCsar(
 
   const marker = new StaticObject({
     country,
+    heading: 0,
     position,
     typeName: StaticObjectTypeName.FlagWhite,
   })
@@ -39,6 +39,7 @@ export async function createCsar(
   // create a soldier unit to act as a visual csar unit for pickup/smoke
   const unit = new Unit({
     country,
+    heading: 0,
     hidden: true,
     isPlayerSlot: false,
     position,
@@ -155,7 +156,7 @@ export async function findNearbyCsars({
   coalition,
   where,
 }: {
-  position: Pick<Position, 'lat' | 'lon'>
+  position: Pick<GamePositionLL, 'lat' | 'lon'>
   accuracy: number
   coalition: Coalition
   where?: QBFilterQuery<Csar>

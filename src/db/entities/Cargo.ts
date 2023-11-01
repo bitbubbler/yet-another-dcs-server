@@ -1,10 +1,10 @@
 import { Entity, Filter, OneToOne, PrimaryKey, Property } from '@mikro-orm/core'
 import { v4 } from 'uuid'
+import { GamePositionLL } from '../../types'
+import { BaseEntity } from './BaseEntity'
+import { Csar } from './Csar'
 import { UnitTypeName } from './Unit'
 import { Base } from './base/Base'
-import { BaseEntity } from './BaseEntity'
-import { Position } from './Position'
-import { Csar, NewCsar } from './Csar'
 
 export enum CargoSuperType {
   Base,
@@ -85,12 +85,11 @@ export class CargoBase extends BaseEntity {
   @Property()
   mass: number
 
-  @OneToOne({
-    fieldName: 'positionId',
-    unique: true,
-    eager: true,
+  @Property({
+    type: 'json',
+    nullable: false,
   })
-  position: Position
+  position: GamePositionLL
 
   @Property({ type: 'integer' })
   superType: CargoSuperType

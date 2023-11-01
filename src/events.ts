@@ -402,6 +402,14 @@ async function handleEvent(data: StreamEventsResponse__Output): Promise<void> {
 
     return Events.next(event)
   }
+  if ('simulationFps' in data) {
+    const { average } = data.simulationFps
+    // TODO: implement
+    if (average && average < 59) {
+      console.warn(`Low Game FPS: ${average}`)
+    }
+    return
+  }
 
   console.log('An untyped event:', JSON.stringify(data, null, 2))
 

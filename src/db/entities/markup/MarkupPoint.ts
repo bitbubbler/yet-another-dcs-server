@@ -1,6 +1,6 @@
-import { Entity, ManyToOne, OneToOne, Property, Ref } from '@mikro-orm/core'
+import { Entity, ManyToOne, Property, Ref } from '@mikro-orm/core'
+import { GamePositionLL } from '../../../types'
 import { MarkupBase } from './Markup'
-import { Position } from '../Position'
 
 export type NewMarkupPoint = Pick<MarkupPoint, 'index' | 'markup' | 'position'>
 
@@ -9,12 +9,11 @@ export class MarkupPoint {
   @ManyToOne({ fieldName: 'markupId', primary: true })
   markup: Ref<MarkupBase>
 
-  @OneToOne({
-    fieldName: 'positionId',
-    eager: true,
-    primary: true,
+  @Property({
+    type: 'json',
+    nullable: false,
   })
-  position: Position
+  position: GamePositionLL
 
   @Property()
   index: number

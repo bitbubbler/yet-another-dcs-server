@@ -69,10 +69,11 @@ async function handleUnitEvent(
         unit: gameUnitFrom(event.unit),
       })
     } catch (error) {
-      console.log('failed to handle unit event', event)
+      console.log(`UnitEventError: ${error} ${event}`)
     }
   }
   if ('gone' in event) {
+    console.log(`gone, ${JSON.stringify(event)}`)
     const { gone } = event
 
     if (typeof gone.id === 'undefined') {

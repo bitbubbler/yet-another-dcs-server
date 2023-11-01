@@ -2,23 +2,23 @@ import {
   Collection,
   Entity,
   Filter,
-  OneToOne,
   ManyToMany,
+  OneToOne,
   PrimaryKey,
   Property,
 } from '@mikro-orm/core'
 import { Coalition } from '../../../__generated__/dcs/common/v0/Coalition'
-import { BaseStaticObject } from './BaseStaticObject'
+import { GamePositionLL } from '../../../types'
 import { BaseEntity } from '../BaseEntity'
-import { Position } from '../Position'
 import { StaticObject } from '../StaticObject'
 import { Unit } from '../Unit'
-import { BaseUnit } from './BaseUnit'
 import { TextMarkup } from '../markup/TextMarkup'
+import { BaseStaticObject } from './BaseStaticObject'
+import { BaseUnit } from './BaseUnit'
 
 export type NewBase = Pick<
   Base,
-  'coalition' | 'labelMarkup' | 'name' | 'position' | 'type'
+  'coalition' | 'heading' | 'labelMarkup' | 'name' | 'position' | 'type'
 >
 
 @Entity({ tableName: 'bases' })
@@ -41,18 +41,20 @@ export class Base extends BaseEntity {
   @Property()
   goneAt?: Date
 
+  @Property()
+  heading: number
+
   @OneToOne({ fieldName: 'labelMarkupId' })
   labelMarkup: TextMarkup
 
   @Property()
   name: string
 
-  @OneToOne({
-    fieldName: 'positionId',
-    unique: true,
-    eager: true,
+  @Property({
+    type: 'json',
+    nullable: false,
   })
-  position: Position
+  position: GamePositionLL
 
   @ManyToMany({
     pivotEntity: () => BaseStaticObject,
@@ -70,9 +72,10 @@ export class Base extends BaseEntity {
   constructor(newBase: NewBase) {
     super()
 
-    const { coalition, labelMarkup, name, position, type } = newBase
+    const { coalition, heading, labelMarkup, name, position, type } = newBase
 
     this.coalition = coalition
+    this.heading = heading
     this.labelMarkup = labelMarkup
     this.name = name
     this.position = position
@@ -109,7 +112,7 @@ export enum BaseType {
   FARP,
   /**
    * Combat outpost (COP)
-   * - troops only (no cargo pickups here')
+   * - troops only (no cargo pickups here)
    * - no spawning here
    */
   COP,

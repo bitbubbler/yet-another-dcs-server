@@ -1,15 +1,9 @@
-import {
-  Entity,
-  ManyToOne,
-  OneToOne,
-  PrimaryKey,
-  Property,
-} from '@mikro-orm/core'
+import { Entity, ManyToOne, PrimaryKey, Property } from '@mikro-orm/core'
+import { GamePositionLL } from '../../../types'
 import { BaseEntity } from '../BaseEntity'
-import { CircleMarkup, NewCircleMarkup } from './CircleMarkup'
 import { Color } from '../Color'
-import { Position } from '../Position'
-import { NewTextMarkup, TextMarkup } from './TextMarkup'
+import { CircleMarkup } from './CircleMarkup'
+import { TextMarkup } from './TextMarkup'
 
 export enum MarkupType {
   Text,
@@ -40,12 +34,11 @@ export abstract class MarkupBase extends BaseEntity {
   @ManyToOne({ fieldName: 'lineColorId', eager: true })
   lineColor: Color
 
-  @OneToOne({
-    fieldName: 'positionId',
-    unique: true,
-    eager: true,
+  @Property({
+    type: 'json',
+    nullable: false,
   })
-  position: Position
+  position: GamePositionLL
 
   @Property({ type: 'integer' })
   abstract type: MarkupType
