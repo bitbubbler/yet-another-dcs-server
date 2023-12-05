@@ -20,13 +20,12 @@ import { visualMarkersMain } from '../visualMarkers'
 import { autoRespawnMain, spawnersMenu } from '../autoRespawn'
 import { logisticsMain, internalCargoMenu } from '../logistics'
 import { csarMenu, searchAndRescueMain } from '../searchAndRescue'
-import { aiMain } from '../ai'
 import { createGroundUnit, spawnGroundUnit } from '../unit'
 import { Base, BaseType, Unit, UnitTypeName } from '../db'
 import { countryFrom } from '../convert'
 import { Coalition } from '../__generated__/dcs/common/v0/Coalition'
 import { createBase } from '../base'
-import { GamePositionLL } from '../types'
+import { Game } from '../Game'
 
 // NOTE: The order of menus in this array determines their order on the client
 const missionMenus: MissionMenu[] = [spawnersMenu, restartMissionMenu]
@@ -40,6 +39,10 @@ async function main(): Promise<void> {
   // things inside here happen every time we disconnect/restart due to an error
   async function setupMission(): Promise<() => Promise<void>> {
     await services.ready()
+
+    /*
+      DELETE THE BELOW AFTER FINISHED REFACTORING
+    */
 
     /**
      * Bootstrap things
@@ -69,8 +72,20 @@ async function main(): Promise<void> {
     // spawn the persisted units
     await trySpawnUnits()
 
-    // start the ai
-    const teardownAi = await aiMain()
+    /*
+      DELETE THE ABOVE AFTER FINISHED REFACTORING
+    */
+
+    // create the components
+    const ai = new AI()
+
+    // create the game class, injecting the components
+    const game = new Game({
+      ai,
+    })
+
+    // start the game
+    game.start()
 
     // TESTING CODE
 
@@ -114,6 +129,7 @@ async function main(): Promise<void> {
     // END TESTING CODE
 
     return async function teardown() {
+      game.shutdown()
       await teardownPingpong()
       await teardownSpawnUnits()
       await teardownPersistence()
@@ -123,7 +139,6 @@ async function main(): Promise<void> {
       await teardownLogisticsMain()
       await teardownSearchAndRescueMain()
       await teardownMenus()
-      await teardownAi()
     }
   }
 

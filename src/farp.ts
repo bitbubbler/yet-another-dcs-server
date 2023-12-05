@@ -67,7 +67,7 @@ export async function spawnFarp({
   }
     return coalition.addGroup(${country - 1}, -1, template)
     `
-    custom.eval({ lua: lua }, function (error, result) {
+    custom.eval({ lua }, function (error, result) {
       if (error) {
         return reject(error)
       }
