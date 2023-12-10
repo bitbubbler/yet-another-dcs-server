@@ -1,4 +1,4 @@
-export interface Mission {
+export interface MissionShape {
   mission: {
     coalition: {
       neutrals: Coalition

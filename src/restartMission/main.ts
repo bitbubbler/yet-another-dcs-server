@@ -1,22 +1,16 @@
-import AdmZip, { IZipEntry } from 'adm-zip'
-import fs from 'fs/promises'
-import path from 'path'
+import { baseTemplateFrom, baseTypeDisplayNameShort } from '../base'
 import { CommandType } from '../commands'
-import { Events, EventType, MissionCommandEvent } from '../events'
+import { waitForTime } from '../common'
+import { vector2DFrom } from '../coord'
+import { Base, BaseType } from '../db'
+import { emFork } from '../db/connection'
+import { EventType, Events, MissionCommandEvent } from '../events'
+import { LatLon } from '../geo'
+import { HelicopterUnit, MissionShape, Miz, Point } from '../miz'
+import { loadMissionFile } from '../net'
 import { Restarts } from '../signals'
 import { outText } from '../trigger'
-import { MemoryReader, parse, stringify, Table } from '../lua'
-import { Mission } from './types'
-import { baseTemplateFrom, baseTypeDisplayNameShort } from '../base'
-import { emFork } from '../db/connection'
-import { Base, BaseType } from '../db'
-import { LatLon } from '../geo'
-import { vector2DFrom } from '../coord'
 import { unitTemplateFrom } from '../unit-templates'
-import { loadMissionFile } from '../net'
-import { options } from '../cli'
-import { HelicopterUnit, Point } from './types'
-import { waitForTime } from '../common'
 
 export async function restartMissionMain(): Promise<() => Promise<void>> {
   const subscription = Events.subscribe(async event => {
@@ -46,64 +40,19 @@ async function handleMissionCommand(event: MissionCommandEvent): Promise<void> {
     // Don't restart immediately, wait for a delay.
     // await waitForTimeout(miliseconds)
 
-    // create a name for the new mission file
-    const newMissionFileName = `generated-mission-${fileTimestamp()}.miz`
-    const newMissionFile = path.join(
-      path.resolve(options.missions),
-      newMissionFileName
-    )
+    const miz = new Miz()
+    // Load the miz file into the class
+    miz.load('./mission-templates/caucasus.miz')
 
-    // Get a buffer of the zip on disk
-    const missionTemplateBuffer = await fs.readFile(
-      './mission-templates/caucasus.miz'
-    )
+    // patch the mission
+    const newMission = await patchMission(await patchMission(miz.mission))
 
-    // load the mission template (zip) into memory
-    const inMemoryMission = new AdmZip(missionTemplateBuffer)
+    miz.mission = newMission
 
-    // modify the in-memory version (which is effectively now a copy) to have the spawn points from the database
-    const missionEntry = inMemoryMission.getEntry('mission')
-
-    if (!missionEntry) {
-      throw new Error('mission entry not found in mission template zip')
-    }
-
-    const missionTemplateMissionBuffer = await zipEntryDataFrom(missionEntry)
-    const parsedMission = await parse(
-      new MemoryReader(missionTemplateMissionBuffer.toString('utf8'))
-    )
-
-    if (
-      !(
-        parsedMission &&
-        typeof parsedMission === 'object' &&
-        'mission' in parsedMission
-      )
-    ) {
-      throw new Error('parsed mission from mission template is invalid')
-    }
-
-    // WARNING: we're casting a loos type into a strict type without doing any validation here.
-    // There is a chance the types don't match the runtime data.
-    const mission: Mission = parsedMission as unknown as Mission
-
-    // patch the mission with slots for each based in the db
-    const newMission = await patchMission(mission)
-
-    // save the patched mission to the in-memory zip entry
-    missionEntry.setData(stringify(newMission as unknown as Table))
-
-    // save the now modified zip using the name above to the mission-tmp folder
-    const newMissionFileBuffer = await inMemoryMission.toBuffer()
-
-    // make sure the directory for mission tmp files exists
-    await fs.mkdir(path.dirname(newMissionFile), { recursive: true })
-
-    // write the new mission out
-    await fs.writeFile(newMissionFile, newMissionFileBuffer)
+    const { newMissionFilePath } = await miz.save()
 
     // load the new mission file
-    await loadMissionFile(newMissionFileName)
+    await loadMissionFile(newMissionFilePath)
 
     // wait ???? why do we wait here?
     await waitForTime(1000)
@@ -113,31 +62,7 @@ async function handleMissionCommand(event: MissionCommandEvent): Promise<void> {
   }
 }
 
-async function zipEntryDataFrom(zipEntry: IZipEntry): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    zipEntry.getDataAsync((data, err) => {
-      if (err) {
-        return reject(err)
-      }
-      return resolve(data)
-    })
-  })
-}
-
-function fileTimestamp(): string {
-  const now = new Date()
-
-  const day = now.getUTCDate().toString().padStart(2, '0')
-  const month = (now.getUTCMonth() + 1).toString().padStart(2, '0') // add one, zero based
-  const year = now.getUTCFullYear().toString().padStart(2, '0')
-  const hour = now.getUTCHours().toString().padStart(2, '0')
-  const minute = now.getUTCMinutes().toString().padStart(2, '0')
-  const second = now.getUTCSeconds().toString().padStart(2, '0')
-
-  return `${day}-${month}-${year}--${hour}-${minute}-${second}`
-}
-
-async function patchMission(mission: Mission): Promise<Mission> {
+async function patchMission(mission: MissionShape): Promise<MissionShape> {
   const em = await emFork()
   const baseRepository = em.getRepository(Base)
   // first, we set some basics
@@ -224,7 +149,7 @@ async function patchMission(mission: Mission): Promise<Mission> {
 
       // update mission file with the new unit we generated from the slot
       mission.mission.coalition.blue.country[0].helicopter!.group.push({
-        groupId: groupId,
+        groupId,
         hidden: false,
         name,
         route: { points: [point] },
