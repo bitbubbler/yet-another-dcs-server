@@ -1,10 +1,9 @@
 import { Entity, Property } from '@mikro-orm/core'
-import { MarkupBase, MarkupType, NewMarkupPropertyNames } from './Markup'
+import { MarkupBase, NewMarkupBase } from './MarkupBase'
+import { MarkupType } from './types'
 
-export type NewTextMarkup = Pick<
-  TextMarkup,
-  NewMarkupPropertyNames | 'fontSize' | 'text'
->
+export type NewTextMarkup = Pick<TextMarkup, 'fontSize' | 'text'> &
+  NewMarkupBase
 
 @Entity({ discriminatorValue: MarkupType.Text })
 export class TextMarkup extends MarkupBase {

@@ -12,20 +12,21 @@ import { GroupMenu, menusMain, MissionMenu } from '../menus'
 import { pingpong } from '../pingpong'
 import { startUnitEvents } from '../unitEvents'
 
-// // bigger things
-import { spawnUnitsMain } from '../spawnUnits'
+// bigger things
+import { Coalition } from '../__generated__/dcs/common/v0/Coalition'
+import { AI } from '../ai'
+import { autoRespawnMain, spawnersMenu } from '../autoRespawn'
+import { createBase } from '../base'
+import { countryFrom } from '../convert'
+import { Base, BaseType, Unit, UnitTypeName } from '../db'
+import { Game } from '../Game'
+import { internalCargoMenu, logisticsMain } from '../logistics'
 import { persistenceMain, trySpawnUnits } from '../persistence'
 import { restartMissionMain, restartMissionMenu } from '../restartMission'
-import { visualMarkersMain } from '../visualMarkers'
-import { autoRespawnMain, spawnersMenu } from '../autoRespawn'
-import { logisticsMain, internalCargoMenu } from '../logistics'
 import { csarMenu, searchAndRescueMain } from '../searchAndRescue'
+import { spawnUnitsMain } from '../spawnUnits'
 import { createGroundUnit, spawnGroundUnit } from '../unit'
-import { Base, BaseType, Unit, UnitTypeName } from '../db'
-import { countryFrom } from '../convert'
-import { Coalition } from '../__generated__/dcs/common/v0/Coalition'
-import { createBase } from '../base'
-import { Game } from '../Game'
+import { visualMarkersMain } from '../visualMarkers'
 
 // NOTE: The order of menus in this array determines their order on the client
 const missionMenus: MissionMenu[] = [spawnersMenu, restartMissionMenu]

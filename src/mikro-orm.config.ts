@@ -18,6 +18,7 @@ import {
   MarkupBase,
   MarkupPoint,
   PlayerIp,
+  Resource,
   Spawner,
   SpawnerQueuedUnit,
   SpawnGroup,
@@ -34,6 +35,7 @@ import { BetterSqliteDriver } from '@mikro-orm/better-sqlite'
 const config: Options<BetterSqliteDriver> = {
   dbName: '../dev.sqlite',
   debug: false, // TODO: put this on a config from cli.ts
+  ensureIndexes: true,
   entities: [
     Base,
     BaseStaticObject,
@@ -48,6 +50,7 @@ const config: Options<BetterSqliteDriver> = {
     MarkupPoint,
     Player,
     PlayerIp,
+    Resource,
     Spawner,
     SpawnerQueuedUnit,
     SpawnGroup,

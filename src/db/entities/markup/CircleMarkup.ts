@@ -1,12 +1,11 @@
 import { Entity, Property } from '@mikro-orm/core'
 import { LineType } from '../../../__generated__/dcs/trigger/v0/LineType'
 
-import { MarkupBase, MarkupType, NewMarkupPropertyNames } from './Markup'
+import { MarkupBase, NewMarkupBase } from './MarkupBase'
+import { MarkupType } from './types'
 
-export type NewCircleMarkup = Pick<
-  CircleMarkup,
-  NewMarkupPropertyNames | 'lineType' | 'radius'
->
+export type NewCircleMarkup = Pick<CircleMarkup, 'lineType' | 'radius'> &
+  NewMarkupBase
 
 @Entity({ discriminatorValue: MarkupType.Circle })
 export class CircleMarkup extends MarkupBase {

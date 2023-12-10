@@ -1,6 +1,6 @@
 import { Entity, ManyToOne, Property, Ref } from '@mikro-orm/core'
 import { GamePositionLL } from '../../../types'
-import { MarkupBase } from './Markup'
+import { MarkupBase } from './MarkupBase'
 
 export type NewMarkupPoint = Pick<MarkupPoint, 'index' | 'markup' | 'position'>
 
