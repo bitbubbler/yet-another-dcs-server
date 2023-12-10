@@ -10,7 +10,7 @@ import { Template } from '../base-templates/types'
 import { positionLatLonFrom } from '../coord'
 import { StaticObjectTypeName, Unit, UnitTypeName } from '../db'
 import { LatLon } from '../geo'
-import { Mission } from '../restartMission/types'
+import { MissionShape } from '../miz/types'
 import { services } from '../services'
 import { GamePositionLL } from '../types'
 
@@ -309,7 +309,7 @@ async function getSlots(): Promise<UnitPartial[]> {
   return slots
 }
 
-async function getCurrentMission(): Promise<Mission> {
+async function getCurrentMission(): Promise<MissionShape> {
   const lua = `
   return DCS.getCurrentMission()
 `
@@ -327,7 +327,7 @@ async function getCurrentMission(): Promise<Mission> {
       const json = JSON.parse(result.json)
 
       // type cast to a mission type
-      const mission: Mission = json
+      const mission: MissionShape = json
 
       // resolve with the mission type
       resolve(mission)
